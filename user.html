@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Manajemen User SIPEKA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen p-4 pb-20">
+
+<script src="script.js"></script>
+
+<script>
+  cekLogin();
+  if (localStorage.getItem("role") !== "admin") {
+      alert("Akses Ditolak! Halaman ini khusus Admin.");
+      window.location.href = "dashboard.html";
+  }
+</script>
+
+<div class="flex items-center mb-6 mt-2">
+  <button onclick="window.location.href='dashboard.html'" 
+    class="mr-4 bg-white p-2 rounded-xl shadow text-blue-900 font-bold">←</button>
+  <div>
+    <h2 class="text-xl font-bold text-blue-900">Manajemen User</h2>
+    <p class="text-xs text-gray-500">Daftarkan akun kader baru</p>
+  </div>
+</div>
+
+<div class="bg-white p-6 rounded-2xl shadow border-t-4 border-blue-900">
+  <h3 class="font-bold text-md mb-4 text-gray-800">👥 Form Pendaftaran Kader</h3>
+  
+  <div class="space-y-4">
+    <div>
+      <label class="text-xs font-bold text-gray-500">NAMA LENGKAP</label>
+      <input id="user-nama" type="text" placeholder="Sesuai KTP" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+    </div>
+
+    <div>
+      <label class="text-xs font-bold text-gray-500">NIK (16 Digit)</label>
+      <input id="user-nik" type="number" placeholder="Akan digunakan sebagai ID Login" class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+    </div>
+
+    <div>
+      <label class="text-xs font-bold text-gray-500">NO WHATSAPP</label>
+      <input id="user-hp" type="number" placeholder="Contoh: 0812345678" class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs font-bold text-gray-500">KECAMATAN</label>
+        <input id="user-kecamatan" type="text" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">DESA/WILAYAH</label>
+        <input id="user-wilayah" type="text" placeholder="Desa Tugas" class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs font-bold text-gray-500">ROLE AKUN</label>
+        <select id="user-role" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+          <option value="users">User / Kader</option>
+          <option value="admin">Admin UPTD</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">PASSWORD AWAL</label>
+        <input id="user-password" type="text" value="123456" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+      </div>
+    </div>
+
+    <button onclick="tambahUser()" id="btn-tambah-user"
+      class="w-full bg-blue-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-800 transition mt-2">
+      SIMPAN USER BARU
+    </button>
+    <p id="info-user" class="text-center text-sm mt-2 font-bold"></p>
+  </div>
+</div>
+
+<div class="mt-8 mb-10">
+  <div class="flex justify-between items-center mb-4 px-2">
+    <h3 class="font-bold text-md text-gray-800">📋 Daftar Kader Terdaftar</h3>
+    <button onclick="loadUsers()" class="text-blue-600 text-xs font-bold uppercase tracking-widest bg-blue-100 px-3 py-1 rounded-lg">🔄 Refresh</button>
+  </div>
+
+  <div id="container-daftar-user" class="space-y-3">
+    <p class="text-center text-sm text-gray-400 py-10 italic">Memuat data kader...</p>
+  </div>
+</div>
+
+<script>
+  // Otomatis mengisi kolom Kecamatan & Panggil daftar user
+  document.getElementById("user-kecamatan").value = localStorage.getItem("kecamatan") || "";
+  loadUsers();
+</script>
+
+</body>
+</html>

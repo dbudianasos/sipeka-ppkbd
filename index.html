@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Login SIPEKA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-6">
+
+<div class="bg-white p-10 rounded-[2.5rem] shadow-2xl w-full max-w-sm text-center border-t-[10px] border-blue-900">
+
+  <div class="text-5xl mb-4">🏢</div>
+
+  <h1 class="text-3xl font-black text-blue-900">SIPEKA PPKBD</h1>
+  <p class="text-gray-400 text-xs mb-8 uppercase tracking-widest">Sistem Pelaporan Kinerja PPKBD</p>
+
+  <input id="nik" type="text" placeholder="NIK"
+    class="w-full p-4 mb-4 bg-slate-50 rounded-2xl border outline-none focus:ring-2 focus:ring-blue-600">
+
+  <input id="password" type="password" placeholder="Password"
+    class="w-full p-4 mb-6 bg-slate-50 rounded-2xl border outline-none focus:ring-2 focus:ring-blue-600">
+
+  <button onclick="login()"
+    class="w-full bg-blue-900 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-blue-800 transition">
+    MASUK
+  </button>
+
+  <p id="info" class="text-red-500 text-sm mt-4"></p>
+
+</div>
+<script src="script.js"></script>
+
+</body>
+</html>

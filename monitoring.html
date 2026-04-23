@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitoring SIPEKA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen p-4 pb-20">
+
+<script src="script.js"></script>
+<script>cekLogin();</script>
+
+<div class="flex items-center mb-6 mt-2">
+  <button onclick="window.location.href='dashboard.html'" class="mr-4 bg-white p-2 rounded-xl shadow text-blue-900 font-bold">←</button>
+  <div>
+    <h2 class="text-xl font-bold text-blue-900">Monitoring</h2>
+    <p class="text-xs text-gray-500">Pantau status & riwayat laporan</p>
+  </div>
+</div>
+
+<div class="space-y-4" id="list-riwayat">
+  <p class="text-center text-sm text-gray-400 py-10 italic">Memuat riwayat laporan...</p>
+</div>
+
+<script>
+  // Panggil fungsi dari script.js
+  loadRiwayat();
+</script>
+
+</body>
+</html>

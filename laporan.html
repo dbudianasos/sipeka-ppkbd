@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Input Laporan SIPEKA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen p-4 pb-20">
+
+<script src="script.js"></script>
+
+<div class="flex items-center mb-6 mt-2">
+  <button onclick="window.location.href='dashboard.html'" 
+    class="mr-4 bg-white p-2 rounded-xl shadow text-blue-900 font-bold">←</button>
+  <div>
+    <h2 class="text-xl font-bold text-blue-900">Laporan Kinerja</h2>
+    <p class="text-xs text-gray-500">Input realisasi kegiatan harian</p>
+  </div>
+</div>
+
+<div class="bg-white p-6 rounded-2xl shadow border-t-4 border-green-600">
+  <div class="space-y-4">
+    
+    <div>
+      <label class="text-xs font-bold text-gray-500">SUMBER KEGIATAN</label>
+      <select id="sumber-kegiatan" onchange="toggleRenjaSelector()" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-green-600">
+        <option value="renja">Sesuai Rencana Kerja (Renja)</option>
+        <option value="luar">Kegiatan Tambahan (Luar Renja)</option>
+      </select>
+    </div>
+
+    <div id="area-pilih-renja">
+      <label class="text-xs font-bold text-gray-500">PILIH RENJA</label>
+      <select id="pilih-renja" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-green-600">
+        <option value="">-- Memuat Renja Anda... --</option>
+      </select>
+    </div>
+
+    <div id="area-manual" class="space-y-4">
+      <div>
+        <label class="text-xs font-bold text-gray-500">JENIS KEGIATAN</label>
+        <select id="lap-kegiatan" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-green-600">
+            <option value="Pertemuan">Pertemuan</option>
+            <option value="Pencatatan & Pelaporan">Pencatatan & Pelaporan</option>
+            <option value="KIE">KIE</option>
+            <option value="Pelayanan & Penggerakan">Pelayanan & Penggerakan</option>
+            <option value="Lainnya">Lainnya</option>
+        </select>
+      </div>
+      
+      <div>
+        <label class="text-xs font-bold text-gray-500">SUBSTANSI / DETAIL KEGIATAN</label>
+        <input id="lap-substansi" type="text" placeholder="Isi jika ini Kegiatan Tambahan..." class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-green-600">
+      </div>
+
+      <div>
+        <label class="text-xs font-bold text-gray-500">LOKASI KEGIATAN (Desa/Tempat)</label>
+        <input id="lap-lokasi" type="text" placeholder="Contoh: Desa Lubangbuaya / Kantor UPTD" class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-green-600">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs font-bold text-gray-500">TANGGAL</label>
+        <input id="lap-tgl" type="date" class="w-full p-3 text-sm bg-slate-50 border rounded-xl">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">REALISASI (Orang)</label>
+        <input id="lap-realisasi" type="number" placeholder="Jumlah Peserta" class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl">
+      </div>
+    </div>
+
+    <div>
+        <label class="text-xs font-bold text-gray-500">UPLOAD FOTO VISUM (WAJIB)</label>
+        <input type="file" id="lap-foto-file" accept="image/*" class="hidden" onchange="previewFoto(this)">
+        <div onclick="document.getElementById('lap-foto-file').click()" 
+             class="w-full p-6 border-2 border-dashed border-slate-300 rounded-2xl text-center cursor-pointer hover:bg-slate-50 transition">
+            <span id="label-foto" class="text-sm text-gray-400 font-bold">📸 Klik untuk Ambil/Pilih Foto</span>
+            <img id="img-preview" class="hidden mt-2 mx-auto rounded-lg max-h-40">
+        </div>
+        <p class="text-[10px] text-red-500 mt-1 italic">*Foto otomatis dikompres agar hemat kuota</p>
+    </div>
+
+    <button onclick="simpanLaporan()" id="btn-simpan-laporan"
+      class="w-full bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-green-700 transition mt-2">
+      KIRIM LAPORAN SEKARANG
+    </button>
+    <p id="info-laporan" class="text-center text-sm mt-2 font-bold"></p>
+  </div>
+</div>
+
+<script>
+  cekLogin();
+  loadRenjaUntukLaporan(); // Load daftar renja ke dropdown
+
+  function toggleRenjaSelector() {
+    const sumber = document.getElementById("sumber-kegiatan").value;
+    const areaRenja = document.getElementById("area-pilih-renja");
+    if(sumber === "luar") {
+        areaRenja.style.display = "none";
+    } else {
+        areaRenja.style.display = "block";
+    }
+  }
+</script>
+
+</body>
+</html>
