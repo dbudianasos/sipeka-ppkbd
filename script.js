@@ -726,6 +726,50 @@ function updateSubstansi() {
   }
 }
 
+//======================LOAD STATISTIK (GRAFIK KINERJA)==========================//
+function loadStatistik() {
+  const role = localStorage.getItem("role");
+  const nik = localStorage.getItem("nik");
+  const ctx = document.getElementById('chartKinerja').getContext('2d');
+  
+  const tahun = document.getElementById("filter-tahun").value;
+  const bulan = document.getElementById("filter-bulan").value;
+  const userSelect = document.getElementById("filter-user").value;
+
+  // Jika admin pilih user tertentu, gunakan NIK user itu. Jika tidak, kosongkan (untuk total).
+  const nikTarget = (role === 'admin') ? userSelect : nik;
+
+  // Munculkan filter user jika admin
+  if (role === 'admin') {
+    document.getElementById("admin-filter-user").classList.remove("hidden");
+    document.getElementById("section-peringkat").classList.remove("hidden");
+  }
+
+  fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
+    .then(res => res.json())
+    .then(data => {
+      // 1. Update Cards (Total & Persen) - Logika sama seperti sebelumnya
+      
+      // 2. Render Chart (Gunakan instance chart yang sama atau hancurkan yang lama)
+      // (Gunakan window.myChart untuk reset agar grafik tidak tumpang tindih)
+      if (window.myChart) window.myChart.destroy();
+      window.myChart = new Chart(ctx, { /* konfigurasi bar chart */ });
+
+      // 3. Render Peringkat
+      const listPeringkat = document.getElementById("list-peringkat");
+      if (listPeringkat) {
+        listPeringkat.innerHTML = data.ranking.slice(0, 5).map((u, i) => `
+          <div class="flex items-center justify-between bg-white p-3 rounded-2xl shadow-sm">
+            <div class="flex items-center gap-3">
+              <span class="font-bold text-blue-900 w-5">${i+1}.</span>
+              <p class="text-xs font-medium text-gray-700">${u.nama}</p>
+            </div>
+            <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold">${u.skor} Laporan</span>
+          </div>
+        `).join('');
+      }
+    });
+}
 // =========================================================
 // BAGIAN MONITORING & CETAK (Tambahkan ke script.js)
 // =========================================================
