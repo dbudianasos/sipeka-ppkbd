@@ -162,7 +162,7 @@ function approve(id) {
     }
   });
 }
-// ================= SIMPAN RENJA =================
+// ================= SIMPAN RENJA (VERSI UPDATE SIGA) =================
 function simpanRenja() {
   const btn = document.getElementById("btn-simpan-renja");
   const info = document.getElementById("info-renja");
@@ -170,20 +170,35 @@ function simpanRenja() {
   const nik = localStorage.getItem("nik");
   const nama = localStorage.getItem("nama");
   
+  // Ambil data dasar
   const tahun = document.getElementById("renja-tahun").value;
   const bulan = document.getElementById("renja-bulan").value;
-  const kegiatan = document.getElementById("renja-kegiatan").value;
-  const substansi = document.getElementById("renja-substansi").value;
+  const lokasi = document.getElementById("renja-lokasi").value;
   const sasaran = document.getElementById("renja-sasaran").value;
   const volume = document.getElementById("renja-volume").value;
   const peserta = document.getElementById("renja-peserta").value;
   const indikator = document.getElementById("renja-indikator").value;
-  const lokasi = document.getElementById("renja-lokasi").value;
 
-  if (!kegiatan || !sasaran || !volume || !peserta) {
-    info.innerText = "Harap isi semua kolom target!";
+  // Ambil data untuk digabungkan
+  const jenis = document.getElementById("renja-jenis").value;
+  const substansi = document.getElementById("renja-substansi").value;
+  const keterangan = document.getElementById("renja-keterangan").value;
+
+  // Validasi: Jenis Kegiatan wajib ada
+  if (!jenis || !sasaran || !volume || !peserta) {
+    info.innerText = "Harap isi Jenis Kegiatan dan semua kolom target!";
     info.className = "text-center text-sm mt-2 text-red-500 font-bold";
     return;
+  }
+
+  // --- LOGIKA JAHIT DATA UNTUK KOLOM KEGIATAN ---
+  let kegiatanGabung = "";
+  if (jenis === "Lainnya") {
+    kegiatanGabung = "Lainnya: " + keterangan;
+  } else {
+    // Format: "Jenis: Substansi - Keterangan"
+    // Contoh: "KIE: Konseling Individu - Dusun III"
+    kegiatanGabung = jenis + ": " + substansi + (keterangan ? " - " + keterangan : "");
   }
 
   btn.disabled = true;
@@ -198,8 +213,7 @@ function simpanRenja() {
       nama: nama,
       tahun: tahun,
       bulan: bulan,
-      // Gabungkan Jenis dan Substansi agar rapi di Spreadsheet
-      kegiatan: kegiatan + " - " + substansi, 
+      kegiatan: kegiatanGabung, // <--- Hasil gabungan 3 input masuk ke sini
       sasaran: sasaran,
       target_volume: volume,
       target_peserta: peserta,
@@ -213,10 +227,11 @@ function simpanRenja() {
       info.innerText = "Renja berhasil disimpan!";
       info.className = "text-center text-sm mt-2 text-green-600 font-bold";
       
-      // Kosongkan form beberapa isian
+      // Kosongkan form input target
       document.getElementById("renja-sasaran").value = "";
       document.getElementById("renja-volume").value = "";
       document.getElementById("renja-peserta").value = "";
+      document.getElementById("renja-keterangan").value = ""; // Bersihkan juga keterangan
       
       // Refresh list renja di bawahnya
       loadRenja();
@@ -530,6 +545,69 @@ function hapusUser(nikTarget, namaTarget) {
       loadUsers(); // Refresh daftar otomatis
     }
   });
+}
+//======================Update Substansi==========================//
+function updateSubstansi() {
+  const jenis = document.getElementById("renja-jenis").value;
+  const wrapperSub = document.getElementById("wrapper-substansi");
+  const selectSub = document.getElementById("renja-substansi");
+  const labelDeskripsi = document.getElementById("label-deskripsi");
+
+  // MAPPING SUBSTANSI SESUAI KATEGORI SIGA
+  const dataSubstansi = {
+    "Pertemuan": [
+      "Pertemuan Rutin Kader", 
+      "Rapat Koordinasi (Desa/RW)", 
+      "Pertemuan Kelompok Kerja (Pokja)"
+    ],
+    "KIE": [
+      "Penyuluhan Kelompok", 
+      "Konseling Individu", 
+      "Kunjungan Rumah (Door-to-door)", 
+      "Penyebaran Media Informasi"
+    ],
+    "Pelayanan & Penggerakan": [
+      "Pendampingan Rujukan KB", 
+      "Distribusi Alkon (Sub-PPKBD)", 
+      "Pembinaan Poktan (BKB/BKR/BKL/UPPKA)", 
+      "Fasilitasi Pelayanan KB/Baksos"
+    ],
+    "Pencatatan & Pelaporan": [
+      "Pemutakhiran Data Keluarga (Verval)", 
+      "Pemetaan Sasaran (PUS Unmet Need)", 
+      "Pengisian Buku Bantu / K0", 
+      "Input Laporan ke New SIGA"
+    ]
+  };
+
+  // Reset dropdown anak
+  selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
+
+  if (jenis === "Lainnya" || jenis === "") {
+    wrapperSub.classList.add("hidden");
+    labelDeskripsi.innerText = "Deskripsi Kegiatan";
+    // Jika Lainnya, tambahkan opsi default agar tidak kosong saat dikirim
+    let opt = document.createElement("option");
+    opt.value = "Lainnya";
+    opt.selected = true;
+    selectSub.appendChild(opt);
+  } else {
+    wrapperSub.classList.remove("hidden");
+    labelDeskripsi.innerText = "Keterangan Tambahan (Opsional)";
+    
+    // Isi dropdown anak berdasarkan pilihan induk
+    dataSubstansi[jenis].forEach(item => {
+      let opt = document.createElement("option");
+      opt.value = item;
+      opt.innerHTML = item;
+      selectSub.appendChild(opt);
+    });
+    // Tambahkan pilihan "Lainnya" di setiap kategori
+    let optLain = document.createElement("option");
+    optLain.value = "Lainnya di " + jenis;
+    optLain.innerHTML = "Lainnya...";
+    selectSub.appendChild(optLain);
+  }
 }
 
 // =========================================================
