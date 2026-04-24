@@ -207,7 +207,7 @@ function simpanRenja() {
 
   fetch(API_URL, {
     method: "POST",
-    body: new URLSearchParams({
+	body: new URLSearchParams({
       action: "submit_renja",
       nik: nik,
       nama: nama,
@@ -227,14 +227,27 @@ function simpanRenja() {
       info.innerText = "Renja berhasil disimpan!";
       info.className = "text-center text-sm mt-2 text-green-600 font-bold";
       
-      // Kosongkan form input target
+      // 1. Kosongkan Dropdown Utama & Sembunyikan Substansi
+      const jenis = document.getElementById("renja-jenis");
+      jenis.value = ""; // Kembali ke "-- Pilih Jenis Kegiatan --"
+      
+      const wrapperSub = document.getElementById("wrapper-substansi");
+      if (wrapperSub) wrapperSub.classList.add("hidden"); // Sembunyikan lagi dropdown anak
+      
+      const substansi = document.getElementById("renja-substansi");
+      if (substansi) substansi.value = ""; // Kosongkan pilihan anak
+
+      // 2. Kosongkan Elemen Teks & Angka
+      document.getElementById("renja-indikator").value = "";
       document.getElementById("renja-sasaran").value = "";
       document.getElementById("renja-volume").value = "";
       document.getElementById("renja-peserta").value = "";
       document.getElementById("renja-keterangan").value = ""; // Bersihkan juga keterangan
       
       // Refresh list renja di bawahnya
-      loadRenja();
+      setTimeout(() => {
+		  loadRenja();
+		}, 1500); // Tunggu 1,5 detik baru refresh daftar
     } else {
       info.innerText = "Gagal menyimpan!";
       info.className = "text-center text-sm mt-2 text-red-500 font-bold";
