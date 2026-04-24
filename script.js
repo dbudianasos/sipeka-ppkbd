@@ -364,7 +364,7 @@ function hapusRenja(id) {
   }
 }
 // ================= LOAD DATA RENJA (Untuk Dropdown di Form Laporan) =================
-// ================= LOAD DATA RENJA KE GLOBAL (ANTI-CACHE) =================
+// ================= LOAD DATA RENJA KE GLOBAL (VERSI PROAKTIF) =================
 let statusRenjaGlobal = "loading"; 
 
 function loadRenjaUntukLaporan() {
@@ -372,7 +372,6 @@ function loadRenjaUntukLaporan() {
   dataRenjaGlobal = []; 
   statusRenjaGlobal = "loading";
 
-  // Obat Anti-Cache: Tambahkan angka acak (waktu) di akhir URL
   const antiCache = new Date().getTime();
   const fetchUrl = API_URL + "?action=get_renja&nik=" + nik + "&nocache=" + antiCache;
 
@@ -383,6 +382,14 @@ function loadRenjaUntukLaporan() {
         dataRenjaGlobal = data; 
         statusRenjaGlobal = "sukses";
         console.log("Renja berhasil ditarik:", dataRenjaGlobal);
+
+        // --- SIHIRNYA DI SINI ---
+        // Cek apakah user sudah terlanjur pilih tanggal saat data sedang ditarik
+        const tglSudahDiisi = document.getElementById("lap-tgl").value;
+        if (tglSudahDiisi) {
+          // Jika sudah ada tanggal, langsung jalankan filter otomatis!
+          filterRenjaBerdasarkanTanggal(); 
+        }
       } else {
         statusRenjaGlobal = "kosong";
       }
