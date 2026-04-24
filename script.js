@@ -4,6 +4,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzXt4isvjY5KrSZi37IedLK
 let base64Foto = ""; 
 // Variable global untuk menampung data agar bisa difilter saat cetak
 let dataRiwayatGlobal = [];
+let dataRenjaGlobal = []; // Untuk menyimpan data renja agar bisa difilter tanggal
 let myChartInstance = null;
 // ================= LOGIN =================
 function login() {
@@ -389,6 +390,52 @@ function loadRenjaUntukLaporan() {
       dropdown.innerHTML = '<option value="">Gagal koneksi ke server</option>';
     });
 }
+
+// ================= LOAD DATA RENJA KE GLOBAL =================
+function loadRenjaUntukLaporan() {
+  const nik = localStorage.getItem("nik");
+  fetch(API_URL + "?action=get_renja&nik=" + nik)
+    .then(res => res.json())
+    .then(data => {
+      // Simpan data aslinya di belakang layar
+      dataRenjaGlobal = data; 
+    })
+    .catch(err => console.error("Fetch Error:", err));
+}
+
+// ================= FILTER RENJA BERDASARKAN TANGGAL =================
+function filterRenjaBerdasarkanTanggal() {
+  const tglInput = document.getElementById("lap-tgl").value;
+  const dropdown = document.getElementById("pilih-renja");
+  
+  if (!dropdown) return;
+  if (!tglInput) {
+    dropdown.innerHTML = '<option value="">-- Menunggu Tanggal --</option>';
+    return;
+  }
+
+  // Ambil angka bulan dari kalender (Format YYYY-MM-DD -> ambil MM)
+  const bulanPilih = tglInput.split("-")[1]; 
+
+  // Saring data: Bulan harus sama (pakai padStart agar 08 = 08) DAN Sisa Volume harus > 0
+  const renjaTersedia = dataRenjaGlobal.filter(r => {
+    const bulanRenja = String(r.bulan).padStart(2, '0');
+    return bulanRenja === bulanPilih && r.sisa_vol > 0;
+  });
+
+  // Masukkan data yang sudah disaring ke Dropdown
+  dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
+  
+  if (renjaTersedia.length === 0) {
+    dropdown.innerHTML = '<option value="">(Tidak ada Renja tersisa di bulan ini)</option>';
+    return;
+  }
+
+  renjaTersedia.forEach(renja => {
+    dropdown.innerHTML += `<option value="${renja.renja_id}">${renja.kegiatan} (Sisa Vol: ${renja.sisa_vol})</option>`;
+  });
+}
+
 // ================= SIMPAN LAPORAN FINAL =================
 async function simpanLaporan() {
   const btn = document.getElementById("btn-simpan-laporan");
@@ -399,27 +446,46 @@ async function simpanLaporan() {
   const nama = localStorage.getItem("nama");
   const kecamatan = localStorage.getItem("kecamatan");
   
-  // Ambil Data Form
+  // Ambil Data Form Dasar
   const sumber = document.getElementById("sumber-kegiatan").value;
-  const dropdownRenja = document.getElementById("pilih-renja");
-  const renja_id = (sumber === "renja") ? dropdownRenja.value : "LUAR-RENJA";
-  
-  const kegiatanManual = document.getElementById("lap-kegiatan").value;
-  const lokasi = document.getElementById("lap-lokasi").value;
   const tanggal = document.getElementById("lap-tgl").value;
+  const lokasi = document.getElementById("lap-lokasi").value;
   const realisasi = document.getElementById("lap-realisasi").value;
 
-  // --- GEMBOK VALIDASI ---
-  if (sumber === "renja" && !renja_id) return alert("Pilih Renja terlebih dahulu!");
-  if (!tanggal || !realisasi || !lokasi) return alert("Lengkapi Tanggal, Lokasi, dan Realisasi!");
-  
-  // Cek apakah foto sudah diproses oleh previewFoto
-  if (!base64Foto) return alert("Gagal! Foto Visum wajib diupload.");
+  // --- LOGIKA PENJAHITAN NAMA KEGIATAN & VALIDASI ---
+  let renja_id = "";
+  let namaKegiatanFinal = "";
 
-  // Tentukan Nama Kegiatan untuk di Spreadsheet
-  let namaKegiatanFinal = (sumber === "renja") 
-      ? dropdownRenja.options[dropdownRenja.selectedIndex].text 
-      : "Tambahan: " + kegiatanManual;
+  if (sumber === "renja") {
+    const dropdownRenja = document.getElementById("pilih-renja");
+    renja_id = dropdownRenja.value;
+    
+    if (!renja_id) return alert("Pilih Rencana Kerja terlebih dahulu!");
+    
+    const teksRenja = dropdownRenja.options[dropdownRenja.selectedIndex].text;
+    const catatanRenja = document.getElementById("lap-catatan-renja").value;
+    
+    // Jahit data: Nama Renja + Catatan (Jika ada)
+    namaKegiatanFinal = catatanRenja ? `${teksRenja} | Catatan: ${catatanRenja}` : teksRenja;
+
+  } else {
+    // Jika Luar Renja
+    renja_id = "LUAR-RENJA";
+    const jenisLuar = document.getElementById("lap-kegiatan").value;
+    const substansiLuar = document.getElementById("lap-substansi").value;
+    const keteranganLuar = document.getElementById("lap-keterangan").value;
+
+    if (!jenisLuar || !substansiLuar || !keteranganLuar) {
+      return alert("Harap lengkapi Jenis, Substansi, dan Dasar Pelaksanaan Luar Renja!");
+    }
+
+    // Jahit data: Tambahan: Jenis - Substansi (Keterangan)
+    namaKegiatanFinal = `Tambahan: ${jenisLuar} - ${substansiLuar} (${keteranganLuar})`;
+  }
+
+  // --- GEMBOK VALIDASI UMUM ---
+  if (!tanggal || !realisasi || !lokasi) return alert("Lengkapi Tanggal, Lokasi, dan Jumlah Peserta!");
+  if (!base64Foto) return alert("Gagal! Foto Visum wajib diupload.");
 
   // Mulai Proses Kirim
   btn.disabled = true; 
@@ -435,11 +501,11 @@ async function simpanLaporan() {
         nama: nama,
         kecamatan: kecamatan,
         renja_id: renja_id,
-        kegiatan: namaKegiatanFinal,
+        kegiatan: namaKegiatanFinal, // Data yang sudah dijahit super rapi
         tanggal: tanggal,
         realisasi: realisasi,
         lokasi: lokasi,
-        foto_data: base64Foto  // Mengirim foto yang sudah dikompres
+        foto_data: base64Foto  
       })
     });
 
