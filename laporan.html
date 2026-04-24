@@ -150,6 +150,7 @@
   // FUNGSI UNTUK MEMBUKA KUNCI FORM SAAT TANGGAL DIPILIH
   function bukaKunciForm() {
     const tglInput = document.getElementById("lap-tgl").value;
+    const today = new Date().toISOString().split('T')[0];
     const areaLanjutan = document.getElementById("area-lanjutan");
     const pesanKunci = document.getElementById("pesan-kunci");
     const dropdownSumber = document.getElementById("sumber-kegiatan");
@@ -163,6 +164,13 @@
       // Sembunyikan pesan merah
       if(pesanKunci) pesanKunci.style.display = "none";
 
+      // Pengecekan Tambahan: Jika input tanggal lebih besar dari hari ini
+      if (tglInput > today) {
+        alert("Maaf Pak/Bu, tidak boleh melaporkan kegiatan untuk tanggal masa depan.");
+        document.getElementById("lap-tgl").value = ""; // Kosongkan kembali
+        return;
+      }
+      
       // Panggil fungsi filter renja dari script.js
       if(typeof filterRenjaBerdasarkanTanggal === "function") {
         filterRenjaBerdasarkanTanggal();
