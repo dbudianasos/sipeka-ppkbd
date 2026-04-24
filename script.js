@@ -744,19 +744,13 @@ function updateSubstansi() {
 function loadGrafik() {
   const role = localStorage.getItem("role");
   const nikLogin = localStorage.getItem("nik");
+  const tahun = document.getElementById("filter-tahun").value;
+  const bulan = document.getElementById("filter-bulan").value;
   
-  // CEK AMAN: Pastikan elemen ada sebelum mengambil .value
-  const elTahun = document.getElementById("filter-tahun");
-  const elBulan = document.getElementById("filter-bulan");
-  const elUser = document.getElementById("filter-user");
+  const userEl = document.getElementById("filter-user");
+  const userSelect = userEl ? userEl.value : "";
 
-  if (!elTahun || !elBulan) return; // Jika tidak ada filter, stop di sini agar tidak error
-
-  const tahun = elTahun.value;
-  const bulan = elBulan.value;
-  const userSelect = elUser ? elUser.value : "";
-
-  let nikTarget = (role === 'admin' && userSelect) ? userSelect : nikLogin;
+  let nikTarget = (role === 'admin') ? userSelect : nikLogin;
 
   if (role === 'admin') {
     const adminArea = document.getElementById("admin-filter-area");
@@ -779,34 +773,58 @@ function loadGrafik() {
         data: {
           labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
           datasets: [
-            { label: 'Target', data: data.target, backgroundColor: '#e2e8f0', borderRadius: 6 },
-            { label: 'Realisasi', data: data.realisasi, backgroundColor: '#1e3a8a', borderRadius: 6 }
+            {
+              label: 'Target',
+              data: data.target || [0,0,0,0,0],
+              backgroundColor: '#e2e8f0',
+              borderRadius: 6
+            },
+            {
+              label: 'Realisasi',
+              data: data.realisasi || [0,0,0,0,0],
+              backgroundColor: '#1e3a8a',
+              borderRadius: 6
+            }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+          plugins: { 
+            legend: { position: 'bottom', labels: { font: { size: 10 } } } 
+          },
+          scales: { 
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
         }
       });
 
-      // Update Peringkat
+      // PANGGIL RANKING HANYA JIKA ROLE ADMIN
       if (role === 'admin' && data.ranking) {
-        const listRank = document.getElementById("list-peringkat");
-        if (listRank) {
-          listRank.innerHTML = data.ranking.slice(0, 5).map((u, i) => `
-            <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
-              <div class="flex items-center gap-3">
-                <span class="font-bold text-blue-900">${i+1}.</span>
-                <p class="text-xs font-bold">${u.nama}</p>
-              </div>
-              <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold">${u.skor} Lap</span>
-            </div>
-          `).join('');
-        }
+         renderPeringkat(data.ranking);
       }
     })
     .catch(err => console.error("Gagal load grafik:", err));
+}
+//======================RENDER PERINGKAT (DATA RANKING)==========================//
+function renderPeringkat(dataRanking) {
+  const listPeringkat = document.getElementById("list-peringkat");
+  if (!listPeringkat) return;
+
+  if (!dataRanking || dataRanking.length === 0) {
+    listPeringkat.innerHTML = "<p class='text-center text-xs text-gray-400 py-4'>Belum ada data prestasi.</p>";
+    return;
+  }
+
+  listPeringkat.innerHTML = dataRanking.slice(0, 5).map((u, i) => `
+    <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-6 h-6 rounded-full ${i === 0 ? 'bg-yellow-400' : 'bg-slate-100'} text-[10px] font-bold ${i === 0 ? 'text-white' : 'text-gray-400'}">${i+1}</span>
+        <p class="text-xs font-bold text-gray-700">${u.nama}</p>
+      </div>
+      <span class="text-[10px] bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">${u.skor} Laporan</span>
+    </div>
+  `).join('');
 }
 // =========================================================
 // BAGIAN MONITORING & CETAK (Tambahkan ke script.js)
