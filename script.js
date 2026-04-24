@@ -604,60 +604,48 @@ function updateSubstansi() {
   const wrapperSub = document.getElementById("wrapper-substansi");
   const selectSub = document.getElementById("renja-substansi");
   const labelDeskripsi = document.getElementById("label-deskripsi");
-  const labelSasaran = document.querySelector('label[for="renja-sasaran"]') || document.getElementById("label-sasaran");
-  const inputPeserta = document.getElementById("renja-peserta");
+  
+  // Elemen yang akan berubah dinamis
+  const labelSasaran = document.getElementById("label-sasaran");
   const labelPeserta = document.getElementById("label-peserta");
+  const inputPeserta = document.getElementById("renja-peserta");
 
-  // MAPPING SUBSTANSI SESUAI KATEGORI SIGA
+  // 1. MAPPING DATA (Tetap sama)
   const dataSubstansi = {
-    "Pertemuan": [
-      "Pertemuan Rutin Kader", 
-      "Rapat Koordinasi (Desa/RW)", 
-      "Pertemuan Kelompok Kerja (Pokja)"
-    ],
-    "KIE": [
-      "Penyuluhan Kelompok", 
-      "Konseling Individu", 
-      "Kunjungan Rumah (Door-to-door)", 
-      "Penyebaran Media Informasi"
-    ],
-    "Pelayanan & Penggerakan": [
-      "Pendampingan Rujukan KB", 
-      "Distribusi Alkon (Sub-PPKBD)", 
-      "Pembinaan Poktan (BKB/BKR/BKL/UPPKA)", 
-      "Fasilitasi Pelayanan KB/Baksos"
-    ],
-    "Pencatatan & Pelaporan": [
-      "Pemutakhiran Data Keluarga (Verval)", 
-      "Pemetaan Sasaran (PUS Unmet Need)", 
-      "Pengisian Buku Bantu / K0", 
-      "Input Laporan ke New SIGA"
-    ]
+    "Pertemuan": ["Pertemuan Rutin Kader", "Rapat Koordinasi (Desa/RW)", "Pertemuan Kelompok Kerja (Pokja)"],
+    "KIE": ["Penyuluhan Kelompok", "Konseling Individu", "Kunjungan Rumah (Door-to-door)", "Penyebaran Media Informasi"],
+    "Pelayanan & Penggerakan": ["Pendampingan Rujukan KB", "Distribusi Alkon (Sub-PPKBD)", "Pembinaan Poktan (BKB/BKR/BKL/UPPKA)", "Fasilitasi Pelayanan KB/Baksos"],
+    "Pencatatan & Pelaporan": ["Pemutakhiran Data Keluarga (Verval)", "Pemetaan Sasaran (PUS Unmet Need)", "Pengisian Buku Bantu / K0", "Input Laporan ke New SIGA"]
   };
-	
-  // Reset dulu ke kondisi awal
-  inputPeserta.disabled = false;
-  inputPeserta.classList.remove("bg-gray-200");
-  if(labelPeserta) labelPeserta.innerText = "TARGET PESERTA";
-  if(labelSasaran) labelSasaran.innerText = "SASARAN";
-	
-  // Reset dropdown anak
-  selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
-  if (jenis === "Pertemuan") {
-    // Jika Pertemuan, Sasaran berubah jadi Unsur Peserta
-    if(labelSasaran) labelSasaran.innerText = "UNSUR PESERTA (Siapa saja yang diundang)";
-  } else if (jenis === "Pencatatan & Pelaporan") {
-    // Jika Laporan, Target Peserta biasanya tidak ada, kita kunci jadi 0
-    inputPeserta.value = 0;
-    inputPeserta.disabled = true;
-    inputPeserta.classList.add("bg-gray-200");
-    if(labelPeserta) labelPeserta.innerText = "TARGET PESERTA (N/A)";
+
+  // 2. RESET KONDISI AWAL (Penting agar tidak terbawa dari pilihan sebelumnya)
+  if (inputPeserta) {
+    inputPeserta.disabled = false;
+    inputPeserta.classList.remove("bg-slate-200");
+    if (inputPeserta.value == "0") inputPeserta.value = ""; 
   }
-	
+  if (labelPeserta) labelPeserta.innerText = "TARGET PESERTA";
+  if (labelSasaran) labelSasaran.innerText = "SASARAN";
+
+  // 3. LOGIKA KHUSUS PER JENIS
+  if (jenis === "Pertemuan") {
+    if (labelSasaran) labelSasaran.innerText = "UNSUR PESERTA (Yg Diundang)";
+  } 
+  else if (jenis === "Pencatatan & Pelaporan") {
+    if (inputPeserta) {
+      inputPeserta.value = 0;
+      inputPeserta.disabled = true;
+      inputPeserta.classList.add("bg-slate-200"); // Kasih warna abu biar kelihatan terkunci
+    }
+    if (labelPeserta) labelPeserta.innerText = "TARGET PESERTA (N/A)";
+  }
+
+  // 4. UPDATE DROPDOWN SUBSTANSI (Tetap sama)
+  selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
+  
   if (jenis === "Lainnya" || jenis === "") {
     wrapperSub.classList.add("hidden");
     labelDeskripsi.innerText = "Deskripsi Kegiatan";
-    // Jika Lainnya, tambahkan opsi default agar tidak kosong saat dikirim
     let opt = document.createElement("option");
     opt.value = "Lainnya";
     opt.selected = true;
@@ -665,19 +653,12 @@ function updateSubstansi() {
   } else {
     wrapperSub.classList.remove("hidden");
     labelDeskripsi.innerText = "Keterangan Tambahan (Opsional)";
-    
-    // Isi dropdown anak berdasarkan pilihan induk
     dataSubstansi[jenis].forEach(item => {
       let opt = document.createElement("option");
       opt.value = item;
       opt.innerHTML = item;
       selectSub.appendChild(opt);
     });
-    // Tambahkan pilihan "Lainnya" di setiap kategori
-    let optLain = document.createElement("option");
-    optLain.value = "Lainnya di " + jenis;
-    optLain.innerHTML = "Lainnya...";
-    selectSub.appendChild(optLain);
   }
 }
 
