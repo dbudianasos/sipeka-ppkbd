@@ -776,7 +776,7 @@ function loadGrafik() {
         })
         .catch(err => console.error("Gagal ambil daftar kader:", err));
     }
-
+  }
   // 2. TENTUKAN SIAPA YANG DILIHAT
   // Jika Admin belum pilih kader, nikTarget jadi kosong (artinya: Lihat Total Se-Kecamatan)
   let nikTarget = (role === 'admin') ? userSelect : nikLogin;
