@@ -539,7 +539,6 @@ function tambahUser() {
       wilayah: wilayah,
       role: role,
       password: password
-	  status: "aktif"
     })
   })
   .then(res => res.text())
