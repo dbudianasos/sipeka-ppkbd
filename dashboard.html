@@ -60,26 +60,26 @@
   </div>
 
   <div class="grid grid-cols-2 gap-4">
-    <div onclick="keRenja()" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
-      <div class="text-3xl mb-2">📋</div>
-      <p class="text-sm font-bold text-gray-700">Renja</p>
-    </div>
-
-    <div onclick="keLaporan()" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
-      <div class="text-3xl mb-2">📊</div>
-      <p class="text-sm font-bold text-gray-700">Laporan</p>
-    </div>
-
-    <div onclick="window.location.href='monitoring.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
-      <div class="text-3xl mb-2">📈</div>
-      <p class="text-sm font-bold text-gray-700">Monitoring</p>
-    </div>
-
-    <div onclick="window.location.href='cetak.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
-      <div class="text-3xl mb-2">🖨️</div>
-      <p class="text-sm font-bold text-gray-700">Cetak</p>
-    </div>
-  </div>
+	  <div onclick="window.location.href='renja.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
+	    <div class="text-3xl mb-2">📋</div>
+	    <p class="text-sm font-bold text-gray-700">Renja</p>
+	  </div>
+	
+	  <div onclick="window.location.href='laporan.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
+	    <div class="text-3xl mb-2">📊</div>
+	    <p class="text-sm font-bold text-gray-700">Laporan</p>
+	  </div>
+	
+	  <div onclick="window.location.href='monitoring.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
+	    <div class="text-3xl mb-2">📈</div>
+	    <p class="text-sm font-bold text-gray-700">Monitoring</p>
+	  </div>
+	
+	  <div onclick="window.location.href='cetak.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
+	    <div class="text-3xl mb-2">🖨️</div>
+	    <p class="text-sm font-bold text-gray-700">Cetak</p>
+	  </div>
+	</div>
   
   <div class="space-y-4">
   
@@ -134,9 +134,9 @@
 
 <script src="script.js"></script>
 <script>
-  // Cek login dulu, baru muat grafik
-  cekLogin(); 
-  loadGrafik(); 
+  cekLogin();      // Pastikan sudah login
+  initDashboard(); // Isi nama, role, dan munculkan menu admin
+  loadGrafik();    // Muat grafik capaian
 </script>
 
 <footer class="text-center text-xs text-gray-400 mt-10">
