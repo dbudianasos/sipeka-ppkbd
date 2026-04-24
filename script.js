@@ -744,71 +744,81 @@ function updateSubstansi() {
 function loadGrafik() {
   const role = localStorage.getItem("role");
   const nikLogin = localStorage.getItem("nik");
+  const kecAdmin = localStorage.getItem("kecamatan"); // Ambil kecamatan admin
   
-  const elTahun = document.getElementById("filter-tahun");
-  const elBulan = document.getElementById("filter-bulan");
-  const elUser = document.getElementById("filter-user");
+  const tahun = document.getElementById("filter-tahun").value;
+  const bulan = document.getElementById("filter-bulan").value;
+  const userEl = document.getElementById("filter-user");
+  const userSelect = userEl ? userEl.value : "";
 
-  if (!elTahun || !elBulan) return;
-
-  const tahun = elTahun.value;
-  const bulan = elBulan.value;
-  const userSelect = elUser ? elUser.value : "";
-
-  // Logika NIK: Admin bisa lihat total atau per user, Kader cuma lihat diri sendiri
-  let nikTarget = (role === 'admin') ? userSelect : nikLogin;
-
-  if (role === 'admin') {
-    const adminArea = document.getElementById("admin-filter-area");
-    const rankArea = document.getElementById("section-peringkat");
-    if(adminArea) adminArea.classList.remove("hidden");
-    if(rankArea) rankArea.classList.remove("hidden");
+  // 1. ISI DROPDOWN KADER (Hanya jika Admin & Dropdown masih kosong)
+  if (role === 'admin' && userEl && userEl.options.length <= 1) {
+    console.log("Mengambil daftar kader untuk kecamatan:", kecAdmin);
+    fetch(`${API_URL}?action=get_users&kecamatan=${kecAdmin}`)
+      .then(res => res.json())
+      .then(users => {
+        users.forEach(u => {
+          if (u.role !== 'admin') { // Kader saja yang muncul
+            let opt = document.createElement("option");
+            opt.value = u.nik;
+            opt.innerHTML = u.nama;
+            userEl.appendChild(opt);
+          }
+        });
+      })
+      .catch(err => console.error("Gagal ambil daftar kader:", err));
   }
 
+  // 2. TENTUKAN SIAPA YANG DILIHAT
+  // Jika Admin belum pilih kader, nikTarget jadi kosong (artinya: Lihat Total Se-Kecamatan)
+  let nikTarget = (role === 'admin') ? userSelect : nikLogin;
+
+  // 3. TARIK DATA STATISTIK
   fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
     .then(res => res.json())
     .then(data => {
+      // --- UPDATE KARTU RINGKASAN ---
+      const totalTarget = data.target.reduce((a, b) => a + b, 0);
+      const totalReal = data.realisasi.reduce((a, b) => a + b, 0);
+      const persen = totalTarget > 0 ? Math.round((totalReal / totalTarget) * 100) : 0;
+
+      document.getElementById("total-realisasi").innerText = totalReal;
+      document.getElementById("total-persen").innerText = persen + "%";
+      document.getElementById("progress-bar").style.width = (persen > 100 ? 100 : persen) + "%";
+
+      // --- UPDATE GRAFIK BATANG ---
       const canvas = document.getElementById('myChart');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      
-      if (myChartInstance) { myChartInstance.destroy(); }
-
-      myChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
-          datasets: [
-            {
-              label: 'Target',
-              data: data.target,
-              backgroundColor: '#e2e8f0',
-              borderRadius: 6
-            },
-            {
-              label: 'Realisasi',
-              data: data.realisasi,
-              backgroundColor: '#1e3a8a',
-              borderRadius: 6
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { 
-            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } 
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (myChartInstance) myChartInstance.destroy();
+        myChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
+            datasets: [
+              { label: 'Target', data: data.target, backgroundColor: '#e2e8f0', borderRadius: 6 },
+              { label: 'Realisasi', data: data.realisasi, backgroundColor: '#1e3a8a', borderRadius: 6 }
+            ]
           },
-          scales: { 
-            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
           }
-        }
-      });
+        });
+      }
 
-      // Update Peringkat (Hanya Admin)
-      if (role === 'admin') { renderPeringkat(data.ranking); }
+      // --- UPDATE RANKING (Jika Admin) ---
+      if (role === 'admin') {
+        const rankArea = document.getElementById("section-peringkat");
+        if (rankArea) rankArea.classList.remove("hidden");
+        renderPeringkat(data.ranking);
+      }
     })
-    .catch(err => console.error("Gagal load grafik:", err));
+    .catch(err => {
+      console.error("Gagal load statistik:", err);
+    });
 }
 
 // ================= RENDER LIST PERINGKAT =================
