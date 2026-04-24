@@ -548,40 +548,80 @@ async function simpanLaporan() {
 
 // Fungsi Menampilkan Preview dan Kompresi
 function previewFoto(input) {
-    const file = input.files[0];
-    const reader = new FileReader();
-    const label = document.getElementById("label-foto");
-    const preview = document.getElementById("img-preview");
+  const file = input.files[0];
+  if (!file) return;
 
-    reader.onload = function(e) {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = function() {
-            // --- PROSES AUTO COMPRESS ---
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800; // Ukuran maksimal lebar
-            let width = img.width;
-            let height = img.height;
+  const reader = new FileReader();
+  const label = document.getElementById("label-foto");
+  const preview = document.getElementById("img-preview");
 
-            if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-            }
+  // Ambil data dari form untuk dijadikan keterangan di foto
+  const tglInput = document.getElementById("lap-tgl").value;
+  const lokasi = document.getElementById("lap-lokasi").value || "Lokasi tidak diisi";
+  const sumber = document.getElementById("sumber-kegiatan").value;
+  
+  let kegiatan = "";
+  if (sumber === "renja") {
+    const drp = document.getElementById("pilih-renja");
+    kegiatan = drp.selectedIndex > 0 ? drp.options[drp.selectedIndex].text : "Kegiatan Renja";
+  } else {
+    kegiatan = document.getElementById("lap-kegiatan").value || "Kegiatan Luar Renja";
+  }
 
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, width, height);
+  reader.onload = function(e) {
+    const img = new Image();
+    img.src = e.target.result;
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 1000; // Kita besarkan sedikit agar teks lebih tajam
+      let width = img.width;
+      let height = img.height;
 
-            // Kompres ke JPEG dengan kualitas 0.7 (70%)
-            base64Foto = canvas.toDataURL("image/jpeg", 0.7);
-            
-            preview.src = base64Foto;
-            preview.classList.remove("hidden");
-            label.innerText = "Foto terpilih: " + file.name;
-        }
+      if (width > MAX_WIDTH) {
+        height *= MAX_WIDTH / width;
+        width = MAX_WIDTH;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      
+      // 1. Gambar foto asli ke canvas
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // 2. Tambahkan Kotak Transparan Biru di bagian bawah (Overlay)
+      ctx.fillStyle = "rgba(0, 45, 95, 0.6)"; // Warna biru SIPEKA transparan
+      const boxHeight = height * 0.2; // Tinggi kotak 20% dari foto
+      ctx.fillRect(0, height - boxHeight, width, boxHeight);
+
+      // 3. Tambahkan Teks Keterangan
+      ctx.fillStyle = "white";
+      ctx.textBaseline = "middle";
+      
+      // Ukuran Font Dinamis berdasarkan lebar foto
+      const fontSizeLarge = Math.round(width * 0.04);
+      const fontSizeSmall = Math.round(width * 0.03);
+      const padding = width * 0.05;
+
+      // Baris 1: Nama Aplikasi & Kegiatan
+      ctx.font = `bold ${fontSizeLarge}px Poppins, Arial`;
+      ctx.fillText("SIPEKA PPKBD | " + kegiatan.substring(0, 40), padding, height - (boxHeight * 0.7));
+
+      // Baris 2: Lokasi & Tanggal
+      ctx.font = `${fontSizeSmall}px Poppins, Arial`;
+      const infoBawah = "📍 " + lokasi + " | 📅 " + tglInput;
+      ctx.fillText(infoBawah, padding, height - (boxHeight * 0.3));
+
+      // 4. Ubah hasil canvas ke Base64 (JPG kualitas 0.7)
+      base64Foto = canvas.toDataURL("image/jpeg", 0.7);
+      
+      preview.src = base64Foto;
+      preview.classList.remove("hidden");
+      label.innerText = "Foto Berhasil Diberi Keterangan!";
+      document.getElementById("ikon-kamera").classList.add("hidden");
     }
-    reader.readAsDataURL(file);
+  }
+  reader.readAsDataURL(file);
 }
 
 // ================= TAMBAH USER (KHUSUS ADMIN) =================
