@@ -1244,3 +1244,9 @@ function cetakPDFPerBulan() {
   printWindow.document.write(html);
   printWindow.document.close();
 }
+// Pastikan ini ada agar saat buka halaman, data langsung ditarik di background
+document.addEventListener("DOMContentLoaded", () => {
+  if (document.getElementById("pilih-renja")) {
+    loadRenjaUntukLaporan();
+  }
+});
