@@ -598,19 +598,20 @@ function hapusUser(nikTarget, namaTarget) {
     }
   });
 }
-//======================Update Substansi==========================//
+//======================Update Substansi (FIXED)==========================//
 function updateSubstansi() {
   const jenis = document.getElementById("renja-jenis").value;
   const wrapperSub = document.getElementById("wrapper-substansi");
   const selectSub = document.getElementById("renja-substansi");
   const labelDeskripsi = document.getElementById("label-deskripsi");
   
-  // Elemen yang akan berubah dinamis
+  // Elemen dinamis
   const labelSasaran = document.getElementById("label-sasaran");
+  const inputSasaran = document.getElementById("renja-sasaran"); // <--- Tadi ini yang hilang
   const labelPeserta = document.getElementById("label-peserta");
   const inputPeserta = document.getElementById("renja-peserta");
 
-  // 1. MAPPING DATA (Tetap sama)
+  // 1. MAPPING DATA
   const dataSubstansi = {
     "Pertemuan": ["Pertemuan Rutin Kader", "Rapat Koordinasi (Desa/RW)", "Pertemuan Kelompok Kerja (Pokja)"],
     "KIE": ["Penyuluhan Kelompok", "Konseling Individu", "Kunjungan Rumah (Door-to-door)", "Penyebaran Media Informasi"],
@@ -618,54 +619,67 @@ function updateSubstansi() {
     "Pencatatan & Pelaporan": ["Pemutakhiran Data Keluarga (Verval)", "Pemetaan Sasaran (PUS Unmet Need)", "Pengisian Buku Bantu / K0", "Input Laporan ke New SIGA"]
   };
 
-  // 2. RESET KONDISI AWAL (Penting agar tidak terbawa dari pilihan sebelumnya)
+  // 2. RESET KONDISI AWAL (Proteksi agar tidak error jika elemen tidak ada)
   if (inputPeserta) {
     inputPeserta.disabled = false;
     inputPeserta.classList.remove("bg-slate-200");
+    inputPeserta.placeholder = "Berapa orang?";
     if (inputPeserta.value == "0") inputPeserta.value = ""; 
   }
   if (labelPeserta) labelPeserta.innerText = "TARGET PESERTA";
-  inputPeserta.placeholder = "Berapa orang?";
-    
-  if (labelSasaran) labelSasaran.innerText = "SASARAN";
-  inputSasaran.placeholder = "Contoh: PUS, Remaja, Lansia, Balita...";
   
-  // 3. LOGIKA KHUSUS PER JENIS
+  if (labelSasaran) labelSasaran.innerText = "SASARAN";
+  if (inputSasaran) inputSasaran.placeholder = "Contoh: PUS, Remaja, Lansia, Balita...";
+  
+  // 3. LOGIKA KHUSUS PER JENIS (DINAMIS)
   if (jenis === "Pertemuan") {
     if (labelSasaran) labelSasaran.innerText = "UNSUR PESERTA (Yg Diundang)";
-	inputSasaran.placeholder = "Contoh: Tokoh Masyarakat, RT/RW, Kader...";
+    if (inputSasaran) inputSasaran.placeholder = "Contoh: Tokoh Masyarakat, RT/RW, Kader...";
   } 
   else if (jenis === "Pencatatan & Pelaporan") {
     if (inputPeserta) {
       inputPeserta.value = 0;
       inputPeserta.disabled = true;
-      inputPeserta.classList.add("bg-slate-200"); // Kasih warna abu biar kelihatan terkunci
+      inputPeserta.classList.add("bg-slate-200");
     }
     if (labelPeserta) labelPeserta.innerText = "TARGET PESERTA (N/A)";
-	inputSasaran.placeholder = "Contoh: Kader, Sub-PPKBD...";
+    if (inputSasaran) inputSasaran.placeholder = "Contoh: Kader, Sub-PPKBD...";
   }
-   else if (jenis === "KIE") {
-    inputSasaran.placeholder = "Contoh: PUS Unmet Need, Ibu Hamil...";
+  else if (jenis === "KIE") {
+    if (inputSasaran) inputSasaran.placeholder = "Contoh: PUS Unmet Need, Ibu Hamil...";
   }
-  // 4. UPDATE DROPDOWN SUBSTANSI (Tetap sama)
+
+  // 4. UPDATE DROPDOWN SUBSTANSI
   selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
   
   if (jenis === "Lainnya" || jenis === "") {
-    wrapperSub.classList.add("hidden");
-    labelDeskripsi.innerText = "Deskripsi Kegiatan";
+    // Jika pilih Lainnya atau belum pilih apa-apa, SEMBUNYIKAN dropdown substansi
+    if (wrapperSub) wrapperSub.classList.add("hidden");
+    if (labelDeskripsi) labelDeskripsi.innerText = "Deskripsi Kegiatan";
+    
     let opt = document.createElement("option");
     opt.value = "Lainnya";
     opt.selected = true;
     selectSub.appendChild(opt);
   } else {
-    wrapperSub.classList.remove("hidden");
-    labelDeskripsi.innerText = "Keterangan Tambahan (Opsional)";
-    dataSubstansi[jenis].forEach(item => {
-      let opt = document.createElement("option");
-      opt.value = item;
-      opt.innerHTML = item;
-      selectSub.appendChild(opt);
-    });
+    // Jika pilih kategori SIGA, MUNCULKAN dropdown substansi
+    if (wrapperSub) wrapperSub.classList.remove("hidden");
+    if (labelDeskripsi) labelDeskripsi.innerText = "Keterangan Tambahan (Opsional)";
+    
+    // Isi pilihan anak
+    if (dataSubstansi[jenis]) {
+      dataSubstansi[jenis].forEach(item => {
+        let opt = document.createElement("option");
+        opt.value = item;
+        opt.innerHTML = item;
+        selectSub.appendChild(opt);
+      });
+      // Tambahkan pilihan "Lainnya" di setiap kategori
+      let optLain = document.createElement("option");
+      optLain.value = "Lainnya di " + jenis;
+      optLain.innerHTML = "Lainnya...";
+      selectSub.appendChild(optLain);
+    }
   }
 }
 
