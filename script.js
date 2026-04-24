@@ -262,8 +262,25 @@ function simpanRenja() {
     btn.innerText = "SIMPAN RENCANA KERJA";
   });
 }
+// ================= LOAD DATA RENJA Untuk List tabel=================
+function loadRenja() {
+  const list = document.getElementById("list-renja");
+  const nik = localStorage.getItem("nik");
 
-// ================= LOAD DATA RENJA =================
+  fetch(`${API_URL}?action=get_renja&nik=${nik}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.length === 0) {
+        list.innerHTML = "<p class='text-center text-gray-400'>Belum ada rencana kerja.</p>";
+        return;
+      }
+      // Logika looping data Bapak di sini...
+    })
+    .catch(() => {
+      list.innerHTML = "<p class='text-center text-red-400 text-xs'>Gagal memuat daftar. Refresh halaman!</p>";
+    });
+}
+// ================= LOAD DATA RENJA Untuk Laporan=================
 function loadRenjaUntukLaporan() {
   const nik = localStorage.getItem("nik");
   const dropdown = document.getElementById("pilih-renja");
