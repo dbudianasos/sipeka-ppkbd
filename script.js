@@ -727,8 +727,7 @@ function updateSubstansi() {
 }
 
 //======================LOAD STATISTIK (GRAFIK KINERJA)==========================//
-let myChartInstance = null;
-
+//let myChartInstance = null;
 function loadGrafik() {
   const role = localStorage.getItem("role");
   const nikLogin = localStorage.getItem("nik");
