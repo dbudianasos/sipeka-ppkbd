@@ -364,51 +364,34 @@ function hapusRenja(id) {
   }
 }
 // ================= LOAD DATA RENJA (Untuk Dropdown di Form Laporan) =================
+// ================= LOAD DATA RENJA KE GLOBAL (ANTI-CACHE) =================
+let statusRenjaGlobal = "loading"; 
+
 function loadRenjaUntukLaporan() {
   const nik = localStorage.getItem("nik");
-  const dropdown = document.getElementById("pilih-renja");
-
-  if (!dropdown) return;
-
-  fetch(API_URL + "?action=get_renja&nik=" + nik)
-    .then(res => res.json())
-    .then(data => {
-      dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
-      
-      if (data.length === 0) {
-        dropdown.innerHTML = '<option value="">(Belum ada Renja / NIK tidak cocok)</option>';
-        return;
-      }
-
-      data.forEach(renja => {
-        // Kita tampilkan kegiatan di dropdown agar kader mudah memilih
-        dropdown.innerHTML += `<option value="${renja.renja_id}">${renja.kegiatan}</option>`;
-      });
-    })
-    .catch(err => {
-      console.error("Fetch Error:", err);
-      dropdown.innerHTML = '<option value="">Gagal koneksi ke server</option>';
-    });
-}
-
-// ================= LOAD DATA RENJA KE GLOBAL =================
-function loadRenjaUntukLaporan() {
-  const nik = localStorage.getItem("nik");
-  
-  // Pastikan data dikosongkan dulu sebelum mengambil baru
   dataRenjaGlobal = []; 
-  
-  fetch(API_URL + "?action=get_renja&nik=" + nik)
+  statusRenjaGlobal = "loading";
+
+  // Obat Anti-Cache: Tambahkan angka acak (waktu) di akhir URL
+  const antiCache = new Date().getTime();
+  const fetchUrl = API_URL + "?action=get_renja&nik=" + nik + "&nocache=" + antiCache;
+
+  fetch(fetchUrl)
     .then(res => res.json())
     .then(data => {
       if(data && data.length > 0) {
         dataRenjaGlobal = data; 
-        console.log("Data Renja berhasil dimuat ke memori:", dataRenjaGlobal);
+        statusRenjaGlobal = "sukses";
+        console.log("Renja berhasil ditarik:", dataRenjaGlobal);
+      } else {
+        statusRenjaGlobal = "kosong";
       }
     })
-    .catch(err => console.error("Fetch Error Renja:", err));
+    .catch(err => {
+      console.error("Fetch Error Renja:", err);
+      statusRenjaGlobal = "error";
+    });
 }
-
 // ================= FILTER RENJA BERDASARKAN TANGGAL =================
 function filterRenjaBerdasarkanTanggal() {
   const tglInput = document.getElementById("lap-tgl").value;
