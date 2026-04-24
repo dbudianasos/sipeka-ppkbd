@@ -68,20 +68,32 @@
         </div>
 
         <div id="area-manual" class="p-4 bg-amber-50/50 rounded-2xl border border-amber-100 space-y-4" style="display:none;">
+  
           <div>
-            <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Jenis Kegiatan</label>
-            <select id="lap-kegiatan" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
-                <option value="Pertemuan">Pertemuan</option>
-                <option value="Pencatatan & Pelaporan">Pencatatan & Pelaporan</option>
-                <option value="KIE">KIE</option>
-                <option value="Pelayanan & Penggerakan">Pelayanan & Penggerakan</option>
-                <option value="Lainnya">Lainnya</option>
+            <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Jenis Kegiatan Luar Renja</label>
+            <select id="lap-kegiatan" onchange="updateSubstansiLaporan()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
+                <option value="">-- Pilih Jenis Kegiatan --</option>
+                <option value="Pertemuan">1. Pertemuan</option>
+                <option value="KIE">2. KIE (Komunikasi, Informasi, Edukasi)</option>
+                <option value="Pelayanan & Penggerakan">3. Pelayanan & Penggerakan</option>
+                <option value="Pencatatan & Pelaporan">4. Pencatatan & Pelaporan</option>
+                <option value="Lainnya">5. Lainnya</option>
             </select>
           </div>
-          <div>
-            <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Substansi / Dasar Pelaksanaan</label>
-            <input id="lap-substansi" type="text" placeholder="Misal: Instruksi Kades..." class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
+        
+          <div id="wrapper-substansi-lap" class="hidden space-y-4">
+            <div>
+              <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Substansi Kegiatan</label>
+              <select id="lap-substansi" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
+                </select>
+            </div>
+        
+            <div>
+              <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Dasar Pelaksanaan / Keterangan</label>
+              <input id="lap-keterangan" type="text" placeholder="Misal: Instruksi Kades / Undangan Bidan..." class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all placeholder:font-normal shadow-sm">
+            </div>
           </div>
+        
         </div>
 
         <div class="grid grid-cols-3 gap-3">
