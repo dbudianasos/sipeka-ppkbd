@@ -744,12 +744,18 @@ function updateSubstansi() {
 function loadGrafik() {
   const role = localStorage.getItem("role");
   const nikLogin = localStorage.getItem("nik");
-  const tahun = document.getElementById("filter-tahun").value;
-  const bulan = document.getElementById("filter-bulan").value;
   
-  const userEl = document.getElementById("filter-user");
-  const userSelect = userEl ? userEl.value : "";
+  const elTahun = document.getElementById("filter-tahun");
+  const elBulan = document.getElementById("filter-bulan");
+  const elUser = document.getElementById("filter-user");
 
+  if (!elTahun || !elBulan) return;
+
+  const tahun = elTahun.value;
+  const bulan = elBulan.value;
+  const userSelect = elUser ? elUser.value : "";
+
+  // Logika NIK: Admin bisa lihat total atau per user, Kader cuma lihat diri sendiri
   let nikTarget = (role === 'admin') ? userSelect : nikLogin;
 
   if (role === 'admin') {
@@ -775,13 +781,13 @@ function loadGrafik() {
           datasets: [
             {
               label: 'Target',
-              data: data.target || [0,0,0,0,0],
+              data: data.target,
               backgroundColor: '#e2e8f0',
               borderRadius: 6
             },
             {
               label: 'Realisasi',
-              data: data.realisasi || [0,0,0,0,0],
+              data: data.realisasi,
               backgroundColor: '#1e3a8a',
               borderRadius: 6
             }
@@ -791,7 +797,7 @@ function loadGrafik() {
           responsive: true,
           maintainAspectRatio: false,
           plugins: { 
-            legend: { position: 'bottom', labels: { font: { size: 10 } } } 
+            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } 
           },
           scales: { 
             y: { beginAtZero: true, ticks: { stepSize: 1 } }
@@ -799,24 +805,23 @@ function loadGrafik() {
         }
       });
 
-      // PANGGIL RANKING HANYA JIKA ROLE ADMIN
-      if (role === 'admin' && data.ranking) {
-         renderPeringkat(data.ranking);
-      }
+      // Update Peringkat (Hanya Admin)
+      if (role === 'admin') { renderPeringkat(data.ranking); }
     })
     .catch(err => console.error("Gagal load grafik:", err));
 }
-//======================RENDER PERINGKAT (DATA RANKING)==========================//
+
+// ================= RENDER LIST PERINGKAT =================
 function renderPeringkat(dataRanking) {
   const listPeringkat = document.getElementById("list-peringkat");
   if (!listPeringkat) return;
 
   if (!dataRanking || dataRanking.length === 0) {
-    listPeringkat.innerHTML = "<p class='text-center text-xs text-gray-400 py-4'>Belum ada data prestasi.</p>";
+    listPeringkat.innerHTML = "<p class='text-center text-xs text-gray-400 py-4 italic'>Belum ada data prestasi.</p>";
     return;
   }
 
-  listPeringkat.innerHTML = dataRanking.slice(0, 5).map((u, i) => `
+  listPeringkat.innerHTML = dataRanking.map((u, i) => `
     <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
       <div class="flex items-center gap-3">
         <span class="flex items-center justify-center w-6 h-6 rounded-full ${i === 0 ? 'bg-yellow-400' : 'bg-slate-100'} text-[10px] font-bold ${i === 0 ? 'text-white' : 'text-gray-400'}">${i+1}</span>
