@@ -22,7 +22,6 @@
     <button onclick="window.location.href='dashboard.html'" class="bg-white/20 hover:bg-white/30 p-3 rounded-2xl transition active:scale-95 shadow-sm">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
     </button>
-    
     <div>
       <h2 class="text-2xl font-black tracking-tight leading-tight">Buat Laporan</h2>
       <p class="text-[10px] text-blue-200 uppercase tracking-widest font-bold mt-1">Input Realisasi Kegiatan</p>
@@ -32,27 +31,38 @@
 
 <div class="px-4">
   <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-    <div class="space-y-5">
+    <div class="space-y-6">
       
       <div>
+        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Tanggal Kegiatan</label>
+        <input id="lap-tgl" type="date" onchange="filterRenjaBerdasarkanTanggal()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+      </div>
+
+      <div>
         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Sumber Kegiatan</label>
-        <select id="sumber-kegiatan" onchange="toggleRenjaSelector()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+        <select id="sumber-kegiatan" onchange="toggleAreaForm()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
           <option value="renja">Sesuai Rencana Kerja (Renja)</option>
           <option value="luar">Kegiatan Tambahan (Luar Renja)</option>
         </select>
       </div>
 
-      <div id="area-pilih-renja">
-        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Pilih Rencana Kerja</label>
-        <select id="pilih-renja" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
-          <option value="">-- Memuat Renja Anda... --</option>
-        </select>
+      <div id="area-pilih-renja" class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
+        <div>
+          <label class="text-[10px] font-bold text-blue-800 uppercase tracking-widest ml-2 mb-1 block">Pilih Rencana Kerja</label>
+          <select id="pilih-renja" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-blue-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm">
+            <option value="">-- Pilih Tanggal Terlebih Dahulu --</option>
+            </select>
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-blue-800 uppercase tracking-widest ml-2 mb-1 block">Catatan Tambahan (Opsional)</label>
+          <input id="lap-catatan-renja" type="text" placeholder="Kendala/Kondisi lapangan..." class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-blue-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:font-normal shadow-sm">
+        </div>
       </div>
 
-      <div id="area-manual" class="space-y-5">
+      <div id="area-manual" class="p-4 bg-amber-50/50 rounded-2xl border border-amber-100 space-y-4" style="display:none;">
         <div>
-          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Jenis Kegiatan</label>
-          <select id="lap-kegiatan" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+          <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Jenis Kegiatan Luar Renja</label>
+          <select id="lap-kegiatan" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
               <option value="Pertemuan">Pertemuan</option>
               <option value="Pencatatan & Pelaporan">Pencatatan & Pelaporan</option>
               <option value="KIE">KIE</option>
@@ -60,42 +70,32 @@
               <option value="Lainnya">Lainnya</option>
           </select>
         </div>
-        
         <div>
-          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Substansi / Detail</label>
-          <input id="lap-substansi" type="text" placeholder="Jelaskan detail kegiatan..." class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:font-normal">
-        </div>
-
-        <div>
-          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Lokasi Kegiatan</label>
-          <input id="lap-lokasi" type="text" placeholder="Contoh: Desa Lubangbuaya" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:font-normal">
+          <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Substansi / Dasar Pelaksanaan</label>
+          <input id="lap-substansi" type="text" placeholder="Misal: Instruksi Kades/Puskesmas..." class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all placeholder:font-normal shadow-sm">
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Tanggal</label>
-          <input id="lap-tgl" type="date" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+        <div class="col-span-2">
+          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Lokasi / Tempat</label>
+          <input id="lap-lokasi" type="text" placeholder="Contoh: Desa Lubangbuaya" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:font-normal">
         </div>
-        <div>
-          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Realisasi (Orang)</label>
-          <input id="lap-realisasi" type="number" placeholder="Jml Peserta" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:font-normal">
+        <div class="col-span-2">
+          <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Realisasi (Jumlah Peserta/Sasaran)</label>
+          <input id="lap-realisasi" type="number" placeholder="Ketik angka saja..." class="w-full p-4 text-3xl text-center font-black text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all placeholder:font-normal placeholder:text-sm placeholder:text-gray-400">
         </div>
       </div>
 
       <div class="pt-2">
         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-2 block">Upload Foto Visum (Wajib)</label>
         <input type="file" id="lap-foto-file" accept="image/*" capture="environment" class="hidden" onchange="previewFoto(this)">
-        
         <div onclick="document.getElementById('lap-foto-file').click()" 
              class="w-full p-8 bg-blue-50/50 border-2 border-dashed border-blue-200 rounded-[2rem] text-center cursor-pointer hover:bg-blue-50 transition-all active:scale-95 group">
-            
             <div id="ikon-kamera" class="text-4xl mb-2 group-hover:scale-110 transition-transform">📸</div>
             <span id="label-foto" class="text-xs text-blue-800 font-bold tracking-wide">Ambil atau Pilih Foto</span>
-            
             <img id="img-preview" class="hidden mt-4 mx-auto rounded-xl max-h-48 object-cover shadow-md border-4 border-white">
         </div>
-        <p class="text-[9px] text-gray-400 mt-2 text-center font-medium">*Foto akan diotomatisasi kompresinya agar hemat kuota.</p>
       </div>
 
       <div class="pt-4">
@@ -103,7 +103,7 @@
           class="w-full bg-blue-900 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-900/20 hover:bg-blue-800 active:scale-95 transition-all tracking-widest text-sm uppercase">
           Kirim Laporan
         </button>
-        <p id="info-laporan" class="text-center text-xs mt-3 font-bold min-h-[1rem]"></p>
+        <p id="info-laporan" class="text-center text-xs mt-3 font-bold min-h-[1rem] text-red-500"></p>
       </div>
 
     </div>
@@ -111,28 +111,30 @@
 </div>
 
 <script>
-  // Cek apakah user sudah login
-  if (typeof cekLogin === "function") { cekLogin(); }
-  
-  // Jika fungsi loadRenjaUntukLaporan ada di script.js, jalankan
-  if (typeof loadRenjaUntukLaporan === "function") { loadRenjaUntukLaporan(); }
-
-  // Logika Sembunyikan/Tampilkan Dropdown Renja
-  function toggleRenjaSelector() {
+  // Fungsi untuk mengatur tampilan area Renja vs Luar Renja
+  function toggleAreaForm() {
     const sumber = document.getElementById("sumber-kegiatan").value;
     const areaRenja = document.getElementById("area-pilih-renja");
+    const areaManual = document.getElementById("area-manual");
     
-    // Asumsi: jika pilih Renja, form manual (kegiatan, substansi, lokasi) mungkin otomatis terisi, 
-    // tapi biarkan terbuka agar bisa diubah. 
     if(sumber === "luar") {
         areaRenja.style.display = "none";
+        areaManual.style.display = "block";
     } else {
         areaRenja.style.display = "block";
+        areaManual.style.display = "none";
     }
   }
 
-  // Set default form state
-  toggleRenjaSelector();
+  // Set default form state saat halaman dibuka
+  toggleAreaForm();
+
+  // Ini hanya kerangka (placeholder) untuk difungsikan di script.js nanti
+  function filterRenjaBerdasarkanTanggal() {
+    const tanggalDipilih = document.getElementById("lap-tgl").value;
+    // Logika menyaring renja berdasarkan bulan & sisa volume akan ditulis di script.js
+    console.log("Tanggal dipilih:", tanggalDipilih);
+  }
 </script>
 
 </body>
