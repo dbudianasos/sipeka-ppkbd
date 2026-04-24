@@ -625,11 +625,15 @@ function updateSubstansi() {
     if (inputPeserta.value == "0") inputPeserta.value = ""; 
   }
   if (labelPeserta) labelPeserta.innerText = "TARGET PESERTA";
+  inputPeserta.placeholder = "Berapa orang?";
+    
   if (labelSasaran) labelSasaran.innerText = "SASARAN";
-
+  inputSasaran.placeholder = "Contoh: PUS, Remaja, Lansia, Balita...";
+  
   // 3. LOGIKA KHUSUS PER JENIS
   if (jenis === "Pertemuan") {
     if (labelSasaran) labelSasaran.innerText = "UNSUR PESERTA (Yg Diundang)";
+	inputSasaran.placeholder = "Contoh: Tokoh Masyarakat, RT/RW, Kader...";
   } 
   else if (jenis === "Pencatatan & Pelaporan") {
     if (inputPeserta) {
@@ -638,8 +642,11 @@ function updateSubstansi() {
       inputPeserta.classList.add("bg-slate-200"); // Kasih warna abu biar kelihatan terkunci
     }
     if (labelPeserta) labelPeserta.innerText = "TARGET PESERTA (N/A)";
+	inputSasaran.placeholder = "Contoh: Kader, Sub-PPKBD...";
   }
-
+   else if (jenis === "KIE") {
+    inputSasaran.placeholder = "Contoh: PUS Unmet Need, Ibu Hamil...";
+  }
   // 4. UPDATE DROPDOWN SUBSTANSI (Tetap sama)
   selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
   
