@@ -1323,3 +1323,13 @@ document.addEventListener("DOMContentLoaded", () => {
     loadRenjaUntukLaporan();
   }
 });
+
+// FUNGSI JEMBATAN UNTUK MEMBUKA GALERI/KAMERA
+function bukaKamera() {
+  const inputFile = document.getElementById('lap-foto-file');
+  if (inputFile) {
+    inputFile.click();
+  } else {
+    console.error("Error: ID 'lap-foto-file' tidak ditemukan di HTML!");
+  }
+}
