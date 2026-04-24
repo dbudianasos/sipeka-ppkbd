@@ -819,6 +819,23 @@ function updateSubstansiLaporan() {
     }
   }
 }
+// ==========================================
+// KUNCI TANGGAL MAKSIMAL HARI INI
+// ==========================================
+function batasiTanggalLaporan() {
+  const inputTgl = document.getElementById("lap-tgl");
+  if (inputTgl) {
+    // Ambil tanggal hari ini dalam format YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Set atribut 'max' pada input kalender
+    inputTgl.setAttribute("max", today);
+  }
+}
+
+// Jalankan fungsi saat halaman dimuat
+document.addEventListener("DOMContentLoaded", batasiTanggalLaporan);
+
 
 //======================LOAD STATISTIK (GRAFIK KINERJA)==========================//
 function loadGrafik() {
