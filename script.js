@@ -604,6 +604,9 @@ function updateSubstansi() {
   const wrapperSub = document.getElementById("wrapper-substansi");
   const selectSub = document.getElementById("renja-substansi");
   const labelDeskripsi = document.getElementById("label-deskripsi");
+  const labelSasaran = document.querySelector('label[for="renja-sasaran"]') || document.getElementById("label-sasaran");
+  const inputPeserta = document.getElementById("renja-peserta");
+  const labelPeserta = document.getElementById("label-peserta");
 
   // MAPPING SUBSTANSI SESUAI KATEGORI SIGA
   const dataSubstansi = {
@@ -631,10 +634,26 @@ function updateSubstansi() {
       "Input Laporan ke New SIGA"
     ]
   };
-
+	
+  // Reset dulu ke kondisi awal
+  inputPeserta.disabled = false;
+  inputPeserta.classList.remove("bg-gray-200");
+  if(labelPeserta) labelPeserta.innerText = "TARGET PESERTA";
+  if(labelSasaran) labelSasaran.innerText = "SASARAN";
+	
   // Reset dropdown anak
   selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
-
+  if (jenis === "Pertemuan") {
+    // Jika Pertemuan, Sasaran berubah jadi Unsur Peserta
+    if(labelSasaran) labelSasaran.innerText = "UNSUR PESERTA (Siapa saja yang diundang)";
+  } else if (jenis === "Pencatatan & Pelaporan") {
+    // Jika Laporan, Target Peserta biasanya tidak ada, kita kunci jadi 0
+    inputPeserta.value = 0;
+    inputPeserta.disabled = true;
+    inputPeserta.classList.add("bg-gray-200");
+    if(labelPeserta) labelPeserta.innerText = "TARGET PESERTA (N/A)";
+  }
+	
   if (jenis === "Lainnya" || jenis === "") {
     wrapperSub.classList.add("hidden");
     labelDeskripsi.innerText = "Deskripsi Kegiatan";
