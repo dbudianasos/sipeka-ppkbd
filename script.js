@@ -324,7 +324,30 @@ function loadRenja() {
       list.innerHTML = "<p class='text-center text-red-400 text-[10px]'>Gagal memuat daftar.</p>";
     });
 }
+// ================= FUNGSI HAPUS RENJA =================
+function hapusRenja(id) {
+  // 1. Munculkan konfirmasi (Penting agar tidak asal terhapus)
+  if (confirm("Apakah yakin ingin menghapus rencana ini?")) {
+    
+    console.log("Mencoba menghapus Renja ID:", id); // Cek di console F12
 
+    // 2. Kirim perintah hapus ke GAS
+    fetch(`${API_URL}?action=hapus_renja&renja_id=${id}`)
+      .then(res => res.text())
+      .then(res => {
+        if (res.trim() === "success") {
+          alert("Rencana Kerja Berhasil Dihapus!");
+          loadRenja(); // Panggil ulang daftar agar kartu yang dihapus hilang
+        } else {
+          alert("Gagal menghapus data di database: " + res);
+        }
+      })
+      .catch(err => {
+        console.error("Error Hapus:", err);
+        alert("Terjadi kesalahan koneksi saat menghapus.");
+      });
+  }
+}
 // ================= LOAD DATA RENJA (Untuk Dropdown di Form Laporan) =================
 function loadRenjaUntukLaporan() {
   const nik = localStorage.getItem("nik");
