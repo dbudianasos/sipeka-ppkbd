@@ -264,31 +264,35 @@ function simpanRenja() {
 }
 // ================= LOAD DATA RENJA (Untuk List di Bawah Form) =================
 function loadRenja() {
-  const list = document.getElementById("list-renja"); // Pastikan ID di HTML adalah "list-renja"
+  const list = document.getElementById("listRenja"); // Sudah disesuaikan dengan HTML Bapak
   const nik = localStorage.getItem("nik");
 
   if (!list) return;
-  list.innerHTML = "<p class='text-center text-gray-500 text-[10px] animate-pulse'>Sinkronisasi data...</p>";
+
+  // Tampilkan efek loading biar keren
+  list.innerHTML = "<p class='text-center text-gray-400 text-xs animate-pulse'>Sedang menyinkronkan data...</p>";
 
   fetch(`${API_URL}?action=get_renja&nik=${nik}`)
     .then(res => res.json())
     .then(data => {
-      if (data.length === 0) {
-        list.innerHTML = "<p class='text-center text-gray-400 text-xs py-4'>Belum ada rencana kerja.</p>";
+      if (!data || data.length === 0) {
+        list.innerHTML = "<div class='bg-blue-50 p-4 rounded-2xl text-center text-blue-800 text-xs'>Belum ada rencana kerja. Yuk, buat sekarang!</div>";
         return;
       }
 
-      // DISINI LOGIKA LOOPING-NYA, PAK:
       let html = "";
       data.forEach(item => {
+        // Kita buat kartu yang cantik untuk daftar renja
         html += `
-          <div class="bg-white p-3 rounded-2xl shadow-sm border-l-4 border-blue-600 mb-3">
-            <h3 class="font-bold text-blue-900 text-xs uppercase">${item.kegiatan}</h3>
-            <div class="flex justify-between items-center mt-2">
-               <span class="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
-                 Target: ${item.target_peserta}
-               </span>
-               <span class="text-[9px] text-gray-400 italic">ID: ${item.renja_id}</span>
+          <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-900 mb-3">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <h3 class="font-bold text-blue-900 text-xs uppercase leading-tight">${item.kegiatan}</h3>
+                <p class="text-[9px] text-gray-400 mt-1 italic">ID: ${item.renja_id}</p>
+              </div>
+              <div class="bg-blue-100 px-2 py-1 rounded-lg">
+                <p class="text-[10px] font-bold text-blue-800">${item.target_peserta} <span class="font-normal">Orang</span></p>
+              </div>
             </div>
           </div>
         `;
@@ -297,7 +301,7 @@ function loadRenja() {
     })
     .catch(err => {
       console.error(err);
-      list.innerHTML = "<p class='text-center text-red-400 text-[10px]'>Gagal memuat daftar.</p>";
+      list.innerHTML = "<p class='text-center text-red-400 text-[10px] py-4'>Gagal mengambil data. Cek koneksi!</p>";
     });
 }
 
