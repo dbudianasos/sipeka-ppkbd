@@ -262,38 +262,55 @@ function simpanRenja() {
     btn.innerText = "SIMPAN RENCANA KERJA";
   });
 }
-// ================= LOAD DATA RENJA Untuk List tabel=================
+// ================= LOAD DATA RENJA (Untuk List di Bawah Form) =================
 function loadRenja() {
-  const list = document.getElementById("list-renja");
+  const list = document.getElementById("list-renja"); // Pastikan ID di HTML adalah "list-renja"
   const nik = localStorage.getItem("nik");
+
+  if (!list) return;
+  list.innerHTML = "<p class='text-center text-gray-500 text-[10px] animate-pulse'>Sinkronisasi data...</p>";
 
   fetch(`${API_URL}?action=get_renja&nik=${nik}`)
     .then(res => res.json())
     .then(data => {
       if (data.length === 0) {
-        list.innerHTML = "<p class='text-center text-gray-400'>Belum ada rencana kerja.</p>";
+        list.innerHTML = "<p class='text-center text-gray-400 text-xs py-4'>Belum ada rencana kerja.</p>";
         return;
       }
-      // Logika looping data Bapak di sini...
+
+      // DISINI LOGIKA LOOPING-NYA, PAK:
+      let html = "";
+      data.forEach(item => {
+        html += `
+          <div class="bg-white p-3 rounded-2xl shadow-sm border-l-4 border-blue-600 mb-3">
+            <h3 class="font-bold text-blue-900 text-xs uppercase">${item.kegiatan}</h3>
+            <div class="flex justify-between items-center mt-2">
+               <span class="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">
+                 Target: ${item.target_peserta}
+               </span>
+               <span class="text-[9px] text-gray-400 italic">ID: ${item.renja_id}</span>
+            </div>
+          </div>
+        `;
+      });
+      list.innerHTML = html;
     })
-    .catch(() => {
-      list.innerHTML = "<p class='text-center text-red-400 text-xs'>Gagal memuat daftar. Refresh halaman!</p>";
+    .catch(err => {
+      console.error(err);
+      list.innerHTML = "<p class='text-center text-red-400 text-[10px]'>Gagal memuat daftar.</p>";
     });
 }
-// ================= LOAD DATA RENJA Untuk Laporan=================
+
+// ================= LOAD DATA RENJA (Untuk Dropdown di Form Laporan) =================
 function loadRenjaUntukLaporan() {
   const nik = localStorage.getItem("nik");
   const dropdown = document.getElementById("pilih-renja");
 
   if (!dropdown) return;
 
-  console.log("Mencoba tarik Renja untuk NIK:", nik);
-
   fetch(API_URL + "?action=get_renja&nik=" + nik)
     .then(res => res.json())
     .then(data => {
-      console.log("Data Renja diterima:", data); // Intip datanya di sini
-      
       dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
       
       if (data.length === 0) {
@@ -302,6 +319,7 @@ function loadRenjaUntukLaporan() {
       }
 
       data.forEach(renja => {
+        // Kita tampilkan kegiatan di dropdown agar kader mudah memilih
         dropdown.innerHTML += `<option value="${renja.renja_id}">${renja.kegiatan}</option>`;
       });
     })
