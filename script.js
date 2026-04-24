@@ -740,6 +740,86 @@ function updateSubstansi() {
   }
 }
 
+// ==========================================
+// LOGIKA DROPDOWN SUBSTANSI (LAPORAN - LUAR RENJA)
+// ==========================================
+function updateSubstansiLaporan() {
+  const jenis = document.getElementById("lap-kegiatan").value;
+  const wrapperSub = document.getElementById("wrapper-substansi-lap");
+  const selectSub = document.getElementById("lap-substansi");
+  
+  const wrapperKet = document.getElementById("wrapper-keterangan-lap");
+  const labelKet = document.getElementById("label-lap-keterangan");
+  const inputRealisasi = document.getElementById("lap-realisasi");
+
+  // 1. MAPPING DATA (Sama persis dengan Renja)
+  const dataSubstansi = {
+    "Pertemuan": ["Pertemuan Rutin Kader", "Rapat Koordinasi (Desa/RW)", "Pertemuan Kelompok Kerja (Pokja)"],
+    "KIE": ["Penyuluhan Kelompok", "Konseling Individu", "Kunjungan Rumah (Door-to-door)", "Penyebaran Media Informasi"],
+    "Pelayanan & Penggerakan": ["Pendampingan Rujukan KB", "Distribusi Alkon (Sub-PPKBD)", "Pembinaan Poktan (BKB/BKR/BKL/UPPKA)", "Fasilitasi Pelayanan KB/Baksos"],
+    "Pencatatan & Pelaporan": ["Pemutakhiran Data Keluarga (Verval)", "Pemetaan Sasaran (PUS Unmet Need)", "Pengisian Buku Bantu / K0", "Input Laporan ke New SIGA"]
+  };
+
+  // 2. RESET INPUT REALISASI (Sama seperti logika input peserta di Renja)
+  if (inputRealisasi) {
+    inputRealisasi.disabled = false;
+    inputRealisasi.classList.remove("bg-slate-200");
+    if (inputRealisasi.value == "0") inputRealisasi.value = ""; 
+  }
+
+  // Logika khusus Pencatatan & Pelaporan (Peserta dinonaktifkan jadi 0)
+  if (jenis === "Pencatatan & Pelaporan") {
+    if (inputRealisasi) {
+      inputRealisasi.value = 0;
+      inputRealisasi.disabled = true;
+      inputRealisasi.classList.add("bg-slate-200");
+    }
+  }
+
+  // 3. UPDATE TAMPILAN DROPDOWN DAN KETERANGAN
+  selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
+
+  if (jenis === "Lainnya" || jenis === "") {
+    // Sembunyikan Substansi
+    if (wrapperSub) wrapperSub.classList.add("hidden");
+    
+    // Tampilkan Keterangan jika "Lainnya", Sembunyikan semua jika kosong
+    if (jenis === "Lainnya") {
+      if (wrapperKet) wrapperKet.classList.remove("hidden");
+      if (labelKet) labelKet.innerText = "Deskripsi Kegiatan Lainnya";
+    } else {
+      if (wrapperKet) wrapperKet.classList.add("hidden");
+    }
+    
+    // Set value default untuk form submission
+    let opt = document.createElement("option");
+    opt.value = "Lainnya";
+    opt.selected = true;
+    selectSub.appendChild(opt);
+
+  } else {
+    // Munculkan Substansi dan Keterangan
+    if (wrapperSub) wrapperSub.classList.remove("hidden");
+    if (wrapperKet) wrapperKet.classList.remove("hidden");
+    if (labelKet) labelKet.innerText = "Dasar Pelaksanaan / Keterangan";
+    
+    // Isi pilihan anak
+    if (dataSubstansi[jenis]) {
+      dataSubstansi[jenis].forEach(item => {
+        let opt = document.createElement("option");
+        opt.value = item;
+        opt.innerHTML = item;
+        selectSub.appendChild(opt);
+      });
+      // Tambahkan pilihan "Lainnya" di akhir
+      let optLain = document.createElement("option");
+      optLain.value = "Lainnya di " + jenis;
+      optLain.innerHTML = "Lainnya...";
+      selectSub.appendChild(optLain);
+    }
+  }
+}
+
 //======================LOAD STATISTIK (GRAFIK KINERJA)==========================//
 function loadGrafik() {
   const role = localStorage.getItem("role");
