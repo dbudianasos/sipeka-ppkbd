@@ -414,16 +414,28 @@ function filterRenjaBerdasarkanTanggal() {
     return;
   }
 
-  // Ambil angka bulan dari kalender (Format YYYY-MM-DD -> ambil MM)
-  const bulanPilih = tglInput.split("-")[1]; 
+  // Ambil Tahun dan Bulan dari kalender (Format kalender selalu YYYY-MM-DD)
+  const tahunPilih = tglInput.split("-")[0]; // Contoh: "2026"
+  const bulanPilihNum = tglInput.split("-")[1]; // Contoh: "01"
+  
+  // Kamus Penerjemah Bulan (Dari Angka ke Teks)
+  const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const bulanPilihText = namaBulan[parseInt(bulanPilihNum, 10) - 1]; // Mengubah "01" jadi "Januari"
 
-  // Saring data: Bulan harus sama (pakai padStart agar 08 = 08) DAN Sisa Volume harus > 0
+  // Mulai menyaring data Renja
   const renjaTersedia = dataRenjaGlobal.filter(r => {
-    const bulanRenja = String(r.bulan).padStart(2, '0');
-    return bulanRenja === bulanPilih && r.sisa_vol > 0;
+    // Pastikan tahunnya sama (Mencegah renja tahun lalu muncul)
+    const matchTahun = String(r.tahun) === tahunPilih;
+    
+    // Cek kecocokan bulan (Mendukung format angka "01" maupun teks "Januari")
+    const matchBulanAngka = String(r.bulan).padStart(2, '0') === bulanPilihNum;
+    const matchBulanTeks = String(r.bulan).toLowerCase() === bulanPilihText.toLowerCase();
+    
+    // Syarat Lolos: Tahun cocok, Bulan cocok, dan Sisa Volume lebih dari 0
+    return matchTahun && (matchBulanAngka || matchBulanTeks) && Number(r.sisa_vol) > 0;
   });
 
-  // Masukkan data yang sudah disaring ke Dropdown
+  // Kosongkan dan siapkan Dropdown
   dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
   
   if (renjaTersedia.length === 0) {
@@ -431,6 +443,7 @@ function filterRenjaBerdasarkanTanggal() {
     return;
   }
 
+  // Masukkan data yang sudah disaring dengan rapi
   renjaTersedia.forEach(renja => {
     dropdown.innerHTML += `<option value="${renja.renja_id}">${renja.kegiatan} (Sisa Vol: ${renja.sisa_vol})</option>`;
   });
