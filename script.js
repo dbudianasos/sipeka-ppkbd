@@ -727,48 +727,76 @@ function updateSubstansi() {
 }
 
 //======================LOAD STATISTIK (GRAFIK KINERJA)==========================//
-function loadStatistik() {
+let myChartInstance = null;
+
+function loadGrafik() {
   const role = localStorage.getItem("role");
-  const nik = localStorage.getItem("nik");
-  const ctx = document.getElementById('chartKinerja').getContext('2d');
-  
+  const nikLogin = localStorage.getItem("nik");
   const tahun = document.getElementById("filter-tahun").value;
   const bulan = document.getElementById("filter-bulan").value;
-  const userSelect = document.getElementById("filter-user").value;
+  
+  // CEK AMAN: Jika elemen filter-user tidak ada, anggap kosong
+  const userEl = document.getElementById("filter-user");
+  const userSelect = userEl ? userEl.value : "";
 
-  // Jika admin pilih user tertentu, gunakan NIK user itu. Jika tidak, kosongkan (untuk total).
-  const nikTarget = (role === 'admin') ? userSelect : nik;
+  let nikTarget = (role === 'admin') ? userSelect : nikLogin;
 
-  // Munculkan filter user jika admin
+  // Logika tampilan Admin (Tetap sama)
   if (role === 'admin') {
-    document.getElementById("admin-filter-user").classList.remove("hidden");
-    document.getElementById("section-peringkat").classList.remove("hidden");
+    const adminArea = document.getElementById("admin-filter-area");
+    const rankArea = document.getElementById("section-peringkat");
+    if(adminArea) adminArea.classList.remove("hidden");
+    if(rankArea) rankArea.classList.remove("hidden");
+    
+    // (Kode tarik daftar user tetap di sini...)
   }
 
+  // Tarik data Statistik
   fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
     .then(res => res.json())
     .then(data => {
-      // 1. Update Cards (Total & Persen) - Logika sama seperti sebelumnya
+      const canvas = document.getElementById('myChart');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
       
-      // 2. Render Chart (Gunakan instance chart yang sama atau hancurkan yang lama)
-      // (Gunakan window.myChart untuk reset agar grafik tidak tumpang tindih)
-      if (window.myChart) window.myChart.destroy();
-      window.myChart = new Chart(ctx, { /* konfigurasi bar chart */ });
+      if (myChartInstance) { myChartInstance.destroy(); }
 
-      // 3. Render Peringkat
-      const listPeringkat = document.getElementById("list-peringkat");
-      if (listPeringkat) {
-        listPeringkat.innerHTML = data.ranking.slice(0, 5).map((u, i) => `
-          <div class="flex items-center justify-between bg-white p-3 rounded-2xl shadow-sm">
-            <div class="flex items-center gap-3">
-              <span class="font-bold text-blue-900 w-5">${i+1}.</span>
-              <p class="text-xs font-medium text-gray-700">${u.nama}</p>
-            </div>
-            <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold">${u.skor} Laporan</span>
-          </div>
-        `).join('');
-      }
-    });
+      myChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
+          datasets: [
+            {
+              label: 'Target',
+              data: data.target, // Pastikan GAS kirim array [target1, target2, ...]
+              backgroundColor: '#e2e8f0',
+              borderRadius: 6
+            },
+            {
+              label: 'Realisasi',
+              data: data.realisasi, // Pastikan GAS kirim array [real1, real2, ...]
+              backgroundColor: '#1e3a8a',
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false, // Penting agar tinggi grafik stabil
+          plugins: { 
+            legend: { position: 'bottom', labels: { font: { size: 10 } } } 
+          },
+          scales: { 
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 9 } } },
+            x: { ticks: { font: { size: 9 } } }
+          }
+        }
+      });
+
+      // Update Peringkat jika admin (Tetap sama)
+      if (role === 'admin') { renderPeringkat(data.ranking); }
+    })
+    .catch(err => console.error("Gagal load grafik:", err));
 }
 // =========================================================
 // BAGIAN MONITORING & CETAK (Tambahkan ke script.js)
