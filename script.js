@@ -399,60 +399,90 @@ function loadRenjaUntukLaporan() {
       statusRenjaGlobal = "error";
     });
 }
-// ================= FILTER RENJA BERDASARKAN TANGGAL =================
+// ================= FILTER RENJA BERDASARKAN TANGGAL & VALIDASI FOTO =================
 function filterRenjaBerdasarkanTanggal() {
   const tglInput = document.getElementById("lap-tgl").value;
   const dropdown = document.getElementById("pilih-renja");
   
+  // 1. Logika Awal (Jika tanggal kosong)
   if (!dropdown) return;
   if (!tglInput) {
     dropdown.innerHTML = '<option value="">-- Menunggu Tanggal --</option>';
+    validasiFotoLaporan(); // Cek validasi untuk kunci kembali jika tanggal dihapus
     return;
   }
 
-  // 1. CEK DATA DI MEMORI
+  // 2. CEK DATA DI MEMORI & FILTER (Data Renja)
   if (dataRenjaGlobal.length === 0) {
     dropdown.innerHTML = '<option value="">-- Sedang sinkronisasi data, coba klik lagi --</option>';
-    loadRenjaUntukLaporan(); // Paksa tarik data lagi jika tadi gagal
+    loadRenjaUntukLaporan();
+    validasiFotoLaporan();
     return;
   }
 
-  // 2. PECAH TANGGAL DARI KALENDER
   const tahunPilih = String(tglInput.split("-")[0]); 
   const bulanPilihNum = String(tglInput.split("-")[1]); 
-  
   const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
   const bulanPilihText = namaBulan[parseInt(bulanPilihNum, 10) - 1]; 
 
-  // 3. SARING DATA DENGAN PEMBERSIH SPASI (TRIM)
   const renjaTersedia = dataRenjaGlobal.filter(r => {
-    // Bersihkan spasi kiri/kanan dari data Excel Bapak
     const rTahun = String(r.tahun).trim();
     const rBulan = String(r.bulan).trim();
     const rSisa = Number(r.sisa_vol);
-
-    // Cek Kecocokan
     const matchTahun = (rTahun === tahunPilih);
     const matchBulanAngka = (rBulan.padStart(2, '0') === bulanPilihNum);
     const matchBulanTeks = (rBulan.toLowerCase() === bulanPilihText.toLowerCase());
-
-    // Harus 100% cocok Tahun, Bulan, dan Sisa Volume
     return matchTahun && (matchBulanAngka || matchBulanTeks) && rSisa > 0;
   });
 
-  // 4. TAMPILKAN KE DROPDOWN
   dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
-  
   if (renjaTersedia.length === 0) {
-    // Pesan ini akan muncul jika datanya ada, tapi tidak ada yang cocok dengan bulan/tahun tersebut
     dropdown.innerHTML = `<option value="">(Tidak ada Renja tersisa untuk ${bulanPilihText} ${tahunPilih})</option>`;
-    return;
+  } else {
+    renjaTersedia.forEach(renja => {
+      dropdown.innerHTML += `<option value="${renja.renja_id}">${renja.kegiatan} (Sisa Vol: ${renja.sisa_vol})</option>`;
+    });
   }
 
-  // Jika berhasil, masukkan daftar kegiatannya
-  renjaTersedia.forEach(renja => {
-    dropdown.innerHTML += `<option value="${renja.renja_id}">${renja.kegiatan} (Sisa Vol: ${renja.sisa_vol})</option>`;
-  });
+  // --- TAMBAHAN: JALANKAN VALIDASI FOTO SETIAP KALI FILTER BERJALAN ---
+  validasiFotoLaporan();
+}
+
+// ================= FUNGSI CEK VALIDASI (PEMBUKA GEMBOK FOTO) =================
+function validasiFotoLaporan() {
+  const tgl = document.getElementById("lap-tgl").value;
+  const lokasi = document.getElementById("lap-lokasi").value.trim();
+  const sumber = document.getElementById("sumber-kegiatan").value;
+  
+  const areaFoto = document.getElementById("area-foto-klik");
+  const labelFoto = document.getElementById("label-foto");
+  const ikon = document.getElementById("ikon-kamera");
+
+  // Cek syarat kegiatan
+  let kegiatanOk = false;
+  if (sumber === "renja") {
+    if (document.getElementById("pilih-renja").value) kegiatanOk = true;
+  } else {
+    // Jika luar renja, harus pilih jenis kegiatan & substansi
+    if (document.getElementById("lap-kegiatan").value && document.getElementById("lap-substansi").value) kegiatanOk = true;
+  }
+
+  // SYARAT MUTLAK: Tanggal ADA + Lokasi ADA + Kegiatan DIPILIH
+  if (tgl && lokasi && kegiatanOk) {
+    areaFoto.classList.remove("opacity-30", "pointer-events-none");
+    areaFoto.classList.add("bg-blue-50/50", "border-blue-200");
+    labelFoto.innerText = "Klik untuk Ambil/Pilih Foto";
+    labelFoto.classList.replace("text-gray-400", "text-blue-800");
+    if (document.getElementById("img-preview").classList.contains("hidden")) {
+       ikon.innerText = "📸";
+    }
+  } else {
+    areaFoto.classList.add("opacity-30", "pointer-events-none");
+    areaFoto.classList.remove("bg-blue-50/50", "border-blue-200");
+    labelFoto.innerText = "Lengkapi Tanggal, Lokasi & Kegiatan";
+    labelFoto.classList.replace("text-blue-800", "text-gray-400");
+    ikon.innerText = "🔒";
+  }
 }
 
 // ================= SIMPAN LAPORAN FINAL =================
@@ -555,17 +585,16 @@ function previewFoto(input) {
   const label = document.getElementById("label-foto");
   const preview = document.getElementById("img-preview");
 
-  // Ambil data dari form untuk dijadikan keterangan di foto
   const tglInput = document.getElementById("lap-tgl").value;
-  const lokasi = document.getElementById("lap-lokasi").value || "Lokasi tidak diisi";
+  const lokasiRaw = (document.getElementById("lap-lokasi").value || "LOKASI TIDAK DIISI").toUpperCase();
   const sumber = document.getElementById("sumber-kegiatan").value;
   
-  let kegiatan = "";
+  let teksKegiatan = "";
   if (sumber === "renja") {
     const drp = document.getElementById("pilih-renja");
-    kegiatan = drp.selectedIndex > 0 ? drp.options[drp.selectedIndex].text : "Kegiatan Renja";
+    teksKegiatan = drp.selectedIndex > 0 ? drp.options[drp.selectedIndex].text : "Kegiatan Renja";
   } else {
-    kegiatan = document.getElementById("lap-kegiatan").value || "Kegiatan Luar Renja";
+    teksKegiatan = document.getElementById("lap-substansi").value || "Kegiatan Luar Renja";
   }
 
   reader.onload = function(e) {
@@ -573,7 +602,7 @@ function previewFoto(input) {
     img.src = e.target.result;
     img.onload = function() {
       const canvas = document.createElement('canvas');
-      const MAX_WIDTH = 1000; // Kita besarkan sedikit agar teks lebih tajam
+      const MAX_WIDTH = 1000; 
       let width = img.width;
       let height = img.height;
 
@@ -585,40 +614,44 @@ function previewFoto(input) {
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
-      
-      // 1. Gambar foto asli ke canvas
       ctx.drawImage(img, 0, 0, width, height);
 
-      // 2. Tambahkan Kotak Transparan Biru di bagian bawah (Overlay)
-      ctx.fillStyle = "rgba(0, 45, 95, 0.6)"; // Warna biru SIPEKA transparan
-      const boxHeight = height * 0.2; // Tinggi kotak 20% dari foto
+      // --- WATERMARK SLIM ---
+      const boxHeight = height * 0.12; 
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; 
       ctx.fillRect(0, height - boxHeight, width, boxHeight);
 
-      // 3. Tambahkan Teks Keterangan
       ctx.fillStyle = "white";
-      ctx.textBaseline = "middle";
+      const padding = width * 0.03;
+      const fontSizeNormal = Math.round(width * 0.03); 
+      const fontSizeSmall = Math.round(width * 0.025);
+
+      // --- SISI KIRI (APLIKASI & KEGIATAN) ---
+      ctx.textAlign = "left";
+      ctx.font = `bold ${fontSizeNormal}px Arial`;
+      ctx.fillText("SIPEKA PPKBD", padding, height - (boxHeight * 0.65));
+
+      ctx.font = `${fontSizeSmall}px Arial`;
+      // Pangkas kegiatan jika > 45 karakter
+      const cetakKegiatan = teksKegiatan.length > 45 ? teksKegiatan.substring(0, 45) + "..." : teksKegiatan;
+      ctx.fillText(cetakKegiatan, padding, height - (boxHeight * 0.35));
+
+      // --- SISI KANAN (IKON + LOKASI & TANGGAL) ---
+      ctx.textAlign = "right";
+      ctx.font = `${fontSizeSmall}px Arial`;
       
-      // Ukuran Font Dinamis berdasarkan lebar foto
-      const fontSizeLarge = Math.round(width * 0.04);
-      const fontSizeSmall = Math.round(width * 0.03);
-      const padding = width * 0.05;
+      // PEMANGKAS LOKASI OTOMATIS: Jika > 35 karakter, pangkas dan beri titik-titik
+      const cetakLokasi = lokasiRaw.length > 35 ? lokasiRaw.substring(0, 35) + "..." : lokasiRaw;
+      ctx.fillText("📍 " + cetakLokasi, width - padding, height - (boxHeight * 0.65));
+      
+      ctx.fillText("📅 " + tglInput, width - padding, height - (boxHeight * 0.35));
 
-      // Baris 1: Nama Aplikasi & Kegiatan
-      ctx.font = `bold ${fontSizeLarge}px Poppins, Arial`;
-      ctx.fillText("SIPEKA PPKBD | " + kegiatan.substring(0, 40), padding, height - (boxHeight * 0.7));
-
-      // Baris 2: Lokasi & Tanggal
-      ctx.font = `${fontSizeSmall}px Poppins, Arial`;
-      const infoBawah = "📍 " + lokasi + " | 📅 " + tglInput;
-      ctx.fillText(infoBawah, padding, height - (boxHeight * 0.3));
-
-      // 4. Ubah hasil canvas ke Base64 (JPG kualitas 0.7)
+      // Simpan hasil ke variabel global
       base64Foto = canvas.toDataURL("image/jpeg", 0.7);
-      
       preview.src = base64Foto;
       preview.classList.remove("hidden");
       label.innerText = "Foto Berhasil Diberi Keterangan!";
-      document.getElementById("ikon-kamera").classList.add("hidden");
+      if(document.getElementById("ikon-kamera")) document.getElementById("ikon-kamera").classList.add("hidden");
     }
   }
   reader.readAsDataURL(file);
