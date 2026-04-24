@@ -57,7 +57,7 @@
         <div id="area-pilih-renja" class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
           <div>
             <label class="text-[10px] font-bold text-blue-800 uppercase tracking-widest ml-2 mb-1 block">Pilih Rencana Kerja</label>
-            <select id="pilih-renja" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-blue-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm">
+            <select id="pilih-renja" onchange="validasiFotoLaporan()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-blue-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-sm">
               <option value="">-- Memuat Renja Anda... --</option>
             </select>
           </div>
@@ -71,7 +71,7 @@
   
           <div>
             <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Jenis Kegiatan Luar Renja</label>
-            <select id="lap-kegiatan" onchange="updateSubstansiLaporan()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
+            <select id="lap-kegiatan" onchange="updateSubstansiLaporan(); validasiFotoLaporan()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
                 <option value="">-- Pilih Jenis Kegiatan --</option>
                 <option value="Pertemuan">1. Pertemuan</option>
                 <option value="KIE">2. KIE (Komunikasi, Informasi, Edukasi)</option>
@@ -83,7 +83,7 @@
         
           <div id="wrapper-substansi-lap" class="hidden">
             <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Substansi Kegiatan</label>
-            <select id="lap-substansi" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
+            <select id="lap-substansi" onchange="validasiFotoLaporan()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
               </select>
           </div>
         
@@ -99,7 +99,7 @@
         <div class="grid grid-cols-3 gap-3">
           <div class="col-span-2">
             <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Lokasi / Tempat</label>
-            <input id="lap-lokasi" type="text" placeholder="Desa / Posyandu..." class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+            <input id="lap-lokasi" oninput="validasiFotoLaporan()" type="text" placeholder="Desa / Posyandu..." class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
           </div>
           <div class="col-span-1">
             <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Peserta</label>
