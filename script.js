@@ -394,13 +394,19 @@ function loadRenjaUntukLaporan() {
 // ================= LOAD DATA RENJA KE GLOBAL =================
 function loadRenjaUntukLaporan() {
   const nik = localStorage.getItem("nik");
+  
+  // Pastikan data dikosongkan dulu sebelum mengambil baru
+  dataRenjaGlobal = []; 
+  
   fetch(API_URL + "?action=get_renja&nik=" + nik)
     .then(res => res.json())
     .then(data => {
-      // Simpan data aslinya di belakang layar
-      dataRenjaGlobal = data; 
+      if(data && data.length > 0) {
+        dataRenjaGlobal = data; 
+        console.log("Data Renja berhasil dimuat ke memori:", dataRenjaGlobal);
+      }
     })
-    .catch(err => console.error("Fetch Error:", err));
+    .catch(err => console.error("Fetch Error Renja:", err));
 }
 
 // ================= FILTER RENJA BERDASARKAN TANGGAL =================
@@ -414,36 +420,46 @@ function filterRenjaBerdasarkanTanggal() {
     return;
   }
 
-  // Ambil Tahun dan Bulan dari kalender (Format kalender selalu YYYY-MM-DD)
-  const tahunPilih = tglInput.split("-")[0]; // Contoh: "2026"
-  const bulanPilihNum = tglInput.split("-")[1]; // Contoh: "01"
-  
-  // Kamus Penerjemah Bulan (Dari Angka ke Teks)
-  const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-  const bulanPilihText = namaBulan[parseInt(bulanPilihNum, 10) - 1]; // Mengubah "01" jadi "Januari"
-
-  // Mulai menyaring data Renja
-  const renjaTersedia = dataRenjaGlobal.filter(r => {
-    // Pastikan tahunnya sama (Mencegah renja tahun lalu muncul)
-    const matchTahun = String(r.tahun) === tahunPilih;
-    
-    // Cek kecocokan bulan (Mendukung format angka "01" maupun teks "Januari")
-    const matchBulanAngka = String(r.bulan).padStart(2, '0') === bulanPilihNum;
-    const matchBulanTeks = String(r.bulan).toLowerCase() === bulanPilihText.toLowerCase();
-    
-    // Syarat Lolos: Tahun cocok, Bulan cocok, dan Sisa Volume lebih dari 0
-    return matchTahun && (matchBulanAngka || matchBulanTeks) && Number(r.sisa_vol) > 0;
-  });
-
-  // Kosongkan dan siapkan Dropdown
-  dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
-  
-  if (renjaTersedia.length === 0) {
-    dropdown.innerHTML = '<option value="">(Tidak ada Renja tersisa di bulan ini)</option>';
+  // 1. CEK DATA DI MEMORI
+  if (dataRenjaGlobal.length === 0) {
+    dropdown.innerHTML = '<option value="">-- Sedang sinkronisasi data, coba klik lagi --</option>';
+    loadRenjaUntukLaporan(); // Paksa tarik data lagi jika tadi gagal
     return;
   }
 
-  // Masukkan data yang sudah disaring dengan rapi
+  // 2. PECAH TANGGAL DARI KALENDER
+  const tahunPilih = String(tglInput.split("-")[0]); 
+  const bulanPilihNum = String(tglInput.split("-")[1]); 
+  
+  const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+  const bulanPilihText = namaBulan[parseInt(bulanPilihNum, 10) - 1]; 
+
+  // 3. SARING DATA DENGAN PEMBERSIH SPASI (TRIM)
+  const renjaTersedia = dataRenjaGlobal.filter(r => {
+    // Bersihkan spasi kiri/kanan dari data Excel Bapak
+    const rTahun = String(r.tahun).trim();
+    const rBulan = String(r.bulan).trim();
+    const rSisa = Number(r.sisa_vol);
+
+    // Cek Kecocokan
+    const matchTahun = (rTahun === tahunPilih);
+    const matchBulanAngka = (rBulan.padStart(2, '0') === bulanPilihNum);
+    const matchBulanTeks = (rBulan.toLowerCase() === bulanPilihText.toLowerCase());
+
+    // Harus 100% cocok Tahun, Bulan, dan Sisa Volume
+    return matchTahun && (matchBulanAngka || matchBulanTeks) && rSisa > 0;
+  });
+
+  // 4. TAMPILKAN KE DROPDOWN
+  dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
+  
+  if (renjaTersedia.length === 0) {
+    // Pesan ini akan muncul jika datanya ada, tapi tidak ada yang cocok dengan bulan/tahun tersebut
+    dropdown.innerHTML = `<option value="">(Tidak ada Renja tersisa untuk ${bulanPilihText} ${tahunPilih})</option>`;
+    return;
+  }
+
+  // Jika berhasil, masukkan daftar kegiatannya
   renjaTersedia.forEach(renja => {
     dropdown.innerHTML += `<option value="${renja.renja_id}">${renja.kegiatan} (Sisa Vol: ${renja.sisa_vol})</option>`;
   });
