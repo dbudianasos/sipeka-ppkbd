@@ -4,7 +4,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzXt4isvjY5KrSZi37IedLK
 let base64Foto = ""; 
 // Variable global untuk menampung data agar bisa difilter saat cetak
 let dataRiwayatGlobal = [];
-
+let myChartInstance = null;
 // ================= LOGIN =================
 function login() {
   const nik = document.getElementById("nik").value;
@@ -727,30 +727,30 @@ function updateSubstansi() {
 }
 
 //======================LOAD STATISTIK (GRAFIK KINERJA)==========================//
-//let myChartInstance = null;
 function loadGrafik() {
   const role = localStorage.getItem("role");
   const nikLogin = localStorage.getItem("nik");
-  const tahun = document.getElementById("filter-tahun").value;
-  const bulan = document.getElementById("filter-bulan").value;
   
-  // CEK AMAN: Jika elemen filter-user tidak ada, anggap kosong
-  const userEl = document.getElementById("filter-user");
-  const userSelect = userEl ? userEl.value : "";
+  // CEK AMAN: Pastikan elemen ada sebelum mengambil .value
+  const elTahun = document.getElementById("filter-tahun");
+  const elBulan = document.getElementById("filter-bulan");
+  const elUser = document.getElementById("filter-user");
 
-  let nikTarget = (role === 'admin') ? userSelect : nikLogin;
+  if (!elTahun || !elBulan) return; // Jika tidak ada filter, stop di sini agar tidak error
 
-  // Logika tampilan Admin (Tetap sama)
+  const tahun = elTahun.value;
+  const bulan = elBulan.value;
+  const userSelect = elUser ? elUser.value : "";
+
+  let nikTarget = (role === 'admin' && userSelect) ? userSelect : nikLogin;
+
   if (role === 'admin') {
     const adminArea = document.getElementById("admin-filter-area");
     const rankArea = document.getElementById("section-peringkat");
     if(adminArea) adminArea.classList.remove("hidden");
     if(rankArea) rankArea.classList.remove("hidden");
-    
-    // (Kode tarik daftar user tetap di sini...)
   }
 
-  // Tarik data Statistik
   fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
     .then(res => res.json())
     .then(data => {
@@ -765,35 +765,32 @@ function loadGrafik() {
         data: {
           labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
           datasets: [
-            {
-              label: 'Target',
-              data: data.target, // Pastikan GAS kirim array [target1, target2, ...]
-              backgroundColor: '#e2e8f0',
-              borderRadius: 6
-            },
-            {
-              label: 'Realisasi',
-              data: data.realisasi, // Pastikan GAS kirim array [real1, real2, ...]
-              backgroundColor: '#1e3a8a',
-              borderRadius: 6
-            }
+            { label: 'Target', data: data.target, backgroundColor: '#e2e8f0', borderRadius: 6 },
+            { label: 'Realisasi', data: data.realisasi, backgroundColor: '#1e3a8a', borderRadius: 6 }
           ]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false, // Penting agar tinggi grafik stabil
-          plugins: { 
-            legend: { position: 'bottom', labels: { font: { size: 10 } } } 
-          },
-          scales: { 
-            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 9 } } },
-            x: { ticks: { font: { size: 9 } } }
-          }
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
         }
       });
 
-      // Update Peringkat jika admin (Tetap sama)
-      if (role === 'admin') { renderPeringkat(data.ranking); }
+      // Update Peringkat
+      if (role === 'admin' && data.ranking) {
+        const listRank = document.getElementById("list-peringkat");
+        if (listRank) {
+          listRank.innerHTML = data.ranking.slice(0, 5).map((u, i) => `
+            <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm">
+              <div class="flex items-center gap-3">
+                <span class="font-bold text-blue-900">${i+1}.</span>
+                <p class="text-xs font-bold">${u.nama}</p>
+              </div>
+              <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold">${u.skor} Lap</span>
+            </div>
+          `).join('');
+        }
+      }
     })
     .catch(err => console.error("Gagal load grafik:", err));
 }
