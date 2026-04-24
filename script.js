@@ -54,7 +54,21 @@ function cekLogin() {
     window.location.href = "index.html";
   }
 }
+// ================= ISI DATA DASHBOARD =================
+function initDashboard() {
+  const nama = localStorage.getItem("nama");
+  const role = localStorage.getItem("role");
 
+  // Isi Nama & Role di Header
+  if (document.getElementById("namaUser")) document.getElementById("namaUser").innerText = nama;
+  if (document.getElementById("roleUser")) document.getElementById("roleUser").innerText = role === "admin" ? "Administrator Wil V" : "Kader PPKBD";
+
+  // Munculkan Menu Admin jika role-nya admin
+  const menuAdmin = document.getElementById("menu-admin");
+  if (role === "admin" && menuAdmin) {
+    menuAdmin.style.display = "block";
+  }
+}
 // ================= LOGOUT =================
 function logout() {
   localStorage.clear();
