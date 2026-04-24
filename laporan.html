@@ -110,6 +110,8 @@
         <div class="pt-2">
           <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-2 block">Upload Foto Visum (Wajib)</label>
           <input type="file" id="lap-foto-file" accept="image/*" capture="environment" class="hidden" onchange="previewFoto(this)">
+          <input type="file" id="lap-foto-file" accept="image/*" class="hidden" onchange="previewFoto(this)">
+          
           <div onclick="document.getElementById('lap-foto-file').click()" 
                class="w-full p-8 bg-blue-50/50 border-2 border-dashed border-blue-200 rounded-[2rem] text-center cursor-pointer hover:bg-blue-50 transition-all active:scale-95 group">
               <div id="ikon-kamera" class="text-4xl mb-2 group-hover:scale-110 transition-transform">📸</div>
