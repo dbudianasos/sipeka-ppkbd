@@ -849,6 +849,32 @@ function renderPeringkat(dataRanking) {
     </div>
   `).join('');
 }
+
+// ==========================================
+// KATA-KATA MOTIVASI ACAK SAAT LOGIN
+// ==========================================
+const daftarMotivasi = [
+  "\"Semangat melayani, wujudkan keluarga sejahtera!\"",
+  "\"Satu laporan Anda, langkah besar bagi kemajuan masyarakat.\"",
+  "\"Kerja ikhlas, kerja tuntas. Selamat bertugas hari ini!\"",
+  "\"Data yang akurat adalah awal dari keputusan yang tepat.\"",
+  "\"Lelahmu hari ini adalah amal jariyah esok hari. Tetap semangat!\"",
+  "\"Mari bangun lingkungan yang sehat dan berencana.\"",
+  "\"Disiplin lapor hari ini, bukti dedikasi tanpa henti.\""
+];
+
+function tampilkanMotivasi() {
+  const elMotivasi = document.getElementById("teks-motivasi");
+  if (elMotivasi) {
+    // Pilih angka acak dari 0 sampai jumlah kalimat
+    const randomIndex = Math.floor(Math.random() * daftarMotivasi.length);
+    elMotivasi.innerText = daftarMotivasi[randomIndex];
+  }
+}
+
+// Jalankan fungsi ini otomatis saat halaman login dibuka
+document.addEventListener("DOMContentLoaded", tampilkanMotivasi);
+
 // =========================================================
 // BAGIAN MONITORING & CETAK (Tambahkan ke script.js)
 // =========================================================
