@@ -264,34 +264,54 @@ function simpanRenja() {
 }
 // ================= LOAD DATA RENJA (Untuk List di Bawah Form) =================
 function loadRenja() {
-  const list = document.getElementById("listRenja"); // Sudah disesuaikan dengan HTML Bapak
+  const list = document.getElementById("listRenja");
   const nik = localStorage.getItem("nik");
-
   if (!list) return;
 
-  // Tampilkan efek loading biar keren
-  list.innerHTML = "<p class='text-center text-gray-400 text-xs animate-pulse'>Sedang menyinkronkan data...</p>";
+  list.innerHTML = "<p class='text-center text-gray-400 text-[10px] animate-pulse'>Sinkronisasi data...</p>";
 
   fetch(`${API_URL}?action=get_renja&nik=${nik}`)
     .then(res => res.json())
     .then(data => {
       if (!data || data.length === 0) {
-        list.innerHTML = "<div class='bg-blue-50 p-4 rounded-2xl text-center text-blue-800 text-xs'>Belum ada rencana kerja. Yuk, buat sekarang!</div>";
+        list.innerHTML = "<p class='text-center text-gray-400 text-xs py-10'>Belum ada rencana kerja.</p>";
         return;
       }
 
       let html = "";
       data.forEach(item => {
-        // Kita buat kartu yang cantik untuk daftar renja
+        // Logika Tombol Hapus: Jika can_delete false, sembunyikan tombol
+        const aksiHapus = item.can_delete 
+          ? `<button onclick="hapusRenja('${item.renja_id}')" class="text-red-300 hover:text-red-600 transition p-2">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+               </svg>
+             </button>`
+          : `<span class="text-[8px] bg-green-100 text-green-600 px-2 py-1 rounded-lg font-bold">TERKUNCI</span>`;
+
         html += `
-          <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-900 mb-3">
+          <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${item.can_delete ? 'border-blue-900' : 'border-green-500'} mb-3 relative">
             <div class="flex justify-between items-start">
               <div class="flex-1">
-                <h3 class="font-bold text-blue-900 text-xs uppercase leading-tight">${item.kegiatan}</h3>
-                <p class="text-[9px] text-gray-400 mt-1 italic">ID: ${item.renja_id}</p>
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="bg-slate-100 text-slate-600 text-[8px] px-2 py-0.5 rounded-md font-bold uppercase">${item.bulan} ${item.tahun}</span>
+                </div>
+                <h3 class="font-bold text-blue-900 text-xs uppercase leading-tight pr-8">${item.kegiatan}</h3>
+                
+                <div class="flex gap-3 mt-3">
+                  <div class="flex flex-col">
+                    <span class="text-[8px] text-gray-400 uppercase">Sisa Volume</span>
+                    <span class="text-xs font-bold ${item.sisa_vol === 0 ? 'text-red-500' : 'text-gray-700'}">${item.sisa_vol} / ${item.target_vol}</span>
+                  </div>
+                  <div class="flex flex-col border-l pl-3">
+                    <span class="text-[8px] text-gray-400 uppercase">Target</span>
+                    <span class="text-xs font-bold text-gray-700">${item.target_peserta} Orang</span>
+                  </div>
+                </div>
               </div>
-              <div class="bg-blue-100 px-2 py-1 rounded-lg">
-                <p class="text-[10px] font-bold text-blue-800">${item.target_peserta} <span class="font-normal">Orang</span></p>
+              
+              <div class="flex items-center">
+                ${aksiHapus}
               </div>
             </div>
           </div>
@@ -301,7 +321,7 @@ function loadRenja() {
     })
     .catch(err => {
       console.error(err);
-      list.innerHTML = "<p class='text-center text-red-400 text-[10px] py-4'>Gagal mengambil data. Cek koneksi!</p>";
+      list.innerHTML = "<p class='text-center text-red-400 text-[10px]'>Gagal memuat daftar.</p>";
     });
 }
 
