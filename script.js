@@ -751,23 +751,31 @@ function loadGrafik() {
   const userEl = document.getElementById("filter-user");
   const userSelect = userEl ? userEl.value : "";
 
-  // 1. ISI DROPDOWN KADER (Hanya jika Admin & Dropdown masih kosong)
-  if (role === 'admin' && userEl && userEl.options.length <= 1) {
-    console.log("Mengambil daftar kader untuk kecamatan:", kecAdmin);
-    fetch(`${API_URL}?action=get_users&kecamatan=${kecAdmin}`)
-      .then(res => res.json())
-      .then(users => {
-        users.forEach(u => {
-          if (u.role !== 'admin') { // Kader saja yang muncul
-            let opt = document.createElement("option");
-            opt.value = u.nik;
-            opt.innerHTML = u.nama;
-            userEl.appendChild(opt);
-          }
-        });
-      })
-      .catch(err => console.error("Gagal ambil daftar kader:", err));
-  }
+  // 1. LOGIKA ADMIN: Munculkan Filter & Isi Dropdown
+  if (role === 'admin') {
+    // TAMPILKAN AREA FILTER (Ini yang tadi kelupaan, Pak!)
+    const adminArea = document.getElementById("admin-filter-area");
+    if (adminArea) {
+      adminArea.classList.remove("hidden");
+    }
+
+    // ISI DROPDOWN KADER (Hanya jika masih kosong)
+    if (userEl && userEl.options.length <= 1) {
+      console.log("Mengambil daftar kader untuk kecamatan:", kecAdmin);
+      fetch(`${API_URL}?action=get_users&kecamatan=${kecAdmin}`)
+        .then(res => res.json())
+        .then(users => {
+          users.forEach(u => {
+            if (u.role !== 'admin') {
+              let opt = document.createElement("option");
+              opt.value = u.nik;
+              opt.innerHTML = u.nama;
+              userEl.appendChild(opt);
+            }
+          });
+        })
+        .catch(err => console.error("Gagal ambil daftar kader:", err));
+    }
 
   // 2. TENTUKAN SIAPA YANG DILIHAT
   // Jika Admin belum pilih kader, nikTarget jadi kosong (artinya: Lihat Total Se-Kecamatan)
