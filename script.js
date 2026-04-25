@@ -187,7 +187,7 @@ function simpanRenja() {
   
   // Ambil data dasar
   const tahun = document.getElementById("renja-tahun").value;
-  const bulan = document.getElementById("renja-bulan").value;
+  const bulan = "TAHUNAN";
   const lokasi = document.getElementById("renja-lokasi").value;
   const sasaran = document.getElementById("renja-sasaran").value;
   const volume = document.getElementById("renja-volume").value;
@@ -311,7 +311,7 @@ function loadRenja() {
             <div class="flex justify-between items-start">
               <div class="flex-1">
                 <div class="flex items-center gap-2 mb-1">
-                  <span class="bg-slate-100 text-slate-600 text-[8px] px-2 py-0.5 rounded-md font-bold uppercase">${item.bulan} ${item.tahun}</span>
+                  <span class="bg-blue-100 text-blue-600 text-[8px] px-2 py-0.5 rounded-md font-bold uppercase">PROGRAM TAHUN ${item.tahun}</span>
                 </div>
                 <h3 class="font-bold text-blue-900 text-xs uppercase leading-tight pr-8">${item.kegiatan}</h3>
                 
@@ -423,18 +423,14 @@ function filterRenjaBerdasarkanTanggal() {
   }
 
   const tahunPilih = String(tglInput.split("-")[0]); 
-  const bulanPilihNum = String(tglInput.split("-")[1]); 
-  const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-  const bulanPilihText = namaBulan[parseInt(bulanPilihNum, 10) - 1]; 
-
+  
+  // LOGIKA BARU: Selama Tahunnya SAMA dan Sisa Volume MASIH ADA, maka MUNCULKAN!
   const renjaTersedia = dataRenjaGlobal.filter(r => {
     const rTahun = String(r.tahun).trim();
-    const rBulan = String(r.bulan).trim();
     const rSisa = Number(r.sisa_vol);
-    const matchTahun = (rTahun === tahunPilih);
-    const matchBulanAngka = (rBulan.padStart(2, '0') === bulanPilihNum);
-    const matchBulanTeks = (rBulan.toLowerCase() === bulanPilihText.toLowerCase());
-    return matchTahun && (matchBulanAngka || matchBulanTeks) && rSisa > 0;
+    
+    // Cukup cek Tahun dan Sisa Volume
+    return (rTahun === tahunPilih) && rSisa > 0;
   });
 
   dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
