@@ -1,46 +1,20 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <title>Dashboard SIPEKA</title>
-  <link rel="icon" type="image/png" href="logo-sipeka.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<body class="bg-slate-50 min-h-screen pb-10">
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart JS -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    body { font-family: 'Poppins', sans-serif; }
-    .nav-gradient { background: linear-gradient(135deg, #004a99 0%, #002d5f 100%); }
-    .menu-card { transition: 0.3s; cursor: pointer; }
-    .menu-card:hover { transform: translateY(-5px); }
-  </style>
-</head>
-
-<body class="bg-slate-100 min-h-screen pb-10">
-
-<!-- HEADER -->
-<header class="sticky top-0 z-50 nav-gradient py-3 px-6 rounded-b-[2rem] shadow-xl transition-all duration-300">
+<header class="sticky top-0 z-50 nav-gradient py-2.5 px-5 rounded-b-[1.5rem] shadow-lg shadow-blue-900/20 transition-all duration-300">
   <div class="flex justify-between items-center max-w-5xl mx-auto">
     
     <div class="flex items-center gap-3">
       <img src="logo-sipeka-dashbord.png" alt="SIPEKA" 
-           class="h-10 md:h-12 w-auto object-contain drop-shadow-lg scale-110 transition-transform hover:scale-125">
-      <div class="hidden sm:block">
-        <h1 class="text-white font-bold text-sm leading-none">siPeKa</h1>
-        <p class="text-[8px] text-blue-200">PPKBD KAB. BEKASI</p>
-      </div>
+           class="h-9 md:h-11 w-auto object-contain drop-shadow-md scale-105 transition-transform hover:scale-110">
     </div>
 
     <div class="flex gap-2">
       <button onclick="window.location.href='profil.html'" 
-              class="bg-white/10 hover:bg-white/30 p-2.5 rounded-xl text-lg backdrop-blur-md border border-white/10 transition active:scale-90 shadow-sm">
+              class="bg-white/10 hover:bg-white/20 p-2 rounded-xl text-base backdrop-blur-md border border-white/10 transition active:scale-95 shadow-sm">
         👤
       </button>
       <button onclick="logout()" 
-              class="bg-red-500/80 hover:bg-red-600 p-2.5 rounded-xl text-lg text-white backdrop-blur-md transition active:scale-90 shadow-sm">
+              class="bg-red-500/80 hover:bg-red-600 p-2 rounded-xl text-base text-white backdrop-blur-md transition active:scale-95 shadow-sm">
         ❌
       </button>
     </div>
@@ -48,135 +22,119 @@
   </div>
 </header>
 
-<div class="px-4">
+<main class="px-5 pt-6 max-w-5xl mx-auto">
 
-  <div class="bg-white p-5 rounded-3xl mb-6 shadow-sm border border-slate-100 text-center">
-    <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-1">Selamat Datang,</p>
-    <h1 id="namaUser" class="text-2xl font-black text-blue-900 tracking-tight"></h1>
-    <p id="roleUser" class="text-[10px] text-blue-700 font-bold bg-blue-50 border border-blue-100 inline-block px-3 py-1 rounded-full mt-2"></p>
+  <div class="bg-white p-4 rounded-[1.5rem] mb-6 shadow-sm border border-slate-100 flex items-center justify-between">
+    <div>
+      <p class="text-[9px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Selamat Datang,</p>
+      <h1 id="namaUser" class="text-lg font-black text-blue-900 tracking-tight leading-tight">Memuat...</h1>
+    </div>
+    <div class="text-right">
+      <p id="roleUser" class="text-[9px] text-blue-700 font-bold bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-full"></p>
+    </div>
   </div>
 
   <div id="menu-admin" style="display:none;" class="mb-6">
-    <div class="bg-slate-200 p-3 rounded-2xl flex gap-3 shadow-inner">
-      <div onclick="window.location.href='approve.html'" 
-           class="menu-card flex-1 bg-yellow-100 p-3 rounded-xl text-center text-yellow-800 font-bold text-xs shadow-sm">
-        ✔ Approve Laporan
+    <div class="bg-blue-900/5 p-2 rounded-[1.5rem] flex gap-2 border border-blue-900/10">
+      <button onclick="window.location.href='approve.html'" 
+            class="flex-1 bg-white p-3 rounded-xl text-center text-blue-800 font-bold text-xs shadow-sm active:scale-95 transition-all">
+        <span class="block text-lg mb-1">✅</span> Approve
+      </button>
+      <button onclick="window.location.href='user.html'" 
+            class="flex-1 bg-white p-3 rounded-xl text-center text-blue-800 font-bold text-xs shadow-sm active:scale-95 transition-all">
+        <span class="block text-lg mb-1">👥</span> User
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3">
+    <div onclick="window.location.href='renja.html'" class="menu-card bg-white p-4 rounded-[1.5rem] text-center shadow-sm border border-slate-100">
+      <div class="text-2xl mb-1.5 drop-shadow-sm">📋</div>
+      <p class="text-xs font-bold text-gray-700">Renja</p>
+    </div>
+    <div onclick="window.location.href='laporan.html'" class="menu-card bg-white p-4 rounded-[1.5rem] text-center shadow-sm border border-slate-100">
+      <div class="text-2xl mb-1.5 drop-shadow-sm">📊</div>
+      <p class="text-xs font-bold text-gray-700">Laporan</p>
+    </div>
+    <div onclick="window.location.href='monitoring.html'" class="menu-card bg-white p-4 rounded-[1.5rem] text-center shadow-sm border border-slate-100">
+      <div class="text-2xl mb-1.5 drop-shadow-sm">📈</div>
+      <p class="text-xs font-bold text-gray-700">Monitoring</p>
+    </div>
+    <div onclick="window.location.href='cetak.html'" class="menu-card bg-white p-4 rounded-[1.5rem] text-center shadow-sm border border-slate-100">
+      <div class="text-2xl mb-1.5 drop-shadow-sm">🖨️</div>
+      <p class="text-xs font-bold text-gray-700">Cetak</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3 mt-6 mb-6">
+    <div class="bg-gradient-to-br from-blue-800 to-blue-900 p-4 rounded-[1.5rem] text-white shadow-md shadow-blue-900/20 transition-all active:scale-95">
+      <div class="flex items-center gap-1.5 mb-1">
+        <span class="text-[10px]">✅</span>
+        <p class="text-[8px] opacity-80 uppercase font-bold tracking-widest">Realisasi</p>
       </div>
-      <div onclick="window.location.href='user.html'" 
-           class="menu-card flex-1 bg-green-100 p-3 rounded-xl text-center text-green-800 font-bold text-xs shadow-sm">
-        👥 Manajemen User
+      <h2 id="total-realisasi" class="text-2xl font-black">0</h2>
+    </div>
+    
+    <div class="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm transition-all active:scale-95">
+      <div class="flex items-center gap-1.5 mb-1">
+        <span class="text-[10px]">🎯</span>
+        <p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Target</p>
+      </div>
+      <h2 id="total-persen" class="text-2xl font-black text-blue-900">0%</h2>
+      <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+        <div id="progress-bar" class="bg-blue-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
       </div>
     </div>
   </div>
 
-  <div class="grid grid-cols-2 gap-4">
-	  <div onclick="window.location.href='renja.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
-	    <div class="text-3xl mb-2">📋</div>
-	    <p class="text-sm font-bold text-gray-700">Renja</p>
-	  </div>
-	
-	  <div onclick="window.location.href='laporan.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
-	    <div class="text-3xl mb-2">📊</div>
-	    <p class="text-sm font-bold text-gray-700">Laporan</p>
-	  </div>
-	
-	  <div onclick="window.location.href='monitoring.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
-	    <div class="text-3xl mb-2">📈</div>
-	    <p class="text-sm font-bold text-gray-700">Monitoring</p>
-	  </div>
-	
-	  <div onclick="window.location.href='cetak.html'" class="menu-card bg-white p-5 rounded-2xl text-center shadow">
-	    <div class="text-3xl mb-2">🖨️</div>
-	    <p class="text-sm font-bold text-gray-700">Cetak</p>
-	  </div>
-	</div>
-
- 
-  <div class="grid grid-cols-2 gap-3 mt-8 mb-6">
-  
-	  <div class="bg-blue-900 p-5 rounded-3xl text-white shadow-lg transition-all active:scale-95">
-	    <div class="flex items-center gap-2 mb-2">
-	      <span class="text-xs">✅</span>
-	      <p class="text-[9px] opacity-70 uppercase font-bold tracking-wider">Total Realisasi</p>
-	    </div>
-	    <h2 id="total-realisasi" class="text-3xl font-extrabold">0</h2>
-	    <p class="text-[8px] opacity-50 mt-1 italic">*Jumlah laporan terkirim</p>
-	  </div>
-	
-	  <div class="bg-white p-5 rounded-3xl border border-blue-100 shadow-sm transition-all active:scale-95">
-	    <div class="flex items-center gap-2 mb-2">
-	      <span class="text-xs">🎯</span>
-	      <p class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Capaian Target</p>
-	    </div>
-	    <h2 id="total-persen" class="text-3xl font-extrabold text-blue-900">0%</h2>
-	    
-	    <div class="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
-	      <div id="progress-bar" class="bg-blue-600 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
-	    </div>
-	  </div>
-	
-	</div>
-  
-  <div class="space-y-4">
-  
-  <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+  <div class="bg-white p-4 md:p-5 rounded-[1.5rem] shadow-sm border border-slate-100 mb-6">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-bold text-blue-900 uppercase">📊 Capaian Kinerja</h3>
-      <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-lg font-bold">LIVE</span>
+      <h3 class="text-xs font-bold text-blue-900 uppercase">📊 Capaian Kinerja</h3>
+      <span class="text-[8px] bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-bold border border-green-200">LIVE</span>
     </div>
 
-    <div class="grid grid-cols-2 gap-2 mb-4">
-      <select id="filter-tahun" onchange="loadGrafik()" class="text-xs p-3 bg-slate-50 border-none rounded-2xl outline-none font-bold text-blue-900">
+    <div class="flex gap-2 mb-4">
+      <select id="filter-tahun" onchange="loadGrafik()" class="flex-1 text-[10px] p-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
         <option value="2026">2026</option>
         <option value="2027">2027</option>
       </select>
-      <select id="filter-bulan" onchange="loadGrafik()" class="text-xs p-3 bg-slate-50 border-none rounded-2xl outline-none font-bold text-blue-900">
+      <select id="filter-bulan" onchange="loadGrafik()" class="flex-[2] text-[10px] p-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
         <option value="">Semua Bulan</option>
         <option value="Januari">Januari</option>
         <option value="Februari">Februari</option>
-        <option value="Maret">Maret</option>
-        <option value="April">April</option>
-        <option value="Mei">Mei</option>
-        <option value="Juni">Juni</option>
-        <option value="Juli">Juli</option>
-        <option value="Agustus">Agustus</option>
-        <option value="September">September</option>
-        <option value="Oktober">Oktober</option>
-        <option value="November">November</option>
         <option value="Desember">Desember</option>
       </select>
     </div>
     
     <div id="admin-filter-area" class="hidden mb-4">
-      <label class="text-[9px] font-bold text-gray-400 ml-1">PILIH KADER</label>
-      <select id="filter-user" onchange="loadGrafik()" class="w-full text-xs p-3 bg-blue-50 border-none rounded-2xl outline-none font-bold text-blue-900 mt-1">
+      <select id="filter-user" onchange="loadGrafik()" class="w-full text-[10px] p-2.5 bg-blue-50 border border-blue-100 rounded-xl outline-none font-bold text-blue-900">
         <option value="">-- Semua Kader (Total) --</option>
       </select>
     </div>
 
-    <div class="relative w-full" style="min-height: 250px;">
+    <div class="relative w-full" style="min-height: 200px;">
       <canvas id="myChart"></canvas>
     </div>
   </div>
 
-  <div id="section-peringkat" class="hidden pb-10">
-    <h3 class="text-sm font-bold text-blue-900 mb-4 ml-2 uppercase italic">🏆 Top 5 Performa Kader</h3>
-    <div id="list-peringkat" class="space-y-3">
-      <p class="text-center text-xs text-gray-400 py-4 italic">Memuat peringkat...</p>
-    </div>
+  <div id="section-peringkat" class="hidden">
+    <h3 class="text-xs font-bold text-blue-900 mb-3 ml-1 uppercase flex items-center gap-2">
+      <span>🏆</span> Top 5 Performa
+    </h3>
+    <div id="list-peringkat" class="space-y-2">
+      </div>
   </div>
 
-</div>
+</main>
 
 <script src="script.js"></script>
 <script>
-  cekLogin();      // Pastikan sudah login
-  initDashboard(); // Isi nama, role, dan munculkan menu admin
-  loadGrafik();    // Muat grafik capaian
+  cekLogin();      
+  initDashboard(); 
+  loadGrafik();    
 </script>
 
-<footer class="text-center text-xs text-gray-400 mt-10">
-  © Versi 0.1 - 2026 Dian UPTD PP Wil V
+<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
+  © 2026 SIPEKA UPTD PP Wil V
 </footer>
 </body>
-</html>
