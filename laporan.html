@@ -147,13 +147,13 @@
 </main>
   
 <script src="script.js"></script>
-
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    batasiTanggalLaporan(); // Memastikan tanggal maksimal hari ini
-    // Memastikan jika ada data renja lama langsung ter-load
-    if (typeof loadRenjaUntukLaporan === "function") {
-       loadRenjaUntukLaporan();
+    batasiTanggalLaporan(); // Mengunci tanggal masa depan saat halaman dibuka
+    
+    // Jika sedang di halaman laporan, tarik data renja
+    if (document.getElementById("pilih-renja")) {
+      loadRenjaUntukLaporan();
     }
   });
 </script>
