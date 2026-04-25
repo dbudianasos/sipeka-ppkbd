@@ -1372,7 +1372,8 @@ function generateIndikator() {
 
   switch (jenis) {
     case "Pertemuan":
-      kalimatBaku = `Terselenggaranya koordinasi/pertemuan ${detailKegiatan} serta meningkatnya kesepahaman bersama ${peserta} peserta dari unsur ${sasaran} di wilayah kerja.`;
+      // Diganti pakai kata "agenda"
+      kalimatBaku = `Terselenggaranya agenda ${detailKegiatan} serta meningkatnya kesepahaman bersama ${peserta} peserta dari unsur ${sasaran} di wilayah kerja.`;
       break;
       
     case "KIE":
@@ -1380,15 +1381,16 @@ function generateIndikator() {
       break;
       
     case "Pelayanan & Penggerakan":
-      kalimatBaku = `Terlaksananya fasilitasi pelayanan dan penggerakan bagi ${peserta} akseptor/sasaran ${sasaran} melalui aktivitas ${detailKegiatan} secara optimal.`;
+      kalimatBaku = `Terlaksananya fasilitasi bagi ${peserta} akseptor/sasaran ${sasaran} melalui aktivitas ${detailKegiatan} secara optimal.`;
       break;
       
     case "Pencatatan & Pelaporan":
-      kalimatBaku = `Tersusunnya dokumen hasil pendataan dan pelaporan ${detailKegiatan} bagi sasaran ${sasaran} yang valid, akurat, dan dapat dipertanggungjawabkan tepat waktu.`;
+      // Diganti pakai kata "dokumen administrasi"
+      kalimatBaku = `Tersusunnya dokumen administrasi untuk ${detailKegiatan} bagi sasaran ${sasaran} yang valid, akurat, dan dapat dipertanggungjawabkan tepat waktu.`;
       break;
       
     default:
-      kalimatBaku = `Terlaksananya kegiatan ${detailKegiatan} dengan menyasar ${peserta} target ${sasaran} sesuai dengan rencana kerja operasional di lapangan.`;
+      kalimatBaku = `Terlaksananya pelaksanaan ${detailKegiatan} dengan menyasar ${peserta} target ${sasaran} sesuai dengan rencana kerja operasional.`;
   }
 
   inputIndikator.value = kalimatBaku;
