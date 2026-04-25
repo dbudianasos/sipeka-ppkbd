@@ -401,45 +401,100 @@ function loadRenjaUntukLaporan() {
       statusRenjaGlobal = "error";
     });
 }
-// ================= FILTER RENJA BERDASARKAN TANGGAL & VALIDASI FOTO =================
+// ================================================================
+// A. LOGIKA FILTER, BUKA KUNCI, DAN SATUAN OTOMATIS (BARU)
+// ================================================================
+
+// 1. FUNGSI: TOGGLE AREA FORM (Pindahan dari HTML)
+function toggleAreaForm() {
+  const sumber = document.getElementById("sumber-kegiatan").value;
+  const areaRenja = document.getElementById("area-pilih-renja");
+  const areaManual = document.getElementById("area-manual");
+  const tglInput = document.getElementById("lap-tgl").value;
+
+  if (sumber === "luar") {
+    areaRenja.style.display = "none";
+    areaManual.style.display = "block";
+  } else {
+    areaRenja.style.display = "block";
+    areaManual.style.display = "none";
+    // Kalau ganti ke mode Renja, langsung refresh listnya
+    if (tglInput) filterRenjaBerdasarkanTanggal(); 
+  }
+  updateLabelSatuanLaporan(); // Update satuan (Orang/Dokumen)
+  validasiFotoLaporan();      // Update status gembok kamera
+}
+
+// 2. FUNGSI: BUKA KUNCI FORM SAAT TANGGAL DIISI (Pindahan dari HTML)
+function bukaKunciForm() {
+  const tglInput = document.getElementById("lap-tgl").value;
+  const areaLanjutan = document.getElementById("area-lanjutan");
+  const pesanKunci = document.getElementById("pesan-kunci");
+  const dropdownSumber = document.getElementById("sumber-kegiatan");
+
+  if (tglInput) {
+    areaLanjutan.removeAttribute("disabled");
+    areaLanjutan.classList.remove("opacity-40");
+    dropdownSumber.removeAttribute("disabled");
+    if (pesanKunci) pesanKunci.style.display = "none";
+    
+    // Langsung tarik data renja tahunan sesuai tahun yang dipilih
+    filterRenjaBerdasarkanTanggal();
+  } else {
+    // Kunci kembali kalau tanggal dikosongkan
+    areaLanjutan.setAttribute("disabled", "true");
+    areaLanjutan.classList.add("opacity-40");
+    dropdownSumber.setAttribute("disabled", "true");
+    if (pesanKunci) pesanKunci.style.display = "block";
+  }
+}
+
+// 3. FUNGSI: FILTER RENJA TAHUNAN (SINKRON DENGAN SATUAN)
 function filterRenjaBerdasarkanTanggal() {
   const tglInput = document.getElementById("lap-tgl").value;
   const dropdown = document.getElementById("pilih-renja");
-  
-  // 1. Logika Awal (Jika tanggal kosong)
-  if (!dropdown) return;
-  if (!tglInput) {
-    dropdown.innerHTML = '<option value="">-- Menunggu Tanggal --</option>';
-    validasiFotoLaporan(); // Cek validasi untuk kunci kembali jika tanggal dihapus
-    return;
-  }
+  if (!dropdown || !tglInput) return;
 
-  // 2. CEK DATA DI MEMORI & FILTER (Data Renja)
-  if (dataRenjaGlobal.length === 0) {
-    dropdown.innerHTML = '<option value="">-- Sedang sinkronisasi data, coba klik lagi --</option>';
-    loadRenjaUntukLaporan();
-    validasiFotoLaporan();
-    return;
-  }
-
-  const tahunPilih = String(tglInput.split("-")[0]); 
+  const tahunPilih = String(tglInput.split("-")[0]);
   
-  // LOGIKA BARU: Selama Tahunnya SAMA dan Sisa Volume MASIH ADA, maka MUNCULKAN!
+  // LOGIKA: Filter berdasarkan Tahun dan Sisa Volume > 0
   const renjaTersedia = dataRenjaGlobal.filter(r => {
-    const rTahun = String(r.tahun).trim();
-    const rSisa = Number(r.sisa_vol);
-    
-    // Cukup cek Tahun dan Sisa Volume
-    return (rTahun === tahunPilih) && rSisa > 0;
+    return String(r.tahun) === tahunPilih && Number(r.sisa_vol) > 0;
   });
 
   dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
+  
   if (renjaTersedia.length === 0) {
-    dropdown.innerHTML = `<option value="">(Tidak ada Renja tersisa untuk ${bulanPilihText} ${tahunPilih})</option>`;
+    dropdown.innerHTML = `<option value="">(Tidak ada Renja aktif tahun ${tahunPilih})</option>`;
   } else {
-    renjaTersedia.forEach(renja => {
-      dropdown.innerHTML += `<option value="${renja.renja_id}">${renja.kegiatan} (Sisa Vol: ${renja.sisa_vol})</option>`;
+    renjaTersedia.forEach(r => {
+      // SIHIRNYA DI SINI: Kita simpan SATUAN di atribut data-satuan
+      dropdown.innerHTML += `<option value="${r.renja_id}" data-satuan="${r.target_peserta}">
+        ${r.kegiatan} (Sisa: ${r.sisa_vol})
+      </option>`;
     });
+  }
+  updateLabelSatuanLaporan(); // Pastikan label satuan update
+  validasiFotoLaporan();      // Pastikan gembok kamera cek ulang
+}
+
+// 4. FUNGSI: UPDATE LABEL SATUAN (Orang/Dokumen/Keluarga)
+function updateLabelSatuanLaporan() {
+  const drp = document.getElementById("pilih-renja");
+  const label = document.getElementById("satuan-realisasi");
+  const sumber = document.getElementById("sumber-kegiatan").value;
+
+  if (!label) return;
+
+  if (sumber === "renja" && drp.selectedIndex > 0) {
+    // Ambil data-satuan dari option yang dipilih (Misal: "20 Dokumen")
+    const teksTarget = drp.options[drp.selectedIndex].getAttribute("data-satuan") || "";
+    // Kita ambil kata terakhirnya saja (Satuannya)
+    const kata = teksTarget.split(" ");
+    label.innerText = kata.length > 1 ? kata[kata.length - 1] : "Orang";
+  } else {
+    // Kalau Luar Renja, defaultnya "Orang"
+    label.innerText = "Orang";
   }
 
   // --- TAMBAHAN: JALANKAN VALIDASI FOTO SETIAP KALI FILTER BERJALAN ---
@@ -1391,7 +1446,7 @@ function generateIndikator() {
   
   const inputIndikator = document.getElementById("renja-indikator");
 
-  // 1. Jika jenis kegiatan belum dipilih, kosongkan indikator
+  // Jika jenis kegiatan belum dipilih, kosongkan indikator
   if (!jenis || jenis === "") {
     inputIndikator.value = "";
     return;
@@ -1401,13 +1456,12 @@ function generateIndikator() {
   // 2. Rangkai Kalimat Pintar (Rule-Based AI)
   let namaKegiatan = (substansi && substansi !== "") ? substansi : jenis;
 	
-  // 3. Trik menyamarkan kata "Lainnya"
+  // Tentukan nama kegiatan
   if (jenis === "Lainnya") {
     namaKegiatan = "kegiatan operasional";
   }
-  // 4. Menambahkan keterangan tambahan ke dalam rangkaian nama kegiatan jika ada
+  // Menambahkan keterangan tambahan ke dalam rangkaian nama kegiatan jika ada
   const detailKegiatan = keterangan ? `${namaKegiatan} (${keterangan})` : namaKegiatan;
-  
   let kalimatBaku = "";
 
   switch (jenis) {
