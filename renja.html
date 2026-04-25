@@ -83,7 +83,7 @@
 
     <div id="wrapper-substansi" class="mb-4 hidden">
       <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Substansi Kegiatan</label>
-      <select id="renja-substansi" onchange="generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
+      <select id="renja-substansi" onchange="updateSatuanOtomatis(); generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
         </select>
     </div>
 
@@ -107,10 +107,22 @@
         <input id="renja-volume" type="number" placeholder="Berapa kali?" class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
       </div>
       <div>
-        <label id="label-peserta" class="text-xs font-bold text-gray-500 uppercase">TARGET</label>
-        <input id="renja-peserta" type="number" oninput="generateIndikator()"
-          placeholder="Berapa orang?" 
-          class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+        <label id="label-peserta" class="text-xs font-bold text-gray-500 uppercase">TARGET & SATUAN</label>
+        <div class="flex gap-2 mt-1">
+          <input id="renja-target-angka" type="number" oninput="generateIndikator()" 
+            placeholder="Jumlah" 
+            class="w-1/2 p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+          
+          <select id="renja-target-satuan" onchange="generateIndikator()" 
+            class="w-1/2 p-3 text-sm bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+            <option value="Orang">Orang</option>
+            <option value="Keluarga">Keluarga</option>
+            <option value="Akseptor">Akseptor</option>
+            <option value="Dokumen">Dokumen</option>
+            <option value="Kegiatan">Kegiatan</option>
+            <option value="Kelompok">Kelompok</option>
+          </select>
+        </div>
       </div>
     </div>
 
