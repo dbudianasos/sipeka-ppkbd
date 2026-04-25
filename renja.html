@@ -44,114 +44,91 @@
 <div class="bg-white p-6 rounded-2xl shadow mb-6 border-t-4 border-blue-900">
   <h3 class="font-bold text-md mb-4 text-gray-800">📋 Tambah Target Baru</h3>
   
-  <div class="space-y-4">
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="text-xs font-bold text-gray-500">TAHUN</label>
-        <input id="renja-tahun" type="number" value="2026" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label class="text-xs font-bold text-gray-500">BULAN</label>
-        <select id="renja-bulan" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-          <option value="Januari">Januari</option>
-          <option value="Februari">Februari</option>
-          <option value="Maret">Maret</option>
-          <option value="April">April</option>
-          <option value="Mei">Mei</option>
-          <option value="Juni">Juni</option>
-          <option value="Juli">Juli</option>
-          <option value="Agustus">Agustus</option>
-          <option value="September">September</option>
-          <option value="Oktober">Oktober</option>
-          <option value="November">November</option>
-          <option value="Desember">Desember</option>
-        </select>
-      </div>
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <label class="text-[10px] font-bold text-gray-500 uppercase">TAHUN ANGGARAN</label>
+      <input id="renja-tahun" type="number" value="2026" 
+        class="w-full p-3 mt-1 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600 font-bold text-blue-900 text-sm">
     </div>
+    <div>
+      <label class="text-[10px] font-bold text-gray-500 uppercase">VOLUME SETAHUN</label>
+      <input id="renja-volume" type="number" placeholder="Berapa kali?" 
+        class="w-full p-3 mt-1 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+    </div>
+  </div>
 
-    <div class="mb-4">
-      <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Jenis Kegiatan</label>
-      <select id="renja-jenis" onchange="updateSubstansi(); generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
-        <option value="">-- Pilih Jenis Kegiatan --</option>
-        <option value="Pertemuan">1. Pertemuan</option>
-        <option value="KIE">2. KIE (Komunikasi, Informasi, Edukasi)</option>
-        <option value="Pelayanan & Penggerakan">3. Pelayanan & Penggerakan</option>
-        <option value="Pencatatan & Pelaporan">4. Pencatatan & Pelaporan</option>
-        <option value="Lainnya">5. Lainnya</option>
+  <div class="mb-4">
+    <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Jenis Kegiatan</label>
+    <select id="renja-jenis" onchange="updateSubstansi(); generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
+      <option value="">-- Pilih Jenis Kegiatan --</option>
+      <option value="Pertemuan">1. Pertemuan</option>
+      <option value="KIE">2. KIE (Komunikasi, Informasi, Edukasi)</option>
+      <option value="Pelayanan & Penggerakan">3. Pelayanan & Penggerakan</option>
+      <option value="Pencatatan & Pelaporan">4. Pencatatan & Pelaporan</option>
+      <option value="Lainnya">5. Lainnya</option>
+    </select>
+  </div>
+
+  <div id="wrapper-substansi" class="mb-4 hidden">
+    <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Substansi Kegiatan</label>
+    <select id="renja-substansi" onchange="updateSatuanOtomatis(); generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
+    </select>
+  </div>
+
+  <div class="mb-4">
+    <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Keterangan Tambahan</label>
+    <textarea id="renja-keterangan" rows="4" oninput="generateIndikator()" 
+      placeholder="Contoh: Menjelaskan detail kegiatan atau agenda pertemuan..."
+      class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm transition-all"></textarea>
+  </div>
+  
+  <div class="mb-4">
+    <label id="label-sasaran" class="text-xs font-bold text-gray-500 uppercase">SASARAN / UNSUR PESERTA</label>
+    <input id="renja-sasaran" type="text" oninput="generateIndikator()"
+      placeholder="Contoh: PUS, Remaja, Lansia..." 
+      class="w-full p-3 mt-1 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+  </div>
+  
+  <div class="mb-4">
+    <label id="label-peserta" class="text-[10px] font-bold text-gray-500 uppercase">TARGET & SATUAN</label>
+    <div class="flex gap-2 mt-1">
+      <input id="renja-target-angka" type="number" oninput="generateIndikator()" placeholder="Jumlah" 
+        class="w-1/3 p-3 text-sm text-center bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+      
+      <select id="renja-target-satuan" onchange="generateIndikator()" 
+        class="w-2/3 p-2.5 text-xs bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-xl outline-none focus:ring-2 focus:ring-blue-600 truncate">
+        <option value="Orang">Orang</option>
+        <option value="Keluarga">Keluarga</option>
+        <option value="Akseptor">Akseptor</option>
+        <option value="Dokumen">Dokumen</option>
+        <option value="Kegiatan">Kegiatan</option>
+        <option value="Kelompok">Kelompok</option>
       </select>
     </div>
-
-    <div id="wrapper-substansi" class="mb-4 hidden">
-      <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Substansi Kegiatan</label>
-      <select id="renja-substansi" onchange="updateSatuanOtomatis(); generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
-        </select>
-    </div>
-
-    <div class="mb-4">
-      <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Keterangan Tambahan</label>
-      <textarea id="renja-keterangan" rows="4" oninput="generateIndikator()" 
-        placeholder="Contoh: Menjelaskan detail kegiatan atau agenda pertemuan..."
-        class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm transition-all"></textarea>
-    </div>
-    
-    <div>
-      <label id="label-sasaran" class="text-xs font-bold text-gray-500 uppercase">SASARAN / UNSUR PESERTA</label>
-      <input id="renja-sasaran" type="text" oninput="generateIndikator()"
-        placeholder="Contoh: PUS, Remaja, Lansia..." 
-        class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-    </div>
-    
-    <div class="grid grid-cols-3 gap-3">
-      
-      <div class="col-span-1">
-        <label class="text-[10px] font-bold text-gray-500 uppercase">VOLUME</label>
-        <input id="renja-volume" type="number" placeholder="Brp x?" 
-          class="w-full p-3 mt-1 text-sm text-center bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      
-      <div class="col-span-2">
-        <label id="label-peserta" class="text-[10px] font-bold text-gray-500 uppercase">TARGET & SATUAN</label>
-        <div class="flex gap-2 mt-1">
-          <input id="renja-target-angka" type="number" oninput="generateIndikator()" placeholder="Jml" 
-            class="w-1/3 p-3 text-sm text-center bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-          
-          <select id="renja-target-satuan" onchange="generateIndikator()" 
-            class="w-2/3 p-2.5 text-xs bg-blue-50 border border-blue-200 text-blue-800 font-bold rounded-xl outline-none focus:ring-2 focus:ring-blue-600 truncate">
-            <option value="Orang">Orang</option>
-            <option value="Keluarga">Keluarga</option>
-            <option value="Akseptor">Akseptor</option>
-            <option value="Dokumen">Dokumen</option>
-            <option value="Kegiatan">Kegiatan</option>
-            <option value="Kelompok">Kelompok</option>
-          </select>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="mb-4">
-      <div class="flex items-center justify-between mb-1">
-        <label class="text-xs font-bold text-gray-500">INDIKATOR KEBERHASILAN</label>
-        <span class="text-[9px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full flex items-center gap-1 border border-green-200">
-          <span>✨</span> Otomatis
-        </span>
-      </div>
-      <textarea id="renja-indikator" readonly rows="5"
-          placeholder="Indikator akan terangkai otomatis di sini..." 
-          class="w-full p-3 bg-slate-100 border border-slate-200 text-gray-600 rounded-2xl outline-none cursor-not-allowed font-medium text-sm leading-relaxed shadow-inner"></textarea>
-      </div>
-
-    <div>
-      <label class="text-xs font-bold text-gray-500">LOKASI / DESA</label>
-      <input id="renja-lokasi" type="text" placeholder="Lokasi kegiatan" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-    </div>
-
-    <button onclick="simpanRenja()" id="btn-simpan-renja"
-      class="w-full bg-blue-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-800 transition mt-2">
-      SIMPAN RENCANA KERJA
-    </button>
-    <p id="info-renja" class="text-center text-sm mt-2 text-blue-600 font-bold"></p>
   </div>
+
+  <div class="mb-4">
+    <div class="flex items-center justify-between mb-1">
+      <label class="text-xs font-bold text-gray-500">INDIKATOR KEBERHASILAN</label>
+      <span class="text-[9px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full flex items-center gap-1 border border-green-200">
+        <span>✨</span> Otomatis
+      </span>
+    </div>
+    <textarea id="renja-indikator" readonly rows="5"
+      placeholder="Indikator akan terangkai otomatis di sini..." 
+      class="w-full p-3 bg-slate-100 border border-slate-200 text-gray-600 rounded-2xl outline-none cursor-not-allowed font-medium text-sm leading-relaxed shadow-inner"></textarea>
+  </div>
+
+  <div class="mb-4">
+    <label class="text-xs font-bold text-gray-500">LOKASI / DESA</label>
+    <input id="renja-lokasi" type="text" placeholder="Lokasi kegiatan" class="w-full p-3 mt-1 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+  </div>
+
+  <button onclick="simpanRenja()" id="btn-simpan-renja"
+    class="w-full bg-blue-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-800 transition mt-2">
+    SIMPAN RENCANA KERJA
+  </button>
+  <p id="info-renja" class="text-center text-sm mt-2 text-blue-600 font-bold"></p>
 </div>
 
 <div>
