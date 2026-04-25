@@ -1399,27 +1399,28 @@ function generateIndikator() {
 
   switch (jenis) {
     case "Pertemuan":
-      // Diganti pakai kata "agenda"
-      kalimatBaku = `Terselenggaranya agenda ${detailKegiatan} serta meningkatnya kesepahaman bersama ${peserta} peserta dari unsur ${sasaran} di wilayah kerja.`;
+      // Menghilangkan kata baku "peserta" karena sudah diwakilkan oleh satuan
+      kalimatBaku = `Terselenggaranya agenda ${detailKegiatan} serta meningkatnya kesepahaman pada ${peserta} dari unsur ${sasaran} di wilayah kerja.`;
       break;
       
     case "KIE":
-      kalimatBaku = `Meningkatnya pengetahuan dan kesadaran ${peserta} orang sasaran ${sasaran} mengenai program Bangga Kencana melalui edukasi ${detailKegiatan}.`;
+      // Menghilangkan kata "orang"
+      kalimatBaku = `Meningkatnya pengetahuan dan kesadaran ${peserta} sasaran ${sasaran} mengenai program Bangga Kencana melalui edukasi ${detailKegiatan}.`;
       break;
       
     case "Pelayanan & Penggerakan":
-      kalimatBaku = `Terlaksananya fasilitasi bagi ${peserta} akseptor/sasaran ${sasaran} melalui aktivitas ${detailKegiatan} secara optimal.`;
+      // Dibuat lebih netral
+      kalimatBaku = `Terlaksananya fasilitasi bagi ${peserta} sasaran ${sasaran} melalui aktivitas ${detailKegiatan} secara optimal.`;
       break;
       
     case "Pencatatan & Pelaporan":
-      // Diganti pakai kata "dokumen administrasi"
-      kalimatBaku = `Tersusunnya dokumen administrasi untuk ${detailKegiatan} bagi sasaran ${sasaran} yang valid, akurat, dan dapat dipertanggungjawabkan tepat waktu.`;
+      // Tata bahasa disesuaikan agar cocok dengan satuan "Dokumen" atau "Keluarga"
+      kalimatBaku = `Tersusunnya administrasi ${detailKegiatan} untuk sasaran ${sasaran} sebanyak ${peserta} yang valid, akurat, dan dapat dipertanggungjawabkan tepat waktu.`;
       break;
       
     default:
-      kalimatBaku = `Terlaksananya pelaksanaan ${detailKegiatan} dengan menyasar ${peserta} target ${sasaran} sesuai dengan rencana kerja operasional.`;
+      kalimatBaku = `Terlaksananya ${detailKegiatan} dengan capaian ${peserta} dari target ${sasaran} sesuai dengan rencana kerja operasional.`;
   }
-
   inputIndikator.value = kalimatBaku;
 }
 
