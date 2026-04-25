@@ -431,20 +431,32 @@ function bukaKunciForm() {
   const areaLanjutan = document.getElementById("area-lanjutan");
   const pesanKunci = document.getElementById("pesan-kunci");
   const dropdownSumber = document.getElementById("sumber-kegiatan");
+  const today = new Date().toISOString().split('T')[0];
 
   if (tglInput) {
+    // PROTEKSI: Jika user memaksa ketik tanggal masa depan
+    if (tglInput > today) {
+      alert("Maaf Pak/Bu, tidak boleh melaporkan kegiatan untuk tanggal masa depan.");
+      document.getElementById("lap-tgl").value = "";
+      areaLanjutan.setAttribute("disabled", "true");
+      areaLanjutan.classList.add("opacity-40");
+      return;
+    }
+
+    // BUKA GEMBOK
     areaLanjutan.removeAttribute("disabled");
     areaLanjutan.classList.remove("opacity-40");
     dropdownSumber.removeAttribute("disabled");
     if (pesanKunci) pesanKunci.style.display = "none";
     
-    // Langsung tarik data renja tahunan sesuai tahun yang dipilih
-    filterRenjaBerdasarkanTanggal();
+    // Jalankan filter renja tahunan
+    if (typeof filterRenjaBerdasarkanTanggal === "function") {
+      filterRenjaBerdasarkanTanggal();
+    }
   } else {
-    // Kunci kembali kalau tanggal dikosongkan
+    // KUNCI KEMBALI
     areaLanjutan.setAttribute("disabled", "true");
     areaLanjutan.classList.add("opacity-40");
-    dropdownSumber.setAttribute("disabled", "true");
     if (pesanKunci) pesanKunci.style.display = "block";
   }
 }
@@ -1067,9 +1079,6 @@ function batasiTanggalLaporan() {
   }
 }
 
-// Jalankan fungsi saat halaman dimuat
-document.addEventListener("DOMContentLoaded", batasiTanggalLaporan);
-
 // ==========================================
 // FUNGSI AI: AUTO-GENERATE TAHUN (TAHUN INI & DEPAN)
 // ==========================================
@@ -1451,16 +1460,12 @@ function generateIndikator() {
     inputIndikator.value = "";
     return;
   }
-  const namaKegiatan = (substansi && substansi !== "") ? substansi : jenis;
-  
-  // 2. Rangkai Kalimat Pintar (Rule-Based AI)
+  // Tentukan nama kegiatan (HANYA SATU KALI DECLARE)
   let namaKegiatan = (substansi && substansi !== "") ? substansi : jenis;
-	
-  // Tentukan nama kegiatan
   if (jenis === "Lainnya") {
     namaKegiatan = "kegiatan operasional";
   }
-  // Menambahkan keterangan tambahan ke dalam rangkaian nama kegiatan jika ada
+
   const detailKegiatan = keterangan ? `${namaKegiatan} (${keterangan})` : namaKegiatan;
   let kalimatBaku = "";
 
