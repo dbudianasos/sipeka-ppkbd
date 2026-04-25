@@ -113,8 +113,9 @@
             <input id="lap-lokasi" oninput="validasiFotoLaporan()" type="text" placeholder="Desa / Posyandu..." class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
           </div>
           <div class="col-span-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Peserta</label>
-            <input id="lap-realisasi" type="number" placeholder="Angka" class="w-full p-4 text-xl text-center font-black text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Realisasi</label>
+            <input id="lap-realisasi" type="number" placeholder="0" class="w-full p-4 text-xl text-center font-black text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+            <p id="satuan-realisasi" class="text-[9px] text-center font-bold text-blue-500 mt-1 uppercase"></p>
           </div>
         </div>
 
@@ -144,60 +145,19 @@
   </div>
 </div>
 </main>
+  
+<script src="script.js"></script>
+
 <script>
-  function toggleAreaForm() {
-    const sumber = document.getElementById("sumber-kegiatan").value;
-    const areaRenja = document.getElementById("area-pilih-renja");
-    const areaManual = document.getElementById("area-manual");
-    if(sumber === "luar") {
-        areaRenja.style.display = "none";
-        areaManual.style.display = "block";
-    } else {
-        areaRenja.style.display = "block";
-        areaManual.style.display = "none";
+  document.addEventListener("DOMContentLoaded", () => {
+    batasiTanggalLaporan(); // Memastikan tanggal maksimal hari ini
+    // Memastikan jika ada data renja lama langsung ter-load
+    if (typeof loadRenjaUntukLaporan === "function") {
+       loadRenjaUntukLaporan();
     }
-  }
-
-  // Set default saat pertama kali buka
-  toggleAreaForm();
-
-  // FUNGSI UNTUK MEMBUKA KUNCI FORM SAAT TANGGAL DIPILIH
-  function bukaKunciForm() {
-    const tglInput = document.getElementById("lap-tgl").value;
-    const today = new Date().toISOString().split('T')[0];
-    const areaLanjutan = document.getElementById("area-lanjutan");
-    const pesanKunci = document.getElementById("pesan-kunci");
-    const dropdownSumber = document.getElementById("sumber-kegiatan");
-
-    if (tglInput) {
-      // Buka kunci fieldset & hilangkan efek buram
-      areaLanjutan.removeAttribute("disabled");
-      areaLanjutan.classList.remove("opacity-40");
-      dropdownSumber.removeAttribute("disabled"); // Buka kunci sumber kegiatan
-
-      // Sembunyikan pesan merah
-      if(pesanKunci) pesanKunci.style.display = "none";
-
-      // Pengecekan Tambahan: Jika input tanggal lebih besar dari hari ini
-      if (tglInput > today) {
-        alert("Maaf Pak/Bu, tidak boleh melaporkan kegiatan untuk tanggal masa depan.");
-        document.getElementById("lap-tgl").value = ""; // Kosongkan kembali
-        return;
-      }
-      
-      // Panggil fungsi filter renja dari script.js
-      if(typeof filterRenjaBerdasarkanTanggal === "function") {
-        filterRenjaBerdasarkanTanggal();
-      }
-    } else {
-      // Kunci kembali jika tanggal dihapus
-      areaLanjutan.setAttribute("disabled", "true");
-      areaLanjutan.classList.add("opacity-40");
-      dropdownSumber.setAttribute("disabled", "true");
-      if(pesanKunci) pesanKunci.style.display = "block";
-    }
-  }
+  });
 </script>
+  
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
   &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
   Aplikasi Pelaporan Kinerja PPKBD
