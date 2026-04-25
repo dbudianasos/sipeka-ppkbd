@@ -480,9 +480,9 @@ function filterRenjaBerdasarkanTanggal() {
     dropdown.innerHTML = `<option value="">(Tidak ada Renja aktif tahun ${tahunPilih})</option>`;
   } else {
     renjaTersedia.forEach(r => {
-      // SIHIRNYA DI SINI: Kita simpan SATUAN di atribut data-satuan
-      dropdown.innerHTML += `<option value="${r.renja_id}" data-satuan="${r.target_peserta}">
-        ${r.kegiatan} (Sisa: ${r.sisa_vol})
+      // Kita tambahkan data-kegiatan untuk menyimpan nama aslinya
+      dropdown.innerHTML += `<option value="${r.renja_id}" data-satuan="${r.target_peserta}" data-kegiatan="${r.kegiatan}">
+        ${r.kegiatan} (Sisa Kuota (volume): ${r.sisa_vol}x Kegiatan)
       </option>`;
     });
   }
@@ -619,7 +619,8 @@ async function simpanLaporan() {
     
     if (!renja_id) return alert("Pilih Rencana Kerja terlebih dahulu!");
     
-    const teksRenja = dropdownRenja.options[dropdownRenja.selectedIndex].text;
+    const optTerpilih = dropdownRenja.options[dropdownRenja.selectedIndex];
+	const teksRenja = optTerpilih.getAttribute("data-kegiatan") || optTerpilih.text.split(" (Sisa")[0].trim();
     const catatanRenja = document.getElementById("lap-catatan-renja").value.trim();
 
     // Validasi Uraian Wajib
