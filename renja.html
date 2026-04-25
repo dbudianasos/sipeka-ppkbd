@@ -44,20 +44,6 @@
 <div class="bg-white p-6 rounded-2xl shadow mb-6 border-t-4 border-blue-900">
   <h3 class="font-bold text-md mb-4 text-gray-800">📋 Tambah Target Baru</h3>
   
-  <div class="grid grid-cols-2 gap-4 mb-4">
-    <div>
-      <label class="text-[10px] font-bold text-gray-500 uppercase">TAHUN ANGGARAN</label>
-      <select id="renja-tahun" 
-        class="w-full p-3 mt-1 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 font-bold text-blue-900 cursor-pointer">
-        </select>
-    </div>
-    <div>
-      <label class="text-[10px] font-bold text-gray-500 uppercase">VOLUME SETAHUN</label>
-      <input id="renja-volume" type="number" placeholder="Berapa kali?" 
-        class="w-full p-3 mt-1 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-    </div>
-  </div>
-
   <div class="mb-4">
     <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Jenis Kegiatan</label>
     <select id="renja-jenis" onchange="updateSubstansi(); generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
@@ -81,6 +67,20 @@
     <textarea id="renja-keterangan" rows="4" oninput="generateIndikator()" 
       placeholder="Contoh: Menjelaskan detail kegiatan atau agenda pertemuan..."
       class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm transition-all"></textarea>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 mb-4">
+    <div>
+      <label class="text-[10px] font-bold text-gray-500 uppercase">TAHUN ANGGARAN</label>
+      <select id="renja-tahun" 
+        class="w-full p-3 mt-1 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 font-bold text-blue-900 cursor-pointer">
+        </select>
+    </div>
+    <div>
+      <label class="text-[10px] font-bold text-gray-500 uppercase">VOLUME SETAHUN</label>
+      <input id="renja-volume" type="number" placeholder="Berapa kali?" 
+        class="w-full p-3 mt-1 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+    </div>
   </div>
   
   <div class="mb-4">
