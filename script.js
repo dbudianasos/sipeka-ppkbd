@@ -1332,7 +1332,7 @@ function loadRiwayat() {
               <p class="font-bold text-sm text-gray-800">${lap.kegiatan}</p>
               <div class="flex justify-between text-xs text-gray-500 mt-2">
                 <p>📅 ${tgl}</p>
-                <p>👥 ${lap.realisasi} Sasaran</p>
+                <p>👥 <span class="font-bold text-blue-700 uppercase">${lap.realisasi}</span></p>
               </div>
             </div>
           `;
