@@ -1353,7 +1353,8 @@ function generateIndikator() {
     inputIndikator.value = "";
     return;
   }
-
+  const namaKegiatan = (substansi && substansi !== "") ? substansi : jenis;
+  
   // 2. Rangkai Kalimat Pintar (Rule-Based AI)
   let kalimat = "Terlaksananya kegiatan ";
   
@@ -1364,22 +1365,31 @@ function generateIndikator() {
     kalimat += jenis;
   }
 
-  // Tambahkan keterangan jika ada
-  if (keterangan) {
-    // Jika keterangan terlalu panjang, kita potong sedikit agar rapi
-    let ketPendek = keterangan.length > 40 ? keterangan.substring(0, 40) + "..." : keterangan;
-    kalimat += " (" + ketPendek + ")";
+  // Menambahkan keterangan tambahan ke dalam rangkaian nama kegiatan jika ada
+  const detailKegiatan = keterangan ? `${namaKegiatan} (${keterangan})` : namaKegiatan;
+  
+  let kalimatBaku = "";
+
+  switch (jenis) {
+    case "Pertemuan":
+      kalimatBaku = `Terselenggaranya koordinasi/pertemuan ${detailKegiatan} serta meningkatnya kesepahaman bersama ${peserta} peserta dari unsur ${sasaran} di wilayah kerja.`;
+      break;
+      
+    case "KIE":
+      kalimatBaku = `Meningkatnya pengetahuan dan kesadaran ${peserta} orang sasaran ${sasaran} mengenai program Bangga Kencana melalui edukasi ${detailKegiatan}.`;
+      break;
+      
+    case "Pelayanan & Penggerakan":
+      kalimatBaku = `Terlaksananya fasilitasi pelayanan dan penggerakan bagi ${peserta} akseptor/sasaran ${sasaran} melalui aktivitas ${detailKegiatan} secara optimal.`;
+      break;
+      
+    case "Pencatatan & Pelaporan":
+      kalimatBaku = `Tersusunnya dokumen hasil pendataan dan pelaporan ${detailKegiatan} bagi sasaran ${sasaran} yang valid, akurat, dan dapat dipertanggungjawabkan tepat waktu.`;
+      break;
+      
+    default:
+      kalimatBaku = `Terlaksananya kegiatan ${detailKegiatan} dengan menyasar ${peserta} target ${sasaran} sesuai dengan rencana kerja operasional di lapangan.`;
   }
 
-  // Tambahkan sasaran dan target jika ada
-  if (sasaran && peserta) {
-    kalimat += ` bagi ${peserta} sasaran ${sasaran}.`;
-  } else if (sasaran) {
-    kalimat += ` untuk sasaran ${sasaran}.`;
-  } else if (peserta) {
-    kalimat += ` sebanyak ${peserta} target.`;
-  }
-
-  // 3. Masukkan hasil rakitan ke dalam TextBox
-  inputIndikator.value = kalimat;
+  inputIndikator.value = kalimatBaku;
 }
