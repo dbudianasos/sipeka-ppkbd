@@ -191,8 +191,10 @@ function simpanRenja() {
   const lokasi = document.getElementById("renja-lokasi").value;
   const sasaran = document.getElementById("renja-sasaran").value;
   const volume = document.getElementById("renja-volume").value;
-  const peserta = document.getElementById("renja-peserta").value;
   const indikator = document.getElementById("renja-indikator").value;
+  const angkaTarget = document.getElementById("renja-target-angka").value;
+  const satuanTarget = document.getElementById("renja-target-satuan").value;
+  const peserta = angkaTarget ? `${angkaTarget} ${satuanTarget}` : "";
 
   // Ambil data untuk digabungkan
   const jenis = document.getElementById("renja-jenis").value;
@@ -256,8 +258,8 @@ function simpanRenja() {
       document.getElementById("renja-indikator").value = "";
       document.getElementById("renja-sasaran").value = "";
       document.getElementById("renja-volume").value = "";
-      document.getElementById("renja-peserta").value = "";
       document.getElementById("renja-keterangan").value = ""; // Bersihkan juga keterangan
+	  document.getElementById("renja-target-angka").value = "";
       
       // Refresh list renja di bawahnya
       setTimeout(() => {
@@ -320,7 +322,7 @@ function loadRenja() {
                   </div>
                   <div class="flex flex-col border-l pl-3">
                     <span class="text-[8px] text-gray-400 uppercase">Target</span>
-                    <span class="text-xs font-bold text-gray-700">${item.target_peserta} Orang</span>
+                    <span class="text-xs font-bold text-gray-700">${item.target_peserta}</span>
                   </div>
                 </div>
               </div>
@@ -824,7 +826,7 @@ function updateSubstansi() {
   const labelSasaran = document.getElementById("label-sasaran");
   const inputSasaran = document.getElementById("renja-sasaran"); // <--- Tadi ini yang hilang
   const labelPeserta = document.getElementById("label-peserta");
-  const inputPeserta = document.getElementById("renja-peserta");
+  const inputPeserta = document.getElementById("renja-target-angka"); // ID Diubah
 
   // 1. MAPPING DATA
   const dataSubstansi = {
@@ -834,17 +836,14 @@ function updateSubstansi() {
     "Pencatatan & Pelaporan": ["Pemutakhiran Data Keluarga (Verval)", "Pemetaan Sasaran (PUS Unmet Need)", "Pengisian Buku Bantu / K0", "Input Laporan ke New SIGA"]
   };
 
-  // 2. RESET KONDISI AWAL (Proteksi agar tidak error jika elemen tidak ada)
+  // 2. RESET KONDISI AWAL
   if (inputPeserta) {
     inputPeserta.disabled = false;
     inputPeserta.classList.remove("bg-slate-200");
-    inputPeserta.placeholder = "Berapa orang?";
+    inputPeserta.placeholder = "Jumlah"; // <-- Ganti jadi "Jumlah"
     if (inputPeserta.value == "0") inputPeserta.value = ""; 
   }
-  if (labelPeserta) labelPeserta.innerText = "TARGET PESERTA";
-  
-  if (labelSasaran) labelSasaran.innerText = "SASARAN";
-  if (inputSasaran) inputSasaran.placeholder = "Contoh: PUS, Remaja, Lansia, Balita...";
+  if (labelPeserta) labelPeserta.innerText = "TARGET & SATUAN"; // <-- Sesuaikan judul baru
   
   // 3. LOGIKA KHUSUS PER JENIS (DINAMIS)
   if (jenis === "Pertemuan") {
@@ -852,16 +851,8 @@ function updateSubstansi() {
     if (inputSasaran) inputSasaran.placeholder = "Contoh: Tokoh Masyarakat, RT/RW, Kader...";
   } 
   else if (jenis === "Pencatatan & Pelaporan") {
-    if (inputPeserta) {
-      inputPeserta.value = 0;
-      inputPeserta.disabled = true;
-      inputPeserta.classList.add("bg-slate-200");
-    }
-    if (labelPeserta) labelPeserta.innerText = "TARGET (N/A)";
+    // HANYA SISAKAN BARIS INI:
     if (inputSasaran) inputSasaran.placeholder = "Contoh: Kader, Sub-PPKBD...";
-  }
-  else if (jenis === "KIE") {
-    if (inputSasaran) inputSasaran.placeholder = "Contoh: PUS Unmet Need, Ibu Hamil...";
   }
 
   // 4. UPDATE DROPDOWN SUBSTANSI
@@ -896,7 +887,10 @@ function updateSubstansi() {
       selectSub.appendChild(optLain);
     }
   }
-}
+	// Panggil AI Satuan dan Indikator agar langsung sinkron!
+  updateSatuanOtomatis();
+  generateIndikator();
+} // <-- Ini kurung kurawal penutup fungsi updateSubstansi
 
 // ==========================================
 // LOGIKA DROPDOWN SUBSTANSI (LAPORAN - LUAR RENJA)
@@ -923,15 +917,6 @@ function updateSubstansiLaporan() {
     inputRealisasi.disabled = false;
     inputRealisasi.classList.remove("bg-slate-200");
     if (inputRealisasi.value == "0") inputRealisasi.value = ""; 
-  }
-
-  // Logika khusus Pencatatan & Pelaporan (Peserta dinonaktifkan jadi 0)
-  if (jenis === "Pencatatan & Pelaporan") {
-    if (inputRealisasi) {
-      inputRealisasi.value = 0;
-      inputRealisasi.disabled = true;
-      inputRealisasi.classList.add("bg-slate-200");
-    }
   }
 
   // 3. UPDATE TAMPILAN DROPDOWN DAN KETERANGAN
@@ -977,6 +962,33 @@ function updateSubstansiLaporan() {
     }
   }
 }
+
+// ==========================================
+// FUNGSI AI: AUTO-UBAH SATUAN TARGET
+// ==========================================
+function updateSatuanOtomatis() {
+  const jenis = document.getElementById("renja-jenis").value;
+  const substansiEl = document.getElementById("renja-substansi");
+  const substansi = substansiEl ? substansiEl.value : "";
+  const satuanSel = document.getElementById("renja-target-satuan");
+
+  if (!satuanSel) return;
+
+  if (jenis === "Pencatatan & Pelaporan") {
+    if (substansi.toLowerCase().includes("verval")) {
+      satuanSel.value = "Keluarga";
+    } else {
+      satuanSel.value = "Dokumen";
+    }
+  } else if (jenis === "Pelayanan & Penggerakan") {
+    satuanSel.value = "Akseptor";
+  } else if (jenis === "Pertemuan") {
+    satuanSel.value = "Kegiatan";
+  } else {
+    satuanSel.value = "Orang";
+  }
+}
+
 // ==========================================
 // KUNCI TANGGAL MAKSIMAL HARI INI
 // ==========================================
@@ -1344,7 +1356,9 @@ function generateIndikator() {
   const substansi = substansiEl && substansiEl.value ? substansiEl.value : "";
   const keterangan = document.getElementById("renja-keterangan").value.trim();
   const sasaran = document.getElementById("renja-sasaran").value.trim();
-  const peserta = document.getElementById("renja-peserta").value.trim();
+  const angkaTarget = document.getElementById("renja-target-angka").value.trim();
+  const satuanTarget = document.getElementById("renja-target-satuan").value;
+  const peserta = angkaTarget ? `${angkaTarget} ${satuanTarget}` : "[Jumlah]";
   
   const inputIndikator = document.getElementById("renja-indikator");
 
@@ -1395,3 +1409,5 @@ function generateIndikator() {
 
   inputIndikator.value = kalimatBaku;
 }
+
+
