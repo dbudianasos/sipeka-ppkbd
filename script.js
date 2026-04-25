@@ -847,12 +847,25 @@ function updateSubstansi() {
   
   // 3. LOGIKA KHUSUS PER JENIS (DINAMIS)
   if (jenis === "Pertemuan") {
-    if (labelSasaran) labelSasaran.innerText = "UNSUR PESERTA (Yg Diundang)";
-    if (inputSasaran) inputSasaran.placeholder = "Contoh: Tokoh Masyarakat, RT/RW, Kader...";
+    if (labelSasaran) labelSasaran.innerText = "UNSUR PESERTA / UNDANGAN";
+    if (inputSasaran) inputSasaran.placeholder = "Contoh: Tokoh Masyarakat, Kader, RT/RW...";
   } 
+  else if (jenis === "KIE") {
+    if (labelSasaran) labelSasaran.innerText = "SASARAN PENYULUHAN";
+    if (inputSasaran) inputSasaran.placeholder = "Contoh: PUS, Ibu Hamil, Remaja, Catin...";
+  }
+  else if (jenis === "Pelayanan & Penggerakan") {
+    if (labelSasaran) labelSasaran.innerText = "SASARAN / AKSEPTOR";
+    if (inputSasaran) inputSasaran.placeholder = "Contoh: Calon Akseptor, PUS Unmet Need...";
+  }
   else if (jenis === "Pencatatan & Pelaporan") {
-    // HANYA SISAKAN BARIS INI:
-    if (inputSasaran) inputSasaran.placeholder = "Contoh: Kader, Sub-PPKBD...";
+    if (labelSasaran) labelSasaran.innerText = "OBJEK PENDATAAN / PELAPORAN";
+    if (inputSasaran) inputSasaran.placeholder = "Contoh: Keluarga, Kader Sub-PPKBD, PUS...";
+  }
+  else {
+    // Default (Lainnya)
+    if (labelSasaran) labelSasaran.innerText = "SASARAN KEGIATAN";
+    if (inputSasaran) inputSasaran.placeholder = "Contoh: Masyarakat umum, PUS...";
   }
 
   // 4. UPDATE DROPDOWN SUBSTANSI
