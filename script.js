@@ -1333,3 +1333,53 @@ function bukaKamera() {
     console.error("Error: ID 'lap-foto-file' tidak ditemukan di HTML!");
   }
 }
+
+// ==========================================
+// FUNGSI AI: AUTO-GENERATE INDIKATOR RENJA
+// ==========================================
+function generateIndikator() {
+  // 1. Tangkap semua nilai dari form
+  const jenis = document.getElementById("renja-jenis").value;
+  const substansiEl = document.getElementById("renja-substansi");
+  const substansi = substansiEl && substansiEl.value ? substansiEl.value : "";
+  const keterangan = document.getElementById("renja-keterangan").value.trim();
+  const sasaran = document.getElementById("renja-sasaran").value.trim();
+  const peserta = document.getElementById("renja-peserta").value.trim();
+  
+  const inputIndikator = document.getElementById("renja-indikator");
+
+  // Jika jenis kegiatan belum dipilih, kosongkan indikator
+  if (!jenis || jenis === "") {
+    inputIndikator.value = "";
+    return;
+  }
+
+  // 2. Rangkai Kalimat Pintar (Rule-Based AI)
+  let kalimat = "Terlaksananya kegiatan ";
+  
+  // Prioritaskan substansi, jika tidak ada, pakai jenis kegiatan
+  if (substansi && substansi !== "") {
+    kalimat += substansi;
+  } else {
+    kalimat += jenis;
+  }
+
+  // Tambahkan keterangan jika ada
+  if (keterangan) {
+    // Jika keterangan terlalu panjang, kita potong sedikit agar rapi
+    let ketPendek = keterangan.length > 40 ? keterangan.substring(0, 40) + "..." : keterangan;
+    kalimat += " (" + ketPendek + ")";
+  }
+
+  // Tambahkan sasaran dan target jika ada
+  if (sasaran && peserta) {
+    kalimat += ` bagi ${peserta} sasaran ${sasaran}.`;
+  } else if (sasaran) {
+    kalimat += ` untuk sasaran ${sasaran}.`;
+  } else if (peserta) {
+    kalimat += ` sebanyak ${peserta} target.`;
+  }
+
+  // 3. Masukkan hasil rakitan ke dalam TextBox
+  inputIndikator.value = kalimat;
+}
