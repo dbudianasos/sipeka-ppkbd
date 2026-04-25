@@ -86,14 +86,14 @@
       <select id="renja-substansi" onchange="generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
         </select>
     </div>
-    
-    <div class="mb-6">
-      <label id="label-deskripsi" class="text-[10px] font-bold text-blue-900 uppercase ml-1">Keterangan Tambahan</label>
-      <textarea id="renja-keterangan" oninput="generateIndikator()" rows="2" 
-        placeholder="Berikan detail kegiatan di sini..."
-        class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm"></textarea>
-    </div>
 
+    <div class="mb-4">
+      <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Keterangan Tambahan</label>
+      <textarea id="renja-keterangan" rows="4" oninput="generateIndikator()" 
+        placeholder="Contoh: Menjelaskan detail kegiatan atau agenda pertemuan..."
+        class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm transition-all"></textarea>
+    </div>
+    
     <div>
       <label id="label-sasaran" class="text-xs font-bold text-gray-500 uppercase">SASARAN / UNSUR PESERTA</label>
       <input id="renja-sasaran" type="text" oninput="generateIndikator()"
@@ -121,10 +121,10 @@
           <span>✨</span> Otomatis
         </span>
       </div>
-      <input id="renja-indikator" type="text" readonly 
-             placeholder="Kalimat indikator otomatis dibuat oleh sistem..." 
-             class="w-full p-3 bg-slate-200 border border-slate-300 text-gray-700 rounded-xl outline-none cursor-not-allowed font-semibold text-sm transition-all shadow-inner">
-    </div>
+      <textarea id="renja-indikator" readonly rows="5"
+          placeholder="Indikator akan terangkai otomatis di sini..." 
+          class="w-full p-3 bg-slate-100 border border-slate-200 text-gray-600 rounded-2xl outline-none cursor-not-allowed font-medium text-sm leading-relaxed shadow-inner"></textarea>
+      </div>
 
     <div>
       <label class="text-xs font-bold text-gray-500">LOKASI / DESA</label>
