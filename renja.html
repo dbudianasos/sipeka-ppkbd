@@ -71,7 +71,7 @@
 
     <div class="mb-4">
       <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Jenis Kegiatan</label>
-      <select id="renja-jenis" onchange="updateSubstansi()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
+      <select id="renja-jenis" onchange="updateSubstansi(); generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
         <option value="">-- Pilih Jenis Kegiatan --</option>
         <option value="Pertemuan">1. Pertemuan</option>
         <option value="KIE">2. KIE (Komunikasi, Informasi, Edukasi)</option>
@@ -83,20 +83,20 @@
 
     <div id="wrapper-substansi" class="mb-4 hidden">
       <label class="text-[10px] font-bold text-blue-900 uppercase ml-1">Substansi Kegiatan</label>
-      <select id="renja-substansi" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
+      <select id="renja-substansi" onchange="generateIndikator()" class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm">
         </select>
     </div>
     
     <div class="mb-6">
       <label id="label-deskripsi" class="text-[10px] font-bold text-blue-900 uppercase ml-1">Keterangan Tambahan</label>
-      <textarea id="renja-keterangan" rows="2" 
+      <textarea id="renja-keterangan" oninput="generateIndikator()" rows="2" 
         placeholder="Berikan detail kegiatan di sini..."
         class="w-full p-3 mt-1 bg-white border-2 border-blue-100 rounded-2xl focus:border-blue-500 outline-none shadow-sm text-sm"></textarea>
     </div>
 
     <div>
       <label id="label-sasaran" class="text-xs font-bold text-gray-500 uppercase">SASARAN / UNSUR PESERTA</label>
-      <input id="renja-sasaran" type="text" 
+      <input id="renja-sasaran" type="text" oninput="generateIndikator()"
         placeholder="Contoh: PUS, Remaja, Lansia..." 
         class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
     </div>
@@ -108,15 +108,22 @@
       </div>
       <div>
         <label id="label-peserta" class="text-xs font-bold text-gray-500 uppercase">TARGET PESERTA</label>
-        <input id="renja-peserta" type="number" 
+        <input id="renja-peserta" type="number" oninput="generateIndikator()"
           placeholder="Berapa orang?" 
           class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
       </div>
     </div>
 
-    <div>
-      <label class="text-xs font-bold text-gray-500">INDIKATOR KEBERHASILAN</label>
-      <input id="renja-indikator" type="text" placeholder="Contoh: 10 Akseptor Baru" class="w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+    <div class="mb-4">
+      <div class="flex items-center justify-between mb-1">
+        <label class="text-xs font-bold text-gray-500">INDIKATOR KEBERHASILAN</label>
+        <span class="text-[9px] font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full flex items-center gap-1 border border-green-200">
+          <span>✨</span> Otomatis
+        </span>
+      </div>
+      <input id="renja-indikator" type="text" readonly 
+             placeholder="Kalimat indikator otomatis dibuat oleh sistem..." 
+             class="w-full p-3 bg-slate-200 border border-slate-300 text-gray-700 rounded-xl outline-none cursor-not-allowed font-semibold text-sm transition-all shadow-inner">
     </div>
 
     <div>
