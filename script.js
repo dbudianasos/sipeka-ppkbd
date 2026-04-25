@@ -490,27 +490,60 @@ function filterRenjaBerdasarkanTanggal() {
   validasiFotoLaporan();      // Pastikan gembok kamera cek ulang
 }
 
-// 4. FUNGSI: UPDATE LABEL SATUAN (Orang/Dokumen/Keluarga)
+// 4. FUNGSI: MENAMPILKAN DETAIL RENJA SAAT DIPILIH
+function showDetailRenja() {
+  const drp = document.getElementById("pilih-renja");
+  const previewBox = document.getElementById("preview-renja-full");
+  const previewTeks = document.getElementById("teks-renja-full");
+
+  if (drp && drp.selectedIndex > 0) {
+    // Tampilkan teks lengkap renja yang dipilih kader
+    previewTeks.innerText = drp.options[drp.selectedIndex].text;
+    previewBox.classList.remove("hidden");
+  } else {
+    if(previewBox) previewBox.classList.add("hidden");
+  }
+  updateLabelSatuanLaporan(); // Panggil sihir satuan
+}
+// 5. FUNGSI: UPDATE LABEL SATUAN (Orang/Dokumen/Keluarga)
 function updateLabelSatuanLaporan() {
   const drp = document.getElementById("pilih-renja");
-  const label = document.getElementById("satuan-realisasi");
+  const container = document.getElementById("container-satuan-laporan");
   const sumber = document.getElementById("sumber-kegiatan").value;
 
-  if (!label) return;
+  if (!container) return;
 
-  if (sumber === "renja" && drp.selectedIndex > 0) {
-    // Ambil data-satuan dari option yang dipilih (Misal: "20 Dokumen")
-    const teksTarget = drp.options[drp.selectedIndex].getAttribute("data-satuan") || "";
-    // Kita ambil kata terakhirnya saja (Satuannya)
-    const kata = teksTarget.split(" ");
-    label.innerText = kata.length > 1 ? kata[kata.length - 1] : "Orang";
+  if (sumber === "renja") {
+    // --- MODE RENJA: SATUAN TERKUNCI ---
+    let satuanAsli = "Orang"; 
+    if (drp && drp.selectedIndex > 0) {
+      const teksTarget = drp.options[drp.selectedIndex].getAttribute("data-satuan") || "";
+      const parts = teksTarget.split(" ");
+      // Ambil kata paling belakang (misal: "Dokumen")
+      satuanAsli = parts.length > 1 ? parts[parts.length - 1] : "Orang";
+    }
+    
+    // Suntikkan Label Biru yang tidak bisa diotak-atik
+    container.innerHTML = `
+      <div class="w-full p-4 bg-blue-100 border border-blue-200 text-blue-800 font-bold rounded-2xl text-center text-sm shadow-inner flex items-center justify-center gap-2">
+        <span>${satuanAsli}</span>
+        <span class="text-[10px] opacity-50">🔒</span>
+      </div>
+    `;
   } else {
-    // Kalau Luar Renja, defaultnya "Orang"
-    label.innerText = "Orang";
+    // --- MODE LUAR RENJA: SATUAN BEBAS PILIH ---
+    container.innerHTML = `
+      <select id="lap-satuan-manual" onchange="validasiFotoLaporan()" class="w-full p-4 text-sm font-bold text-amber-900 bg-amber-50 border border-amber-200 rounded-2xl outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
+        <option value="Orang">Orang</option>
+        <option value="Keluarga">Keluarga</option>
+        <option value="Akseptor">Akseptor</option>
+        <option value="Dokumen">Dokumen</option>
+        <option value="Kegiatan">Kegiatan</option>
+        <option value="Kelompok">Kelompok</option>
+      </select>
+    `;
   }
-
-  // --- TAMBAHAN: JALANKAN VALIDASI FOTO SETIAP KALI FILTER BERJALAN ---
-  validasiFotoLaporan();
+  validasiFotoLaporan(); // Cek apakah tombol simpan sudah boleh aktif
 }
 
 // ================= FUNGSI CEK VALIDASI (PEMBUKA GEMBOK FOTO) =================
@@ -550,23 +583,33 @@ function validasiFotoLaporan() {
   }
 }
 
-// ================= SIMPAN LAPORAN FINAL =================
+// ================= SIMPAN LAPORAN FINAL (SINKRON SATUAN) =================
 async function simpanLaporan() {
   const btn = document.getElementById("btn-simpan-laporan");
   const info = document.getElementById("info-laporan");
   
-  // Ambil Data Identitas
   const nik = localStorage.getItem("nik");
   const nama = localStorage.getItem("nama");
   const kecamatan = localStorage.getItem("kecamatan");
   
-  // Ambil Data Form Dasar
   const sumber = document.getElementById("sumber-kegiatan").value;
   const tanggal = document.getElementById("lap-tgl").value;
   const lokasi = document.getElementById("lap-lokasi").value;
   const realisasi = document.getElementById("lap-realisasi").value;
 
-  // --- LOGIKA PENJAHITAN NAMA KEGIATAN & VALIDASI ---
+  // --- LOGIKA PENGAMBILAN SATUAN (DINAMIS) ---
+  let satuanFinal = "";
+  if (sumber === "renja") {
+    // Ambil teks dari container (Misal: "Dokumen 🔒" -> jadi "Dokumen")
+    const containerSatuan = document.getElementById("container-satuan-laporan");
+    satuanFinal = containerSatuan ? containerSatuan.innerText.replace("🔒", "").trim() : "Orang";
+  } else {
+    // Ambil dari dropdown manual
+    const selectSatuan = document.getElementById("lap-satuan-manual");
+    satuanFinal = selectSatuan ? selectSatuan.value : "Orang";
+  }
+  const realisasiLengkap = `${realisasi} ${satuanFinal}`;
+
   let renja_id = "";
   let namaKegiatanFinal = "";
 
@@ -577,31 +620,31 @@ async function simpanLaporan() {
     if (!renja_id) return alert("Pilih Rencana Kerja terlebih dahulu!");
     
     const teksRenja = dropdownRenja.options[dropdownRenja.selectedIndex].text;
-    const catatanRenja = document.getElementById("lap-catatan-renja").value;
+    const catatanRenja = document.getElementById("lap-catatan-renja").value.trim();
+
+    // Validasi Uraian Wajib
+    if (!catatanRenja || catatanRenja.length < 5) {
+      alert("⚠️ Uraian Detail Kegiatan wajib diisi (Min. 5 karakter) agar laporan valid!");
+      return;
+    }
     
-    // Jahit data: Nama Renja + Catatan (Jika ada)
-    namaKegiatanFinal = catatanRenja ? `${teksRenja} | Catatan: ${catatanRenja}` : teksRenja;
+    namaKegiatanFinal = `${teksRenja} | Detail: ${catatanRenja}`;
 
   } else {
-    // Jika Luar Renja
     renja_id = "LUAR-RENJA";
     const jenisLuar = document.getElementById("lap-kegiatan").value;
     const substansiLuar = document.getElementById("lap-substansi").value;
     const keteranganLuar = document.getElementById("lap-keterangan").value;
 
     if (!jenisLuar || !substansiLuar || !keteranganLuar) {
-      return alert("Harap lengkapi Jenis, Substansi, dan Dasar Pelaksanaan Luar Renja!");
+      return alert("Harap lengkapi Jenis, Substansi, dan Keterangan Luar Renja!");
     }
-
-    // Jahit data: Tambahan: Jenis - Substansi (Keterangan)
     namaKegiatanFinal = `Tambahan: ${jenisLuar} - ${substansiLuar} (${keteranganLuar})`;
   }
 
-  // --- GEMBOK VALIDASI UMUM ---
-  if (!tanggal || !realisasi || !lokasi) return alert("Lengkapi Tanggal, Lokasi, dan Jumlah Peserta!");
+  if (!tanggal || !realisasi || !lokasi) return alert("Lengkapi Tanggal, Lokasi, dan Jumlah Realisasi!");
   if (!base64Foto) return alert("Gagal! Foto Visum wajib diupload.");
 
-  // Mulai Proses Kirim
   btn.disabled = true; 
   btn.innerText = "SEDANG MENGIRIM...";
   if(info) info.innerText = "Mohon tunggu, sedang mengunggah data & foto...";
@@ -615,16 +658,15 @@ async function simpanLaporan() {
         nama: nama,
         kecamatan: kecamatan,
         renja_id: renja_id,
-        kegiatan: namaKegiatanFinal, // Data yang sudah dijahit super rapi
+        kegiatan: namaKegiatanFinal,
         tanggal: tanggal,
-        realisasi: realisasi,
+        realisasi: realisasiLengkap, // <--- Sekarang mengirim "15 Dokumen" bukan cuma "15"
         lokasi: lokasi,
         foto_data: base64Foto  
       })
     });
 
     const resText = await response.text();
-
     if (resText.trim() === "success") {
       alert("Laporan & Foto Berhasil Terkirim!");
       window.location.href = "dashboard.html";
@@ -634,14 +676,13 @@ async function simpanLaporan() {
       btn.innerText = "KIRIM LAPORAN SEKARANG";
     }
   } catch (err) {
-    console.error("Error:", err);
-    alert("Koneksi Error. Pastikan internet stabil dan Apps Script sudah di-deploy.");
+    alert("Koneksi Error. Pastikan internet stabil.");
     btn.disabled = false;
     btn.innerText = "KIRIM LAPORAN SEKARANG";
   }
 }
 
-// Fungsi Menampilkan Preview dan Kompresi
+// ===================Fungsi Menampilkan Preview dan Kompresi=====================
 function previewFoto(input) {
   const file = input.files[0];
   if (!file) return;
@@ -652,8 +693,19 @@ function previewFoto(input) {
 
   const tglInput = document.getElementById("lap-tgl").value;
   const lokasiRaw = (document.getElementById("lap-lokasi").value || "LOKASI TIDAK DIISI").toUpperCase();
+  const realisasi = document.getElementById("lap-realisasi").value || "0";
   const sumber = document.getElementById("sumber-kegiatan").value;
-  
+
+  // Ambil satuan untuk watermark
+  let satuan = "Orang";
+  if (sumber === "renja") {
+    const containerSatuan = document.getElementById("container-satuan-laporan");
+    satuan = containerSatuan ? containerSatuan.innerText.replace("🔒", "").trim() : "Orang";
+  } else {
+    const selectSatuan = document.getElementById("lap-satuan-manual");
+    satuan = selectSatuan ? selectSatuan.value : "Orang";
+  }
+
   let teksKegiatan = "";
   if (sumber === "renja") {
     const drp = document.getElementById("pilih-renja");
@@ -681,41 +733,39 @@ function previewFoto(input) {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, width, height);
 
-      // --- WATERMARK SLIM ---
-      const boxHeight = height * 0.12; 
-      ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; 
+      const boxHeight = height * 0.15; // Box sedikit lebih tinggi untuk 2 baris teks
+      ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; 
       ctx.fillRect(0, height - boxHeight, width, boxHeight);
 
       ctx.fillStyle = "white";
       const padding = width * 0.03;
-      const fontSizeNormal = Math.round(width * 0.03); 
-      const fontSizeSmall = Math.round(width * 0.025);
+      const fontSizeNormal = Math.round(width * 0.035); 
+      const fontSizeSmall = Math.round(width * 0.028);
 
-      // --- SISI KIRI (APLIKASI & KEGIATAN) ---
       ctx.textAlign = "left";
       ctx.font = `bold ${fontSizeNormal}px Arial`;
-      ctx.fillText("SIPEKA PPKBD", padding, height - (boxHeight * 0.65));
-
+      ctx.fillText("SIPEKA PPKBD", padding, height - (boxHeight * 0.7));
+      
       ctx.font = `${fontSizeSmall}px Arial`;
-      // Pangkas kegiatan jika > 45 karakter
-      const cetakKegiatan = teksKegiatan.length > 45 ? teksKegiatan.substring(0, 45) + "..." : teksKegiatan;
-      ctx.fillText(cetakKegiatan, padding, height - (boxHeight * 0.35));
+      const cetakKegiatan = teksKegiatan.length > 40 ? teksKegiatan.substring(0, 40) + "..." : teksKegiatan;
+      ctx.fillText(cetakKegiatan, padding, height - (boxHeight * 0.4));
+      
+      // BARIS BARU DI WATERMARK: Hasil Capaian
+      ctx.fillStyle = "#FFD700"; // Warna kuning emas agar mencolok
+      ctx.font = `bold ${fontSizeSmall}px Arial`;
+      ctx.fillText(`HASIL: ${realisasi} ${satuan}`, padding, height - (boxHeight * 0.15));
 
-      // --- SISI KANAN (IKON + LOKASI & TANGGAL) ---
       ctx.textAlign = "right";
+      ctx.fillStyle = "white";
       ctx.font = `${fontSizeSmall}px Arial`;
-      
-      // PEMANGKAS LOKASI OTOMATIS: Jika > 35 karakter, pangkas dan beri titik-titik
-      const cetakLokasi = lokasiRaw.length > 35 ? lokasiRaw.substring(0, 35) + "..." : lokasiRaw;
-      ctx.fillText("📍 " + cetakLokasi, width - padding, height - (boxHeight * 0.65));
-      
-      ctx.fillText("📅 " + tglInput, width - padding, height - (boxHeight * 0.35));
+      const cetakLokasi = lokasiRaw.length > 30 ? lokasiRaw.substring(0, 30) + "..." : lokasiRaw;
+      ctx.fillText("📍 " + cetakLokasi, width - padding, height - (boxHeight * 0.6));
+      ctx.fillText("📅 " + tglInput, width - padding, height - (boxHeight * 0.3));
 
-      // Simpan hasil ke variabel global
       base64Foto = canvas.toDataURL("image/jpeg", 0.7);
       preview.src = base64Foto;
       preview.classList.remove("hidden");
-      label.innerText = "Foto Berhasil Diberi Keterangan!";
+      label.innerText = "Foto Visum Terverifikasi!";
       if(document.getElementById("ikon-kamera")) document.getElementById("ikon-kamera").classList.add("hidden");
     }
   }
