@@ -1015,6 +1015,26 @@ function batasiTanggalLaporan() {
 // Jalankan fungsi saat halaman dimuat
 document.addEventListener("DOMContentLoaded", batasiTanggalLaporan);
 
+// ==========================================
+// FUNGSI AI: AUTO-GENERATE TAHUN (TAHUN INI & DEPAN)
+// ==========================================
+function setTahunOtomatis() {
+  const selectTahun = document.getElementById("renja-tahun");
+  
+  if (selectTahun) {
+    // Ambil tahun dari kalender HP/Laptop kader saat ini
+    const tahunSekarang = new Date().getFullYear(); 
+    
+    // Masukkan Tahun Sekarang dan Tahun Depan ke dalam Dropdown
+    selectTahun.innerHTML = `
+      <option value="${tahunSekarang}" selected>${tahunSekarang}</option>
+      <option value="${tahunSekarang + 1}">${tahunSekarang + 1}</option>
+    `;
+  }
+}
+
+// Pastikan fungsi ini jalan otomatis saat halaman renja dibuka
+document.addEventListener("DOMContentLoaded", setTahunOtomatis);
 
 //======================LOAD STATISTIK (GRAFIK KINERJA)==========================//
 function loadGrafik() {
