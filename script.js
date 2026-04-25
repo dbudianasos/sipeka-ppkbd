@@ -857,7 +857,7 @@ function updateSubstansi() {
       inputPeserta.disabled = true;
       inputPeserta.classList.add("bg-slate-200");
     }
-    if (labelPeserta) labelPeserta.innerText = "TARGET PESERTA (N/A)";
+    if (labelPeserta) labelPeserta.innerText = "TARGET (N/A)";
     if (inputSasaran) inputSasaran.placeholder = "Contoh: Kader, Sub-PPKBD...";
   }
   else if (jenis === "KIE") {
