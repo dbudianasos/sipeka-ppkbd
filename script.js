@@ -1391,7 +1391,7 @@ function generateIndikator() {
   
   const inputIndikator = document.getElementById("renja-indikator");
 
-  // Jika jenis kegiatan belum dipilih, kosongkan indikator
+  // 1. Jika jenis kegiatan belum dipilih, kosongkan indikator
   if (!jenis || jenis === "") {
     inputIndikator.value = "";
     return;
@@ -1399,16 +1399,13 @@ function generateIndikator() {
   const namaKegiatan = (substansi && substansi !== "") ? substansi : jenis;
   
   // 2. Rangkai Kalimat Pintar (Rule-Based AI)
-  let kalimat = "Terlaksananya kegiatan ";
-  
-  // Prioritaskan substansi, jika tidak ada, pakai jenis kegiatan
-  if (substansi && substansi !== "") {
-    kalimat += substansi;
-  } else {
-    kalimat += jenis;
+  let namaKegiatan = (substansi && substansi !== "") ? substansi : jenis;
+	
+  // 3. Trik menyamarkan kata "Lainnya"
+  if (jenis === "Lainnya") {
+    namaKegiatan = "kegiatan operasional";
   }
-
-  // Menambahkan keterangan tambahan ke dalam rangkaian nama kegiatan jika ada
+  // 4. Menambahkan keterangan tambahan ke dalam rangkaian nama kegiatan jika ada
   const detailKegiatan = keterangan ? `${namaKegiatan} (${keterangan})` : namaKegiatan;
   
   let kalimatBaku = "";
