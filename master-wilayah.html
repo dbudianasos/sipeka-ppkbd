@@ -52,53 +52,96 @@
   </main>
 
   <script>
+    // 1. AMBIL DATA DARI PENYIMPANAN LOKAL
     const role = localStorage.getItem("role");
     const kecAsli = localStorage.getItem("kecamatan");
 
+    // 2. JALANKAN SAAT HALAMAN DIBUKA
     window.onload = () => {
-        cekLogin();
-        loadWilayahDatabase(); // Memanggil fungsi dari script.js
+        cekLogin(); // Pastikan satpam cek dulu
+        
+        // SET STATUS AWAL (Agar tidak "Memuat..." terus)
+        const display = document.getElementById("display-wilayah");
+        if (role === "super_admin") {
+            display.innerText = "Kabupaten Bekasi";
+        } else {
+            display.innerText = "Kecamatan " + kecAsli;
+        }
+
+        // Tarik daftar kecamatan dari script.js
+        if (typeof loadWilayahDatabase === 'function') {
+            loadWilayahDatabase(); 
+        }
     };
 
+    // 3. UPDATE TEKS TAMPILAN WILAYAH (Dipanggil saat dropdown berubah)
     function updateInfoWilayah() {
-        const namaKec = document.getElementById("select-kecamatan").value;
+        const selKec = document.getElementById("select-kecamatan");
         const display = document.getElementById("display-wilayah");
-        if (namaKec) {
-            display.innerText = "Kecamatan " + namaKec;
+        
+        // Jika Super Admin memilih kecamatan tertentu di dropdown
+        if (selKec.value) {
+            display.innerText = "Kecamatan " + selKec.value;
             document.getElementById("msg-kecamatan").classList.add("hidden");
+        } else {
+            // Jika tidak ada yang dipilih, kembalikan ke status awal
+            display.innerText = (role === "super_admin") ? "Kabupaten Bekasi" : "Kecamatan " + kecAsli;
         }
     }
 
+    // 4. HITUNG JUMLAH DESA SAAT MENGETIK
     function hitung() {
         const input = document.getElementById("bulk-input").value;
-        document.getElementById("counter").innerText = input.split(",").filter(i => i.trim() !== "").length;
+        const arrayDesa = input.split(",").filter(item => item.trim() !== "");
+        document.getElementById("counter").innerText = arrayDesa.length;
     }
 
+    // 5. FUNGSI SIMPAN DATA KE SPREADSHEET
     function simpanData() {
         const selKec = document.getElementById("select-kecamatan");
-        const kodeKec = selKec.options[selKec.selectedIndex].getAttribute("data-kode");
+        const selectedOption = selKec.options[selKec.selectedIndex];
         const input = document.getElementById("bulk-input").value;
+        
+        // Validasi Pilihan Kecamatan
+        if(!selKec.value) {
+            document.getElementById("msg-kecamatan").classList.remove("hidden");
+            selKec.focus();
+            return;
+        }
+
+        // Validasi Input Desa
+        if(!input.trim()) {
+            alert("Silakan masukkan nama-nama desa/kelurahan, pisahkan dengan koma.");
+            return;
+        }
+
+        const kodeKec = selectedOption.getAttribute("data-kode");
+        const namaKec = selKec.value;
         const btn = document.getElementById("btn-save");
 
-        if(!selKec.value || !input) return alert("Pilih Kecamatan & Isi Daftar Desa!");
-
-        btn.innerText = "⏳ MENYIMPAN...";
+        btn.innerText = "⏳ SEDANG MENYIMPAN...";
         btn.disabled = true;
 
+        // Kirim ke Google Apps Script
         fetch(API_URL, {
             method: "POST",
             body: new URLSearchParams({
                 action: "save_bulk_wilayah",
                 type: "desa",
                 kode_kec: kodeKec,
-                nama_kec: selKec.value,
+                nama_kec: namaKec,
                 data_list: input
             })
         })
         .then(res => res.text())
         .then(msg => {
-            alert(msg);
-            location.reload();
+            alert("Berhasil! " + msg);
+            location.reload(); 
+        })
+        .catch(err => {
+            alert("Gagal koneksi ke server!");
+            btn.innerText = "SIMPAN KE DATABASE";
+            btn.disabled = false;
         });
     }
 </script>
