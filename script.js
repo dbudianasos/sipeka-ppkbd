@@ -7,6 +7,7 @@ let dataRenjaGlobal = [];
 let GLOBAL_WILAYAH = []; 
 let myChartInstance = null;
 
+
 // ================= LOGIN & SATPAM DIGITAL =================
 function login() {
   const nik = document.getElementById("nik").value;
@@ -184,7 +185,7 @@ function tambahUser() {
     }
   });
 }
-
+let DATA_USERS_ALL = [];
 function loadUsers() {
   const container = document.getElementById("container-daftar-user");
   if (!container) return;
@@ -193,45 +194,94 @@ function loadUsers() {
   const kecAdmin = localStorage.getItem("kecamatan");
   const desaAdmin = localStorage.getItem("desa");
 
-  container.innerHTML = `<p class="text-center text-[10px] text-gray-400 py-10 italic">Menyinkronkan data...</p>`;
+  container.innerHTML = `<p class="text-center text-[10px] text-gray-400 py-10 italic animate-pulse">Menyinkronkan database...</p>`;
 
   const params = new URLSearchParams({
-    action: "get_users", role_admin: roleAdmin, kec_admin: kecAdmin, desa_admin: desaAdmin
+    action: "get_users",
+    role_admin: roleAdmin,
+    kec_admin: kecAdmin,
+    desa_admin: desaAdmin
   });
 
   fetch(`${API_URL}?${params.toString()}`)
     .then(res => res.json())
     .then(data => {
-      container.innerHTML = "";
-      if (data.length === 0) {
-        container.innerHTML = `<div class="bg-white p-10 rounded-2xl text-center text-gray-400 text-[10px] shadow-sm border border-dashed">Belum ada user.</div>`;
-        return;
+      DATA_USERS_ALL = data; // Simpan ke variabel global
+      
+      // Isi Dropdown Filter Kecamatan (Hanya jika Super Admin)
+      const filterKec = document.getElementById("filter-kecamatan");
+      if(filterKec && roleAdmin === "super_admin" && filterKec.options.length <= 1) {
+        const listKec = [...new Set(data.map(u => u.kecamatan))];
+        listKec.forEach(k => {
+          if(k) filterKec.innerHTML += `<option value="${k}">${k}</option>`;
+        });
       }
-      data.forEach(u => {
-        let statusColor = u.status === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
-        let roleLabel = u.role === "super_admin" ? "👑 Super Admin" : (u.role === "admin_kec" ? "🏛️ Admin Kec" : (u.role === "admin_desa" ? "🏠 Admin Desa" : "👤 Kader"));
-        
-        let btnStatus = u.status === "aktif" 
-          ? `<button onclick="ubahStatusUser('${u.nik}', 'nonaktif')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">⏸ NONAKTIFKAN</button>`
-          : `<button onclick="ubahStatusUser('${u.nik}', 'aktif')" class="flex-1 bg-green-50 text-green-700 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">▶ AKTIFKAN</button>`;
 
-        container.innerHTML += `
-          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-2">
-            <div class="flex justify-between items-start mb-2">
-              <div>
-                <p class="text-[11px] font-black text-blue-900 uppercase">${u.nama}</p>
-                <p class="text-[9px] text-slate-400 font-bold">${u.nik}</p>
-              </div>
-              <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase tracking-widest">${u.status}</span>
-            </div>
-            <div class="bg-slate-50 p-2 rounded-lg mb-3">
-               <p class="text-[9px] text-slate-500 font-bold">📍 ${u.kecamatan} - ${u.desa}</p>
-               <p class="text-[9px] text-blue-700 font-black mt-0.5 uppercase tracking-tighter">${roleLabel}</p>
-            </div>
-            <div class="flex gap-2">${btnStatus} <button onclick="hapusUser('${u.nik}', '${u.nama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">🗑 HAPUS</button></div>
-          </div>`;
-      });
+      applyFilters(); // Jalankan tampilan pertama kali
     });
+}
+
+function applyFilters() {
+  const container = document.getElementById("container-daftar-user");
+  const searchQuery = document.getElementById("search-user").value.toUpperCase();
+  const filterRole = document.getElementById("filter-role").value;
+  const filterKec = document.getElementById("filter-kecamatan").value;
+
+  // Proses Filter
+  const filteredData = DATA_USERS_ALL.filter(u => {
+    const matchSearch = u.nama.toUpperCase().includes(searchQuery) || u.nik.includes(searchQuery);
+    const matchRole = filterRole === "" || u.role === filterRole;
+    const matchKec = filterKec === "" || u.kecamatan === filterKec;
+    return matchSearch && matchRole && matchKec;
+  });
+
+  container.innerHTML = "";
+
+  if (filteredData.length === 0) {
+    container.innerHTML = `<p class="text-center text-[10px] text-slate-400 py-10 italic">Data tidak ditemukan...</p>`;
+    return;
+  }
+
+  filteredData.forEach(u => {
+    let statusColor = u.status === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+    
+    // PENJELASAN UNDEFINED: Pastikan menggunakan u.kecamatan dan u.desa (sesuai JSON dari GAS)
+    // Jika masih undefined, ganti menjadi u.nama_kec atau u.nama_desa sesuai kolom di spreadsheet
+    const kecTampil = u.kecamatan || "-";
+    const desaTampil = u.desa || "-";
+
+    let roleLabel = "";
+    if(u.role === "super_admin") roleLabel = "👑 Super Admin";
+    else if(u.role === "admin_kec") roleLabel = "🏛️ Admin Kec";
+    else if(u.role === "admin_desa") roleLabel = "🏠 Admin Desa";
+    else roleLabel = "👤 Kader";
+    
+    let btnStatus = u.status === "aktif" 
+      ? `<button onclick="ubahStatusUser('${u.nik}', 'nonaktif')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">⏸ NONAKTIFKAN</button>`
+      : `<button onclick="ubahStatusUser('${u.nik}', 'aktif')" class="flex-1 bg-green-50 text-green-700 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">▶ AKTIFKAN</button>`;
+
+    container.innerHTML += `
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <p class="text-[11px] font-black text-blue-900 uppercase leading-tight">${u.nama}</p>
+            <p class="text-[9px] text-slate-400 font-bold">${u.nik}</p>
+          </div>
+          <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase shadow-sm">${u.status}</span>
+        </div>
+        
+        <div class="bg-slate-50 p-2 rounded-lg mb-3">
+           <p class="text-[9px] text-slate-500 font-bold">📍 ${kecTampil} - ${desaTampil}</p>
+           <p class="text-[9px] text-blue-700 font-black mt-0.5 uppercase tracking-tighter">${roleLabel}</p>
+        </div>
+        
+        <div class="flex gap-2">
+          ${btnStatus}
+          <button onclick="hapusUser('${u.nik}', '${u.nama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">🗑 HAPUS</button>
+        </div>
+      </div>
+    `;
+  });
 }
 
 function ubahStatusUser(nik, status) {
