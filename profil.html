@@ -2,98 +2,145 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Profil</title>
+  <title>Profil Saya | siPeKa</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <script src="https://cdn.tailwindcss.com"></script>
-
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Poppins', sans-serif; }
+    .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
   </style>
 </head>
 
-<body class="bg-slate-100 min-h-screen p-6">
+<body class="bg-slate-100 min-h-screen pb-10">
+  <header class="nav-gradient p-5 rounded-b-[2rem] shadow-lg mb-6 text-white">
+    <div class="flex items-center gap-4 max-w-5xl mx-auto">
+      <button onclick="window.location.href='dashboard-admin.html'" class="font-bold text-xl">←</button>
+      <h2 class="text-sm font-black uppercase tracking-widest">Profil Pengguna</h2>
+    </div>
+  </header>
 
-<script src="script.js"></script>
-<script>cekLogin();</script>
+  <main class="max-w-xl mx-auto px-4">
+    <div class="bg-white p-6 rounded-[2.5rem] shadow-sm">
+      
+      <div class="text-center mb-8">
+        <div class="relative inline-block">
+          <img id="img-preview" src="https://via.placeholder.com/150" class="w-28 h-28 bg-slate-200 rounded-[2rem] border-4 border-white shadow-md object-cover mb-3">
+          <label for="input-foto" class="absolute bottom-2 right-0 bg-blue-600 text-white p-2 rounded-xl border-2 border-white cursor-pointer active:scale-95 transition">
+            📸
+          </label>
+          <input type="file" id="input-foto" accept="image/*" class="hidden" onchange="previewFoto()">
+        </div>
+        <h3 id="nama-tampil" class="font-black text-slate-800 uppercase text-lg">Memuat...</h3>
+        <p id="nik-tampil" class="text-xs text-slate-400 font-bold"></p>
+      </div>
 
-<!-- HEADER -->
-<div class="flex items-center mb-6">
-  <button onclick="window.location.href='dashboard.html'" 
-    class="mr-4 text-blue-900 font-bold">←</button>
-  <h2 class="text-xl font-bold">Profil</h2>
-</div>
+      <div class="space-y-4">
+        <div>
+          <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Nomor HP / Whatsapp</label>
+          <input id="p-hp" type="number" class="w-full p-4 text-sm font-bold bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-600">
+        </div>
 
-<!-- CARD -->
-<div class="bg-white p-6 rounded-2xl shadow">
+        <div>
+          <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Alamat Lengkap</label>
+          <textarea id="p-alamat" rows="2" class="w-full p-4 text-sm font-bold bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 uppercase" placeholder="Jl. Contoh No. 123..."></textarea>
+        </div>
 
-  <div class="text-center mb-6">
-    <div class="text-5xl mb-2">👤</div>
-    <h3 id="nama" class="font-bold text-lg"></h3>
-    <p id="nik" class="text-sm text-gray-500"></p>
-  </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Kecamatan</label>
+            <input id="p-kecamatan" type="text" class="w-full p-4 text-[11px] font-bold bg-gray-100 rounded-2xl text-gray-500" readonly>
+          </div>
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Wilayah (Desa)</label>
+            <input id="p-desa" type="text" class="w-full p-4 text-[11px] font-bold bg-gray-100 rounded-2xl text-gray-500" readonly>
+          </div>
+        </div>
 
-  <div class="space-y-4">
+        <div class="pt-2">
+          <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Ganti Password (Kosongkan jika tetap)</label>
+          <input id="p-password" type="password" class="w-full p-4 text-sm font-bold bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-600" placeholder="••••••••">
+        </div>
 
-  <div>
-    <label class="text-xs font-bold text-gray-500">Nomor HP / Whatsapp</label>
-    <input id="hp" type="text" class="w-full p-3 border rounded-xl bg-white focus:ring-2 focus:ring-blue-600 outline-none">
-  </div>
-  
-  <div>
-    <label class="text-sm">Wilayah Tugas (Desa)</label>
-    <input id="wilayah" type="text" class="w-full p-3 border rounded-lg bg-gray-100" readonly>
-    <p class="text-[10px] text-gray-400 mt-1">*Wilayah hanya bisa diubah oleh Admin</p>
-  </div>
-  
-  <div>
-  <label class="text-sm">Kecamatan</label>
-  <input id="kecamatan" type="text" class="w-full p-3 border rounded-lg bg-gray-100" readonly>
-  <p class="text-[10px] text-gray-400 mt-1">*Kecamatan hanya bisa diubah oleh Admin</p>
-  </div>
-  
-  <div>
-    <label class="text-sm">Password Baru</label>
-    <input id="passwordBaru" type="password" class="w-full p-3 border rounded-lg">
-  </div>
+        <button onclick="updateProfil()" id="btn-save" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg mt-4 uppercase tracking-widest text-xs active:scale-95 transition">
+          Simpan Perubahan
+        </button>
 
-  <button onclick="updateProfil()" 
-    class="w-full bg-blue-900 text-white p-3 rounded-lg">
-    Simpan Perubahan
-  </button>
+        <p id="info" class="text-center text-[10px] font-bold"></p>
+      </div>
+    </div>
+  </main>
 
-  <p id="info" class="text-center text-sm mt-2"></p>
+  <script src="script.js"></script>
+  <script>
+    cekLogin();
+    let FOTO_DATA = ""; // Penampung string foto profil
 
-</div>
+    function previewFoto() {
+      const file = document.getElementById('input-foto').files[0];
+      const reader = new FileReader();
+      reader.onloadend = function() {
+        document.getElementById('img-preview').src = reader.result;
+        FOTO_DATA = reader.result.split(',')[1]; // Ambil Base64 saja
+      }
+      if (file) reader.readAsDataURL(file);
+    }
 
-</div>
-<script>
-  cekLogin(); // Pastikan user sudah login
+    function loadProfil() {
+      const nik = localStorage.getItem("nik");
+      fetch(`${API_URL}?action=get_profil&nik=${nik}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "success") {
+            document.getElementById("nama-tampil").innerText = data.nama;
+            document.getElementById("nik-tampil").innerText = nik;
+            document.getElementById("p-hp").value = data.hp || "";
+            document.getElementById("p-alamat").value = data.alamat || "";
+            document.getElementById("p-kecamatan").value = data.kecamatan || "";
+            document.getElementById("p-desa").value = data.desa || "";
+            if (data.foto) {
+              document.getElementById("img-preview").src = "data:image/jpeg;base64," + data.foto;
+            }
+          }
+        });
+    }
 
-  function loadProfil() {
-    const nik = localStorage.getItem("nik");
-    
-    // Ambil data dari Backend
-    fetch(API_URL + "?action=get_profil&nik=" + nik)
-      .then(res => res.json())
-      .then(data => {
-        // Cek label "success" yang kita tambahkan di Apps Script tadi
-        if (data.status === "success") {
-          document.getElementById("hp").value = data.hp || "";
-          document.getElementById("wilayah").value = data.wilayah || "";
-          // Kecamatan kita ambil dari memori login agar cepat
-          document.getElementById("kecamatan").value = localStorage.getItem("kecamatan") || "";
-        }
+    function updateProfil() {
+      const btn = document.getElementById("btn-save");
+      const info = document.getElementById("info");
+      const nik = localStorage.getItem("nik");
+      
+      const payload = {
+        action: "update_profil",
+        nik: nik,
+        hp: document.getElementById("p-hp").value,
+        alamat: document.getElementById("p-alamat").value,
+        password: document.getElementById("p-password").value,
+        foto_data: FOTO_DATA
+      };
+
+      btn.innerText = "⏳ MENYIMPAN...";
+      btn.disabled = true;
+
+      fetch(API_URL, {
+        method: "POST",
+        body: new URLSearchParams(payload)
       })
-      .catch(err => console.log("Gagal tarik data profil:", err));
-  }
+      .then(res => res.text())
+      .then(res => {
+        if (res === "success") {
+          info.innerText = "✅ DATA BERHASIL DIPERBARUI";
+          info.className = "text-center text-[10px] font-bold text-green-600 mt-2";
+          setTimeout(() => { location.reload(); }, 1500);
+        } else {
+          alert("Gagal memperbarui profil");
+          btn.disabled = false;
+          btn.innerText = "Simpan Perubahan";
+        }
+      });
+    }
 
-  // Panggil fungsi segera setelah halaman terbuka
-  loadProfil();
-</script>
-<footer class="text-center text-xs text-gray-500 mt-6">
-  © Versi 0.1 - 2026 Dian UPTD PP Wil V
-</footer>
-
+    window.onload = loadProfil;
+  </script>
 </body>
 </html>
