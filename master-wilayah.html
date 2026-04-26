@@ -52,127 +52,55 @@
   </main>
 
   <script>
-    // 1. AMBIL DATA DARI PENYIMPANAN LOKAL
     const role = localStorage.getItem("role");
     const kecAsli = localStorage.getItem("kecamatan");
-    
-    // 2. JALANKAN SAAT HALAMAN DIBUKA
+
     window.onload = () => {
-        cekLogin(); // Pastikan satpam cek dulu
-        loadKecamatanList(); // Tarik daftar kecamatan dari spreadsheet
+        cekLogin();
+        loadWilayahDatabase(); // Memanggil fungsi dari script.js
     };
-    
-    // 3. FUNGSI AMBIL DAFTAR KECAMATAN DARI DATABASE
-    function loadKecamatanList() {
-        const selKec = document.getElementById("select-kecamatan");
-        
-        // Tampilkan loading sebentar
-        selKec.innerHTML = '<option value="">⏳ Memuat Kecamatan...</option>';
-    
-        fetch(`${API_URL}?action=get_wilayah_lengkap`)
-            .then(res => res.json())
-            .then(data => {
-                // Bersihkan dropdown
-                selKec.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
-                
-                // Ambil daftar Kecamatan Unik (agar tidak muncul Setu berkali-kali)
-                const uniqueKec = [...new Map(data.map(item => [item['kode_kec'], item])).values()];
-                
-                uniqueKec.forEach(item => {
-                    if(item.nama_kec && item.nama_kec !== "-") {
-                        let opt = document.createElement("option");
-                        opt.value = item.nama_kec;
-                        opt.setAttribute("data-kode", item.kode_kec); // Simpan kodenya di sini
-                        opt.innerHTML = item.nama_kec;
-                        selKec.appendChild(opt);
-                    }
-                });
-    
-                // LOGIKA PENGUNCIAN OTOMATIS:
-                // Jika Bapak Super Admin, dropdown bisa dipilih. 
-                // Jika Admin Kec, otomatis terpilih wilayahnya dan dikunci (disabled).
-                if (role !== "super_admin") {
-                    selKec.value = kecAsli;
-                    selKec.disabled = true; 
-                }
-                
-                updateInfoWilayah(); // Update teks tampilan
-            })
-            .catch(err => {
-                console.error("Gagal ambil data:", err);
-                selKec.innerHTML = '<option value="">❌ Gagal Memuat Data</option>';
-            });
-    }
-    
-    // 4. UPDATE TEKS TAMPILAN WILAYAH
+
     function updateInfoWilayah() {
         const namaKec = document.getElementById("select-kecamatan").value;
         const display = document.getElementById("display-wilayah");
-        
         if (namaKec) {
             display.innerText = "Kecamatan " + namaKec;
             document.getElementById("msg-kecamatan").classList.add("hidden");
-        } else {
-            display.innerText = "Belum Memilih Kecamatan";
         }
     }
-    
-    // 5. HITUNG JUMLAH DESA SAAT MENGETIK
+
     function hitung() {
         const input = document.getElementById("bulk-input").value;
-        const arrayDesa = input.split(",").filter(item => item.trim() !== "");
-        document.getElementById("counter").innerText = arrayDesa.length;
+        document.getElementById("counter").innerText = input.split(",").filter(i => i.trim() !== "").length;
     }
-    
-    // 6. FUNGSI SIMPAN DATA KE SPREADSHEET
+
     function simpanData() {
         const selKec = document.getElementById("select-kecamatan");
-        const selectedOption = selKec.options[selKec.selectedIndex];
+        const kodeKec = selKec.options[selKec.selectedIndex].getAttribute("data-kode");
         const input = document.getElementById("bulk-input").value;
-        
-        // Validasi Pilihan Kecamatan
-        if(!selKec.value) {
-            document.getElementById("msg-kecamatan").classList.remove("hidden");
-            selKec.focus();
-            return;
-        }
-    
-        // Validasi Input Desa
-        if(!input.trim()) {
-            alert("Silakan masukkan nama-nama desa/kelurahan, pisahkan dengan koma.");
-            return;
-        }
-    
-        const kodeKec = selectedOption.getAttribute("data-kode");
-        const namaKec = selKec.value;
         const btn = document.getElementById("btn-save");
-    
-        // Efek Loading pada Tombol
-        btn.innerText = "⏳ SEDANG MENYIMPAN...";
+
+        if(!selKec.value || !input) return alert("Pilih Kecamatan & Isi Daftar Desa!");
+
+        btn.innerText = "⏳ MENYIMPAN...";
         btn.disabled = true;
-    
-        // Kirim ke Google Apps Script
+
         fetch(API_URL, {
             method: "POST",
             body: new URLSearchParams({
                 action: "save_bulk_wilayah",
                 type: "desa",
                 kode_kec: kodeKec,
-                nama_kec: namaKec,
+                nama_kec: selKec.value,
                 data_list: input
             })
         })
         .then(res => res.text())
         .then(msg => {
-            alert("Berhasil! " + msg);
-            location.reload(); // Refresh halaman agar bersih kembali
-        })
-        .catch(err => {
-            alert("Gagal koneksi ke server!");
-            btn.innerText = "SIMPAN KE DATABASE";
-            btn.disabled = false;
+            alert(msg);
+            location.reload();
         });
     }
-  </script>
+</script>
 </body>
 </html>
