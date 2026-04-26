@@ -54,7 +54,9 @@ function logout() {
   window.location.href = "index.html";
 }
 
-// ================= SISTEM WILAYAH KABUPATEN (BARU) =================
+// ================= SISTEM WILAYAH & OTORITAS =================
+let GLOBAL_WILAYAH = []; 
+
 function loadWilayahDatabase() {
   const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
   if (!selKec) return;
@@ -65,7 +67,6 @@ function loadWilayahDatabase() {
     .then(res => res.json())
     .then(data => {
       GLOBAL_WILAYAH = data;
-      // Ambil daftar Kecamatan Unik
       const uniqueKec = [...new Map(data.map(item => [item['kode_kec'], item])).values()];
       
       selKec.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
@@ -78,17 +79,15 @@ function loadWilayahDatabase() {
           selKec.appendChild(opt);
         }
       });
-      // Inisialisasi tampilan setelah data siap
       initUserPage();
     })
     .catch(err => {
-      console.error(err);
       selKec.innerHTML = '<option value="">❌ Gagal Memuat Data</option>';
     });
 }
 
 function updateDropdownDesa(desaTerpilih = "") {
-  const roleLogin = localStorage.getItem("role"); // Cek siapa yang sedang login
+  const roleLogin = localStorage.getItem("role");
   const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
   const selDesa = document.getElementById("user-wilayah");
   if (!selDesa || !selKec) return;
@@ -96,15 +95,13 @@ function updateDropdownDesa(desaTerpilih = "") {
   const kecDipilih = selKec.value;
   selDesa.innerHTML = '<option value="">-- Pilih Desa --</option>';
   
-  // LOGIKA PROTEKSI: Hanya Super Admin yang bisa melihat opsi "SEMUA DESA"
   if (kecDipilih && roleLogin === "super_admin") {
     let optSemua = document.createElement("option");
     optSemua.value = "SEMUA DESA";
-    optSemua.innerHTML = "SEMUA DESA";
+    optSemua.innerHTML = "--- SEMUA DESA (OTORITAS KEC) ---";
     selDesa.appendChild(optSemua);
   }
   
-  // Ambil daftar desa asli dari database wilayah
   const filtered = GLOBAL_WILAYAH.filter(item => item.nama_kec === kecDipilih);
   filtered.forEach(item => {
     if(item.nama_desa && item.nama_desa !== "-") {
@@ -123,133 +120,75 @@ function initUserPage() {
   const desa = localStorage.getItem("desa");
   
   const subTitle = document.getElementById("sub-title-admin");
-  const selRole = document.getElementById("user-role"); // Dropdown di Form
-  const filterRole = document.getElementById("filter-role"); // Dropdown di Filter
-  const selKec = document.getElementById("user-kecamatan"); // Dropdown Kecamatan di Form
-  const selDesa = document.getElementById("user-wilayah"); // Dropdown Desa di Form
+  const selRole = document.getElementById("user-role"); 
+  const filterRole = document.getElementById("filter-role"); 
+  const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
+  const selDesa = document.getElementById("user-wilayah");
+  const displayWil = document.getElementById("display-wilayah");
 
-  // 1. UPDATE HEADER OTORITAS
   if (subTitle) {
     if (role === "super_admin") subTitle.innerText = "Otoritas: Kabupaten Bekasi";
     else if (role === "admin_kec") subTitle.innerText = "Otoritas: Kecamatan " + kec;
     else subTitle.innerText = "Otoritas: Desa " + desa;
   }
+  
+  if (displayWil) {
+    displayWil.innerText = (role === "super_admin") ? "Kabupaten Bekasi" : "Kecamatan " + kec;
+  }
+
+  if (selKec && role !== "super_admin") {
+    selKec.value = kec;
+    selKec.disabled = true;
+    if (selDesa) updateDropdownDesa();
+  }
 
   if (!selRole) return;
-
-  // 2. LOGIKA ROLE & KUNCI FORM (MILIK PAK DIAN + FILTER)
   let ops = "";
   if (role === "super_admin") {
     ops = `<option value="admin_kec">Admin Kecamatan</option><option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
-  } 
-  else if (role === "admin_kec") {
+  } else if (role === "admin_kec") {
     ops = `<option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
-    // Kunci Kecamatan di Form agar Admin Kec tidak bisa pilih kecamatan lain
-    if(selKec) { 
-      selKec.value = kec; 
-      selKec.disabled = true; 
-      updateDropdownDesa(); 
-    }
-  } 
-  else {
+  } else {
     ops = `<option value="kader">Kader PPKBD</option>`;
-    // Kunci Kecamatan & Desa di Form untuk Admin Desa
-    if(selKec) { selKec.value = kec; selKec.disabled = true; }
     if(selDesa) { updateDropdownDesa(desa); selDesa.disabled = true; }
   }
 
-  // Isi Pilihan di Form Registrasi
   selRole.innerHTML = ops;
-  // Isi Pilihan di Filter (Ditambah opsi "Semua Role")
   if(filterRole) filterRole.innerHTML = `<option value="">Semua Role</option>` + ops;
 }
 
-// ================= MANAJEMEN USER (TAMBAH, LIST, HAPUS) =================
-let DATA_USERS_ALL = []; // Variabel global untuk menampung data
-
-function tambahUser() {
-  const btn = document.getElementById("btn-tambah-user");
-  const info = document.getElementById("info-user");
-
-  // Kita buat payload dengan kunci yang sesuai dengan doPost di GAS Bapak
-  const payload = {
-    action: "tambah_user",
-    user_nik: document.getElementById("user-nik").value,
-    nama: document.getElementById("user-nama").value.toUpperCase(),
-    password: document.getElementById("user-password").value,
-    role: document.getElementById("user-role").value,
-    kecamatan: document.getElementById("user-kecamatan").value,
-    desa: document.getElementById("user-wilayah").value,
-    hp: document.getElementById("user-hp").value
-  };
-
-  if (!payload.user_nik || !payload.nama || !payload.kecamatan || !payload.desa) {
-    info.innerText = "❌ Nama, NIK, Kecamatan & Desa wajib diisi!";
-    info.className = "text-center text-[10px] mt-2 font-bold text-red-500";
-    return;
-  }
-
-  btn.innerText = "⏳ MENYIMPAN...";
-  btn.disabled = true;
-
-  fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
-  .then(res => res.text())
-  .then(res => {
-    if (res === "success") {
-      info.innerText = "✅ USER BERHASIL DIDAFTARKAN!";
-      info.className = "text-center text-[10px] mt-2 font-bold text-green-600";
-      setTimeout(() => { location.reload(); }, 1500);
-    } else {
-      alert("Gagal: " + res);
-      btn.disabled = false;
-      btn.innerText = "SIMPAN DATA PENGGUNA";
-    }
-  });
-}
+// ================= SISTEM DAFTAR USER (SINKRON DENGAN GS) =================
+let DATA_USERS_ALL = [];
 
 function loadUsers() {
   const container = document.getElementById("container-daftar-user");
-  const filterWil = document.getElementById("filter-wilayah"); // Pastikan ID ini ada di HTML
+  const filterWil = document.getElementById("filter-wilayah");
   if (!container) return;
 
   const roleAdmin = localStorage.getItem("role");
   const kecAdmin = localStorage.getItem("kecamatan");
   const desaAdmin = localStorage.getItem("desa");
 
-  container.innerHTML = `<p class="text-center text-[10px] text-gray-400 py-10 italic animate-pulse">Menyinkronkan database...</p>`;
+  container.innerHTML = `<p class="text-center text-[10px] text-gray-400 py-10 italic">Sinkronisasi data...</p>`;
 
-  const params = new URLSearchParams({
-    action: "get_users",
-    role_admin: roleAdmin,
-    kec_admin: kecAdmin,
-    desa_admin: desaAdmin
-  });
-
-  fetch(`${API_URL}?${params.toString()}`)
+  fetch(`${API_URL}?action=get_users&role_admin=${roleAdmin}&kec_admin=${kecAdmin}&desa_admin=${desaAdmin}`)
     .then(res => res.json())
     .then(data => {
-      DATA_USERS_ALL = data; 
+      DATA_USERS_ALL = data;
       
-      // LOGIKA FILTER WILAYAH OTOMATIS
       if (filterWil) {
         filterWil.innerHTML = '<option value="">Semua Wilayah</option>';
         if (roleAdmin === "super_admin") {
-          // Super Admin melihat daftar KECAMATAN
           const listKec = [...new Set(data.map(u => u.Kecamatan || u.kecamatan))].sort();
-          listKec.forEach(k => { if(k && k !== "SEMUA") filterWil.innerHTML += `<option value="${k}">${k}</option>`; });
+          listKec.forEach(k => { if(k) filterWil.innerHTML += `<option value="${k}">${k}</option>`; });
         } else if (roleAdmin === "admin_kec") {
-          // Admin Kec melihat daftar DESA
           const listDesa = [...new Set(data.map(u => u.Desa || u.desa))].sort();
-          listDesa.forEach(d => { if(d && d !== "SEMUA DESA") filterWil.innerHTML += `<option value="${d}">${d}</option>`; });
+          listDesa.forEach(d => { if(d) filterWil.innerHTML += `<option value="${d}">${d}</option>`; });
         } else {
           filterWil.classList.add("hidden");
         }
       }
-
       applyFilters(); 
-    })
-    .catch(err => {
-      container.innerHTML = `<p class="text-center text-red-500 text-[10px]">Gagal memuat data. Periksa koneksi atau Apps Script.</p>`;
     });
 }
 
@@ -258,26 +197,25 @@ function applyFilters() {
   const roleAdmin = localStorage.getItem("role");
   const searchQuery = document.getElementById("search-user").value.toUpperCase();
   const filterRole = document.getElementById("filter-role").value;
-  const filterWil = document.getElementById("filter-wilayah").value;
+  const filterWilValue = document.getElementById("filter-wilayah").value;
 
   const filteredData = DATA_USERS_ALL.filter(u => {
-    // Mapping data sesuai Header Spreadsheet Bapak (Huruf Besar)
-    const namaUser = (u.Nama || "").toUpperCase();
-    const nikUser = (u.NIK || "").toString();
-    const roleUser = u.Role || "";
-    const kecUser = u.Kecamatan || "";
-    const desaUser = u.Desa || "";
+    // SINKRONISASI KUNCI: Cek NAMA/Nama, NIK/nik dsb
+    const uNama = (u.Nama || u.nama || "").toUpperCase();
+    const uNik = (u.NIK || u.nik || "").toString();
+    const uRole = u.Role || u.role || "";
+    const uKec = u.Kecamatan || u.kecamatan || "";
+    const uDesa = u.Desa || u.desa || "";
 
-    const matchSearch = namaUser.includes(searchQuery) || nikUser.includes(searchQuery);
-    const matchRole = filterRole === "" || roleUser === filterRole;
+    const matchSearch = uNama.includes(searchQuery) || uNik.includes(searchQuery);
+    const matchRole = filterRole === "" || uRole === filterRole;
     
     let matchWil = true;
     if (roleAdmin === "super_admin") {
-      matchWil = filterWil === "" || kecUser === filterWil;
+      matchWil = filterWilValue === "" || uKec === filterWilValue;
     } else if (roleAdmin === "admin_kec") {
-      matchWil = filterWil === "" || desaUser === filterWil;
+      matchWil = filterWilValue === "" || uDesa === filterWilValue;
     }
-    
     return matchSearch && matchRole && matchWil;
   });
 
@@ -288,37 +226,33 @@ function applyFilters() {
   }
 
   filteredData.forEach(u => {
-    // Render data menggunakan key Huruf Besar sesuai Spreadsheet
-    const Nama = u.Nama || "-";
-    const NIK = u.NIK || "-";
-    const Kec = u.Kecamatan || "-";
-    const Desa = u.Desa || "-";
-    const Role = u.Role || "";
-    const Status = u.Status || "aktif";
+    // Gunakan Logika Sapu Jagat agar tidak undefined
+    const dNama = u.Nama || u.nama || "---";
+    const dNik = u.NIK || u.nik || "---";
+    const dKec = u.Kecamatan || u.kecamatan || "---";
+    const dDesa = u.Desa || u.desa || "---";
+    const dRole = u.Role || u.role || "";
+    const dStatus = u.Status || u.status || "aktif";
 
-    let statusColor = Status === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
-    let roleLabel = Role === "super_admin" ? "👑 Super Admin" : 
-                    Role === "admin_kec" ? "🏛️ Admin Kec" : 
-                    Role === "admin_desa" ? "🏠 Admin Desa" : "👤 Kader";
+    let statusColor = dStatus === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+    let roleLabel = dRole === "super_admin" ? "👑 Super Admin" : (dRole === "admin_kec" ? "🏛️ Admin Kec" : (dRole === "admin_desa" ? "🏠 Admin Desa" : "👤 Kader"));
 
     container.innerHTML += `
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-2">
         <div class="flex justify-between items-start mb-2">
           <div>
-            <p class="text-[11px] font-black text-blue-900 uppercase leading-tight">${Nama}</p>
-            <p class="text-[9px] text-slate-400 font-bold">${NIK}</p>
+            <p class="text-[11px] font-black text-blue-900 uppercase leading-tight">${dNama}</p>
+            <p class="text-[9px] text-slate-400 font-bold">${dNik}</p>
           </div>
-          <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase shadow-sm">${Status}</span>
+          <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase">${dStatus}</span>
         </div>
         <div class="bg-slate-50 p-2 rounded-lg mb-2">
-           <p class="text-[9px] text-slate-500 font-bold">📍 ${Kec} - ${Desa}</p>
-           <p class="text-[9px] text-blue-700 font-black mt-0.5 uppercase tracking-tighter">${roleLabel}</p>
+           <p class="text-[9px] text-slate-500 font-bold">📍 ${dKec} - ${dDesa}</p>
+           <p class="text-[9px] text-blue-700 font-black mt-0.5 uppercase">${roleLabel}</p>
         </div>
         <div class="flex gap-2">
-           <button onclick="ubahStatusUser('${NIK}', '${Status === 'aktif' ? 'nonaktif' : 'aktif'}')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-bold py-2 rounded-xl active:scale-95 transition">
-             ${Status === 'aktif' ? '⏸ NONAKTIFKAN' : '▶ AKTIFKAN'}
-           </button>
-           <button onclick="hapusUser('${NIK}', '${Nama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-bold py-2 rounded-xl active:scale-95 transition">🗑 HAPUS</button>
+           <button onclick="ubahStatusUser('${dNik}', '${dStatus === 'aktif' ? 'nonaktif' : 'aktif'}')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-bold py-2 rounded-xl transition active:scale-95">STATUS</button>
+           <button onclick="hapusUser('${dNik}', '${dNama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-bold py-2 rounded-xl transition active:scale-95">🗑 HAPUS</button>
         </div>
       </div>`;
   });
