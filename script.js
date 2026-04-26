@@ -799,19 +799,21 @@ function tambahUser() {
     nama: document.getElementById("user-nama").value,
     password: document.getElementById("user-password").value,
     role: document.getElementById("user-role").value,
-    kecamatan: document.getElementById("user-kecamatan").value,
-    desa: document.getElementById("user-wilayah").value, // Mengambil dari select desa
+    kecamatan: document.getElementById("user-kecamatan").value, // AMBIL DARI DROPDOWN
+    desa: document.getElementById("user-wilayah").value,        // AMBIL DARI DROPDOWN DESA
     hp: document.getElementById("user-hp").value
   };
 
-  if (!payload.user_nik || !payload.nama || !payload.desa) {
-    info.innerText = "❌ Semua data wajib diisi!";
-    info.className = "text-center text-sm mt-2 font-bold text-red-500";
+  // SESUAIKAN: Tambahkan pengecekan kecamatan & desa
+  if (!payload.user_nik || !payload.nama || !payload.kecamatan || !payload.desa) {
+    info.innerText = "❌ Nama, NIK, Kecamatan & Desa wajib diisi!";
+    info.className = "text-center text-[10px] mt-2 font-bold text-red-500";
     return;
   }
 
-  info.innerText = "⏳ Menyimpan User...";
-  
+  btn.innerText = "⏳ MENYIMPAN...";
+  btn.disabled = true;
+
   fetch(API_URL, {
     method: "POST",
     body: new URLSearchParams(payload)
@@ -819,10 +821,13 @@ function tambahUser() {
   .then(res => res.text())
   .then(res => {
     if (res === "success") {
-      info.innerText = "✅ User Berhasil Didaftarkan!";
-      info.className = "text-center text-sm mt-2 font-bold text-green-600";
-      // Reset form atau refresh list
-      loadUsers();
+      info.innerText = "✅ USER BERHASIL DIDAFTARKAN!";
+      info.className = "text-center text-[10px] mt-2 font-bold text-green-600";
+      document.getElementById("user-nik").value = "";
+      document.getElementById("user-nama").value = "";
+      btn.disabled = false;
+      btn.innerText = "SIMPAN USER BARU";
+      loadUsers(); // Refresh daftar di bawah
     }
   });
 }
@@ -830,87 +835,67 @@ function tambahUser() {
 // ================= LOAD DAFTAR USER =================
 function loadUsers() {
   const container = document.getElementById("container-daftar-user");
+  const roleAdmin = localStorage.getItem("role");
   const kecAdmin = localStorage.getItem("kecamatan");
+  const desaAdmin = localStorage.getItem("desa");
 
-  container.innerHTML = `<p class="text-center text-sm text-gray-400 py-4 italic">Memuat data...</p>`;
+  container.innerHTML = `<p class="text-center text-[10px] text-gray-400 py-10 italic">Menyinkronkan data wilayah...</p>`;
 
-  fetch(API_URL + "?action=get_users&kecamatan=" + kecAdmin)
+  // KIRIM PARAMETER LENGKAP agar GAS bisa filter otomatis
+  const params = new URLSearchParams({
+    action: "get_users",
+    role_admin: roleAdmin,
+    kec_admin: kecAdmin,
+    desa_admin: desaAdmin
+  });
+
+  fetch(`${API_URL}?${params.toString()}`)
     .then(res => res.json())
     .then(data => {
       container.innerHTML = "";
 
       if (data.length === 0) {
-        container.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-gray-400 text-sm shadow">Belum ada kader terdaftar.</div>`;
+        container.innerHTML = `<div class="bg-white p-10 rounded-2xl text-center text-gray-400 text-[10px] shadow-sm border border-dashed">Belum ada user di wilayah otoritas Anda.</div>`;
         return;
       }
 
       data.forEach(u => {
         let statusColor = u.status === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
-        let roleBadge = u.role === "admin" ? "👑 Admin" : "👤 Kader";
+        
+        // LABEL ROLE DINAMIS
+        let roleLabel = "";
+        if(u.role === "super_admin") roleLabel = "👑 Super Admin";
+        else if(u.role === "admin_kec") roleLabel = "🏛️ Admin Kec";
+        else if(u.role === "admin_desa") roleLabel = "🏠 Admin Desa";
+        else roleLabel = "👤 Kader";
         
         let btnStatus = u.status === "aktif" 
-          ? `<button onclick="ubahStatusUser('${u.nik}', 'nonaktif')" class="flex-1 bg-yellow-100 text-yellow-700 text-xs font-bold py-2 rounded-lg">⏸ Nonaktifkan</button>`
-          : `<button onclick="ubahStatusUser('${u.nik}', 'aktif')" class="flex-1 bg-green-100 text-green-700 text-xs font-bold py-2 rounded-lg">▶ Aktifkan</button>`;
+          ? `<button onclick="ubahStatusUser('${u.nik}', 'nonaktif')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">⏸ NONAKTIFKAN</button>`
+          : `<button onclick="ubahStatusUser('${u.nik}', 'aktif')" class="flex-1 bg-green-50 text-green-700 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">▶ AKTIFKAN</button>`;
 
         container.innerHTML += `
-          <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${u.role === 'admin' ? 'border-red-500' : 'border-blue-500'}">
-            <div class="flex justify-between items-start mb-2">
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+            <div class="flex justify-between items-start mb-3">
               <div>
-                <p class="text-sm font-black text-blue-900 uppercase">${u.nama}</p>
-                <p class="text-[10px] text-gray-500 font-bold tracking-wider">${u.nik}</p>
+                <p class="text-[11px] font-black text-blue-900 uppercase leading-tight">${u.nama}</p>
+                <p class="text-[9px] text-slate-400 font-bold">${u.nik}</p>
               </div>
-              <span class="text-[10px] font-bold ${statusColor} px-2 py-1 rounded-md uppercase">${u.status}</span>
+              <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase shadow-sm">${u.status}</span>
             </div>
             
-            <p class="text-xs text-gray-600 mb-3">Wilayah: <b>${u.wilayah}</b> | ${roleBadge}</p>
+            <div class="bg-slate-50 p-2 rounded-lg mb-3">
+               <p class="text-[9px] text-slate-500 font-bold">📍 ${u.kecamatan} - ${u.desa}</p>
+               <p class="text-[9px] text-blue-700 font-black mt-0.5 uppercase tracking-tighter">${roleLabel}</p>
+            </div>
             
-            <div class="flex gap-2 mt-2">
+            <div class="flex gap-2">
               ${btnStatus}
-              <button onclick="hapusUser('${u.nik}', '${u.nama}')" class="flex-1 bg-red-100 text-red-700 text-xs font-bold py-2 rounded-lg">🗑 Hapus</button>
+              <button onclick="hapusUser('${u.nik}', '${u.nama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">🗑 HAPUS</button>
             </div>
           </div>
         `;
       });
     });
-}
-
-function ubahStatusUser(nikTarget, statusBaru) {
-  if (!confirm(`Yakin ingin mengubah status kader ini menjadi ${statusBaru.toUpperCase()}?`)) return;
-
-  fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({
-      action: "update_status_user",
-      nik_target: nikTarget,
-      status_baru: statusBaru
-    })
-  })
-  .then(res => res.text())
-  .then(res => {
-    if (res === "success") {
-      alert("Status berhasil diubah!");
-      loadUsers(); 
-    }
-  });
-}
-
-function hapusUser(nikTarget, namaTarget) {
-  if (!confirm(`PERINGATAN! Yakin ingin menghapus kader ${namaTarget} secara permanen dari sistem?`)) return;
-
-  fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({
-      action: "hapus_user",
-      nik_target: nikTarget
-    })
-  })
-  .then(res => res.text())
-  .then(res => {
-    if (res === "success") {
-      alert("Kader berhasil dihapus!");
-      loadUsers(); 
-    }
-  });
 }
 
 //======================Update Substansi==========================//
