@@ -6,6 +6,7 @@ let base64Foto = "";
 let dataRiwayatGlobal = [];
 let dataRenjaGlobal = []; // Untuk menyimpan data renja agar bisa difilter tanggal
 let myChartInstance = null;
+
 // ================= LOGIN =================
 function login() {
   const nik = document.getElementById("nik").value;
@@ -28,21 +29,16 @@ function login() {
   .then(res => res.json())
   .then(data => {
     if (data.status === "success") {
-
-	  localStorage.setItem("nik", data.nik);
-	  localStorage.setItem("nama", data.nama);
-	  localStorage.setItem("role", data.role);
-	  localStorage.setItem("kecamatan", data.kecamatan);
-
-	  window.location.href = "dashboard.html";
-
-	} else if (data.status === "nonaktif") {
-
-	  info.innerText = "Akun tidak aktif!";
-
-	} else {
-	  info.innerText = "Login gagal!";
-	}
+      localStorage.setItem("nik", data.nik);
+      localStorage.setItem("nama", data.nama);
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("kecamatan", data.kecamatan);
+      window.location.href = "dashboard.html";
+    } else if (data.status === "nonaktif") {
+      info.innerText = "Akun tidak aktif!";
+    } else {
+      info.innerText = "Login gagal!";
+    }
   })
   .catch(() => {
     info.innerText = "Koneksi error!";
@@ -55,6 +51,7 @@ function cekLogin() {
     window.location.href = "index.html";
   }
 }
+
 // ================= ISI DATA DASHBOARD =================
 function initDashboard() {
   const nama = localStorage.getItem("nama");
@@ -70,22 +67,22 @@ function initDashboard() {
     menuAdmin.style.display = "block";
   }
 }
+
 // ================= LOGOUT =================
 function logout() {
   localStorage.clear();
   window.location.href = "index.html";
 }
+
 // ================= AMBIL PROFIL =================
 function loadProfil() {
   const nik = localStorage.getItem("nik");
   fetch(API_URL + "?action=get_profil&nik=" + nik)
     .then(res => res.json())
     .then(data => {
-      // Perbaikan: Tambahkan pengecekan status success
       if (data.status === "success") {
         document.getElementById("hp").value = data.hp || "";
         document.getElementById("wilayah").value = data.wilayah || "";
-        // Jika ada element kecamatan, isi juga
         if(document.getElementById("kecamatan")) {
            document.getElementById("kecamatan").value = localStorage.getItem("kecamatan") || "";
         }
@@ -129,6 +126,7 @@ function updateProfil() {
     }
   });
 }
+
 // ================= LOAD DATA LAPORAN =================
 function loadLaporan() {
   fetch(API_URL + "?action=get_laporan")
@@ -139,13 +137,11 @@ function loadLaporan() {
 
       data.forEach(lap => {
         if (lap.status === "Draft") {
-
           container.innerHTML += `
             <div class="bg-white p-4 rounded-xl shadow">
               <p class="font-bold">${lap.nama}</p>
               <p class="text-sm">${lap.kegiatan}</p>
               <p class="text-xs text-gray-500">${lap.tanggal}</p>
-
               <button onclick="approve('${lap.id}')" 
                 class="mt-2 bg-green-600 text-white px-3 py-1 rounded">
                 Approve
@@ -177,6 +173,7 @@ function approve(id) {
     }
   });
 }
+
 // ================= SIMPAN RENJA (VERSI UPDATE SIGA) =================
 function simpanRenja() {
   const btn = document.getElementById("btn-simpan-renja");
@@ -213,8 +210,6 @@ function simpanRenja() {
   if (jenis === "Lainnya") {
     kegiatanGabung = "Lainnya: " + keterangan;
   } else {
-    // Format: "Jenis: Substansi - Keterangan"
-    // Contoh: "KIE: Konseling Individu - Dusun III"
     kegiatanGabung = jenis + ": " + substansi + (keterangan ? " - " + keterangan : "");
   }
 
@@ -224,13 +219,13 @@ function simpanRenja() {
 
   fetch(API_URL, {
     method: "POST",
-	body: new URLSearchParams({
+    body: new URLSearchParams({
       action: "submit_renja",
       nik: nik,
       nama: nama,
       tahun: tahun,
       bulan: bulan,
-      kegiatan: kegiatanGabung, // <--- Hasil gabungan 3 input masuk ke sini
+      kegiatan: kegiatanGabung,
       sasaran: sasaran,
       target_volume: volume,
       target_peserta: peserta,
@@ -246,25 +241,25 @@ function simpanRenja() {
       
       // 1. Kosongkan Dropdown Utama & Sembunyikan Substansi
       const jenis = document.getElementById("renja-jenis");
-      jenis.value = ""; // Kembali ke "-- Pilih Jenis Kegiatan --"
+      jenis.value = ""; 
       
       const wrapperSub = document.getElementById("wrapper-substansi");
-      if (wrapperSub) wrapperSub.classList.add("hidden"); // Sembunyikan lagi dropdown anak
+      if (wrapperSub) wrapperSub.classList.add("hidden"); 
       
       const substansi = document.getElementById("renja-substansi");
-      if (substansi) substansi.value = ""; // Kosongkan pilihan anak
+      if (substansi) substansi.value = ""; 
 
       // 2. Kosongkan Elemen Teks & Angka
       document.getElementById("renja-indikator").value = "";
       document.getElementById("renja-sasaran").value = "";
       document.getElementById("renja-volume").value = "";
-      document.getElementById("renja-keterangan").value = ""; // Bersihkan juga keterangan
-	  document.getElementById("renja-target-angka").value = "";
+      document.getElementById("renja-keterangan").value = ""; 
+      document.getElementById("renja-target-angka").value = "";
       
       // Refresh list renja di bawahnya
       setTimeout(() => {
-		  loadRenja();
-		}, 1500); // Tunggu 1,5 detik baru refresh daftar
+        loadRenja();
+      }, 1500); 
     } else {
       info.innerText = "Gagal menyimpan!";
       info.className = "text-center text-sm mt-2 text-red-500 font-bold";
@@ -279,6 +274,7 @@ function simpanRenja() {
     btn.innerText = "SIMPAN RENCANA KERJA";
   });
 }
+
 // ================= LOAD DATA RENJA (Untuk List di Bawah Form) =================
 function loadRenja() {
   const list = document.getElementById("listRenja");
@@ -297,7 +293,6 @@ function loadRenja() {
 
       let html = "";
       data.forEach(item => {
-        // Logika Tombol Hapus: Jika can_delete false, sembunyikan tombol
         const aksiHapus = item.can_delete 
           ? `<button onclick="hapusRenja('${item.renja_id}')" class="text-red-300 hover:text-red-600 transition p-2">
                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -341,20 +336,17 @@ function loadRenja() {
       list.innerHTML = "<p class='text-center text-red-400 text-[10px]'>Gagal memuat daftar.</p>";
     });
 }
+
 // ================= FUNGSI HAPUS RENJA =================
 function hapusRenja(id) {
-  // 1. Munculkan konfirmasi (Penting agar tidak asal terhapus)
   if (confirm("Apakah yakin ingin menghapus rencana ini?")) {
-    
-    console.log("Mencoba menghapus Renja ID:", id); // Cek di console F12
-
-    // 2. Kirim perintah hapus ke GAS
+    console.log("Mencoba menghapus Renja ID:", id); 
     fetch(`${API_URL}?action=hapus_renja&renja_id=${id}`)
       .then(res => res.text())
       .then(res => {
         if (res.trim() === "success") {
           alert("Rencana Kerja Berhasil Dihapus!");
-          loadRenja(); // Panggil ulang daftar agar kartu yang dihapus hilang
+          loadRenja(); 
         } else {
           alert("Gagal menghapus data di database: " + res);
         }
@@ -365,8 +357,8 @@ function hapusRenja(id) {
       });
   }
 }
+
 // ================= LOAD DATA RENJA (Untuk Dropdown di Form Laporan) =================
-// ================= LOAD DATA RENJA KE GLOBAL (VERSI PROAKTIF) =================
 let statusRenjaGlobal = "loading"; 
 
 function loadRenjaUntukLaporan() {
@@ -385,11 +377,8 @@ function loadRenjaUntukLaporan() {
         statusRenjaGlobal = "sukses";
         console.log("Renja berhasil ditarik:", dataRenjaGlobal);
 
-        // --- SIHIRNYA DI SINI ---
-        // Cek apakah user sudah terlanjur pilih tanggal saat data sedang ditarik
         const tglSudahDiisi = document.getElementById("lap-tgl").value;
         if (tglSudahDiisi) {
-          // Jika sudah ada tanggal, langsung jalankan filter otomatis!
           filterRenjaBerdasarkanTanggal(); 
         }
       } else {
@@ -401,11 +390,11 @@ function loadRenjaUntukLaporan() {
       statusRenjaGlobal = "error";
     });
 }
+
 // ================================================================
-// A. LOGIKA FILTER, BUKA KUNCI, DAN SATUAN OTOMATIS (BARU)
+// A. LOGIKA FILTER, BUKA KUNCI, DAN SATUAN OTOMATIS
 // ================================================================
 
-// 1. FUNGSI: TOGGLE AREA FORM (Pindahan dari HTML)
 function toggleAreaForm() {
   const sumber = document.getElementById("sumber-kegiatan").value;
   const areaRenja = document.getElementById("area-pilih-renja");
@@ -418,14 +407,12 @@ function toggleAreaForm() {
   } else {
     areaRenja.style.display = "block";
     areaManual.style.display = "none";
-    // Kalau ganti ke mode Renja, langsung refresh listnya
     if (tglInput) filterRenjaBerdasarkanTanggal(); 
   }
-  updateLabelSatuanLaporan(); // Update satuan (Orang/Dokumen)
-  validasiFotoLaporan();      // Update status gembok kamera
+  updateLabelSatuanLaporan(); 
+  validasiFotoLaporan();      
 }
 
-// 2. FUNGSI: BUKA KUNCI FORM SAAT TANGGAL DIISI (Pindahan dari HTML)
 function bukaKunciForm() {
   const tglInput = document.getElementById("lap-tgl").value;
   const areaLanjutan = document.getElementById("area-lanjutan");
@@ -434,7 +421,6 @@ function bukaKunciForm() {
   const today = new Date().toISOString().split('T')[0];
 
   if (tglInput) {
-    // PROTEKSI: Jika user memaksa ketik tanggal masa depan
     if (tglInput > today) {
       alert("Maaf Pak/Bu, tidak boleh melaporkan kegiatan untuk tanggal masa depan.");
       document.getElementById("lap-tgl").value = "";
@@ -443,25 +429,21 @@ function bukaKunciForm() {
       return;
     }
 
-    // BUKA GEMBOK
     areaLanjutan.removeAttribute("disabled");
     areaLanjutan.classList.remove("opacity-40");
     dropdownSumber.removeAttribute("disabled");
     if (pesanKunci) pesanKunci.style.display = "none";
     
-    // Jalankan filter renja tahunan
     if (typeof filterRenjaBerdasarkanTanggal === "function") {
       filterRenjaBerdasarkanTanggal();
     }
   } else {
-    // KUNCI KEMBALI
     areaLanjutan.setAttribute("disabled", "true");
     areaLanjutan.classList.add("opacity-40");
     if (pesanKunci) pesanKunci.style.display = "block";
   }
 }
 
-// 3. FUNGSI: FILTER RENJA TAHUNAN (SINKRON DENGAN SATUAN)
 function filterRenjaBerdasarkanTanggal() {
   const tglInput = document.getElementById("lap-tgl").value;
   const dropdown = document.getElementById("pilih-renja");
@@ -469,7 +451,6 @@ function filterRenjaBerdasarkanTanggal() {
 
   const tahunPilih = String(tglInput.split("-")[0]);
   
-  // LOGIKA: Filter berdasarkan Tahun dan Sisa Volume > 0
   const renjaTersedia = dataRenjaGlobal.filter(r => {
     return String(r.tahun) === tahunPilih && Number(r.sisa_vol) > 0;
   });
@@ -480,32 +461,29 @@ function filterRenjaBerdasarkanTanggal() {
     dropdown.innerHTML = `<option value="">(Tidak ada Renja aktif tahun ${tahunPilih})</option>`;
   } else {
     renjaTersedia.forEach(r => {
-      // Kita tambahkan data-kegiatan untuk menyimpan nama aslinya
       dropdown.innerHTML += `<option value="${r.renja_id}" data-satuan="${r.target_peserta}" data-kegiatan="${r.kegiatan}">
         ${r.kegiatan} (Sisa Kuota (volume): ${r.sisa_vol}x Kegiatan)
       </option>`;
     });
   }
-  updateLabelSatuanLaporan(); // Pastikan label satuan update
-  validasiFotoLaporan();      // Pastikan gembok kamera cek ulang
+  updateLabelSatuanLaporan(); 
+  validasiFotoLaporan();      
 }
 
-// 4. FUNGSI: MENAMPILKAN DETAIL RENJA SAAT DIPILIH
 function showDetailRenja() {
   const drp = document.getElementById("pilih-renja");
   const previewBox = document.getElementById("preview-renja-full");
   const previewTeks = document.getElementById("teks-renja-full");
 
   if (drp && drp.selectedIndex > 0) {
-    // Tampilkan teks lengkap renja yang dipilih kader
     previewTeks.innerText = drp.options[drp.selectedIndex].text;
     previewBox.classList.remove("hidden");
   } else {
     if(previewBox) previewBox.classList.add("hidden");
   }
-  updateLabelSatuanLaporan(); // Panggil sihir satuan
+  updateLabelSatuanLaporan(); 
 }
-// 5. FUNGSI: UPDATE LABEL SATUAN (Orang/Dokumen/Keluarga)
+
 function updateLabelSatuanLaporan() {
   const drp = document.getElementById("pilih-renja");
   const container = document.getElementById("container-satuan-laporan");
@@ -514,16 +492,13 @@ function updateLabelSatuanLaporan() {
   if (!container) return;
 
   if (sumber === "renja") {
-    // --- MODE RENJA: SATUAN TERKUNCI ---
     let satuanAsli = "Orang"; 
     if (drp && drp.selectedIndex > 0) {
       const teksTarget = drp.options[drp.selectedIndex].getAttribute("data-satuan") || "";
       const parts = teksTarget.split(" ");
-      // Ambil kata paling belakang (misal: "Dokumen")
       satuanAsli = parts.length > 1 ? parts[parts.length - 1] : "Orang";
     }
     
-    // Suntikkan Label Biru yang tidak bisa diotak-atik
     container.innerHTML = `
       <div class="w-full p-4 bg-blue-100 border border-blue-200 text-blue-800 font-bold rounded-2xl text-center text-sm shadow-inner flex items-center justify-center gap-2">
         <span>${satuanAsli}</span>
@@ -531,7 +506,6 @@ function updateLabelSatuanLaporan() {
       </div>
     `;
   } else {
-    // --- MODE LUAR RENJA: SATUAN BEBAS PILIH ---
     container.innerHTML = `
       <select id="lap-satuan-manual" onchange="validasiFotoLaporan()" class="w-full p-4 text-sm font-bold text-amber-900 bg-amber-50 border border-amber-200 rounded-2xl outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
         <option value="Orang">Orang</option>
@@ -543,10 +517,9 @@ function updateLabelSatuanLaporan() {
       </select>
     `;
   }
-  validasiFotoLaporan(); // Cek apakah tombol simpan sudah boleh aktif
+  validasiFotoLaporan(); 
 }
 
-// ================= FUNGSI CEK VALIDASI (PEMBUKA GEMBOK FOTO) =================
 function validasiFotoLaporan() {
   const tgl = document.getElementById("lap-tgl").value;
   const lokasi = document.getElementById("lap-lokasi").value.trim();
@@ -556,19 +529,16 @@ function validasiFotoLaporan() {
   const labelFoto = document.getElementById("label-foto");
   const ikon = document.getElementById("ikon-kamera");
 
-  // Cek syarat kegiatan
   let kegiatanOk = false;
   if (sumber === "renja") {
     if (document.getElementById("pilih-renja").value) kegiatanOk = true;
   } else {
-    // PERUBAHAN: Cek isi Textarea Luar Renja (Minimal 5 karakter)
     const manualTeks = document.getElementById("lap-kegiatan-manual");
     if (manualTeks && manualTeks.value.trim().length >= 5) {
       kegiatanOk = true;
     }
   }
 
-  // SYARAT MUTLAK: Tanggal ADA + Lokasi ADA + Kegiatan DIPILIH
   if (tgl && lokasi && kegiatanOk) {
     areaFoto.classList.remove("opacity-30", "pointer-events-none");
     areaFoto.classList.add("bg-blue-50/50", "border-blue-200");
@@ -586,7 +556,7 @@ function validasiFotoLaporan() {
   }
 }
 
-// ================= SIMPAN LAPORAN FINAL (SINKRON SATUAN) =================
+// ================= SIMPAN LAPORAN FINAL =================
 async function simpanLaporan() {
   const btn = document.getElementById("btn-simpan-laporan");
   const info = document.getElementById("info-laporan");
@@ -600,14 +570,11 @@ async function simpanLaporan() {
   const lokasi = document.getElementById("lap-lokasi").value;
   const realisasi = document.getElementById("lap-realisasi").value;
 
-  // --- LOGIKA PENGAMBILAN SATUAN (DINAMIS) ---
   let satuanFinal = "";
   if (sumber === "renja") {
-    // Ambil teks dari container (Misal: "Dokumen 🔒" -> jadi "Dokumen")
     const containerSatuan = document.getElementById("container-satuan-laporan");
     satuanFinal = containerSatuan ? containerSatuan.innerText.replace("🔒", "").trim() : "Orang";
   } else {
-    // Ambil dari dropdown manual
     const selectSatuan = document.getElementById("lap-satuan-manual");
     satuanFinal = selectSatuan ? selectSatuan.value : "Orang";
   }
@@ -623,10 +590,9 @@ async function simpanLaporan() {
     if (!renja_id) return alert("Pilih Rencana Kerja terlebih dahulu!");
     
     const optTerpilih = dropdownRenja.options[dropdownRenja.selectedIndex];
-	const teksRenja = optTerpilih.getAttribute("data-kegiatan") || optTerpilih.text.split(" (Sisa")[0].trim();
+    const teksRenja = optTerpilih.getAttribute("data-kegiatan") || optTerpilih.text.split(" (Sisa")[0].trim();
     const catatanRenja = document.getElementById("lap-catatan-renja").value.trim();
 
-    // Validasi Uraian Wajib
     if (!catatanRenja || catatanRenja.length < 5) {
       alert("⚠️ Uraian Detail Kegiatan wajib diisi (Min. 5 karakter) agar laporan valid!");
       return;
@@ -664,7 +630,7 @@ async function simpanLaporan() {
         renja_id: renja_id,
         kegiatan: namaKegiatanFinal,
         tanggal: tanggal,
-        realisasi: realisasiLengkap, // <--- Sekarang mengirim "15 Dokumen" bukan cuma "15"
+        realisasi: realisasiLengkap, 
         lokasi: lokasi,
         foto_data: base64Foto  
       })
@@ -691,18 +657,16 @@ function previewFoto(input) {
   const file = input.files[0];
   if (!file) return;
 
-  // 1. Deklarasi HANYA SATU KALI di sini
   const loading = document.getElementById("loading-foto");
   const preview = document.getElementById("img-preview");
   const ikon = document.getElementById("ikon-kamera");
   const label = document.getElementById("label-foto");
 
-  // 2. Munculkan loading, sembunyikan yang lain
   if(loading) loading.classList.remove("hidden");
   if(preview) preview.classList.add("hidden");
   if(ikon) ikon.classList.add("hidden");
   label.innerText = "Mohon Tunggu...";
-	
+    
   const reader = new FileReader();
   
   const tglInput = document.getElementById("lap-tgl").value;
@@ -710,7 +674,6 @@ function previewFoto(input) {
   const realisasi = document.getElementById("lap-realisasi").value || "0";
   const sumber = document.getElementById("sumber-kegiatan").value;
 
-  // Ambil satuan untuk watermark
   let satuan = "Orang";
   if (sumber === "renja") {
     const containerSatuan = document.getElementById("container-satuan-laporan");
@@ -779,7 +742,6 @@ function previewFoto(input) {
       base64Foto = canvas.toDataURL("image/jpeg", 0.7);
       preview.src = base64Foto;
 
-      // 3. Sembunyikan loading setelah selesai
       if(loading) loading.classList.add("hidden");
       preview.classList.remove("hidden");
       label.innerText = "Foto Visum Terverifikasi!";
@@ -802,14 +764,12 @@ function tambahUser() {
   const role = document.getElementById("user-role").value;
   const password = document.getElementById("user-password").value;
 
-  // Validasi Kosong
   if (!nama || !nik || !wilayah || !kecamatan || !password) {
     info.innerText = "Harap lengkapi semua form data user!";
     info.className = "text-center text-sm mt-2 text-red-500 font-bold";
     return;
   }
 
-  // Validasi panjang NIK (KTP Indonesia harus 16 digit)
   if (nik.length < 15) {
     info.innerText = "Peringatan: NIK kurang dari 16 digit!";
     info.className = "text-center text-sm mt-2 text-red-500 font-bold";
@@ -837,12 +797,10 @@ function tambahUser() {
       info.innerText = "User berhasil didaftarkan!";
       info.className = "text-center text-sm mt-2 text-green-600 font-bold";
       
-      // Kosongkan form setelah sukses (kecuali kecamatan & password)
       document.getElementById("user-nama").value = "";
       document.getElementById("user-nik").value = "";
       document.getElementById("user-hp").value = "";
       document.getElementById("user-wilayah").value = "";
-      
     } else {
       info.innerText = "Gagal mendaftarkan user ke Database!";
       info.className = "text-center text-sm mt-2 text-red-500 font-bold";
@@ -874,11 +832,9 @@ function loadUsers() {
       }
 
       data.forEach(u => {
-        // Penentuan warna label status
         let statusColor = u.status === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
         let roleBadge = u.role === "admin" ? "👑 Admin" : "👤 Kader";
         
-        // Logika tombol: Jika aktif tampilkan tombol Nonaktif, jika nonaktif tampilkan tombol Aktif
         let btnStatus = u.status === "aktif" 
           ? `<button onclick="ubahStatusUser('${u.nik}', 'nonaktif')" class="flex-1 bg-yellow-100 text-yellow-700 text-xs font-bold py-2 rounded-lg">⏸ Nonaktifkan</button>`
           : `<button onclick="ubahStatusUser('${u.nik}', 'aktif')" class="flex-1 bg-green-100 text-green-700 text-xs font-bold py-2 rounded-lg">▶ Aktifkan</button>`;
@@ -905,7 +861,6 @@ function loadUsers() {
     });
 }
 
-// ================= UBAH STATUS USER =================
 function ubahStatusUser(nikTarget, statusBaru) {
   if (!confirm(`Yakin ingin mengubah status kader ini menjadi ${statusBaru.toUpperCase()}?`)) return;
 
@@ -921,12 +876,11 @@ function ubahStatusUser(nikTarget, statusBaru) {
   .then(res => {
     if (res === "success") {
       alert("Status berhasil diubah!");
-      loadUsers(); // Refresh daftar otomatis
+      loadUsers(); 
     }
   });
 }
 
-// ================= HAPUS USER =================
 function hapusUser(nikTarget, namaTarget) {
   if (!confirm(`PERINGATAN! Yakin ingin menghapus kader ${namaTarget} secara permanen dari sistem?`)) return;
 
@@ -941,24 +895,23 @@ function hapusUser(nikTarget, namaTarget) {
   .then(res => {
     if (res === "success") {
       alert("Kader berhasil dihapus!");
-      loadUsers(); // Refresh daftar otomatis
+      loadUsers(); 
     }
   });
 }
-//======================Update Substansi (FIXED)==========================//
+
+//======================Update Substansi==========================//
 function updateSubstansi() {
   const jenis = document.getElementById("renja-jenis").value;
   const wrapperSub = document.getElementById("wrapper-substansi");
   const selectSub = document.getElementById("renja-substansi");
   const labelDeskripsi = document.getElementById("label-deskripsi");
   
-  // Elemen dinamis
   const labelSasaran = document.getElementById("label-sasaran");
-  const inputSasaran = document.getElementById("renja-sasaran"); // <--- Tadi ini yang hilang
+  const inputSasaran = document.getElementById("renja-sasaran"); 
   const labelPeserta = document.getElementById("label-peserta");
-  const inputPeserta = document.getElementById("renja-target-angka"); // ID Diubah
+  const inputPeserta = document.getElementById("renja-target-angka"); 
 
-  // 1. MAPPING DATA
   const dataSubstansi = {
     "Pertemuan": ["Pertemuan Rutin Kader", "Rapat Koordinasi (Desa/RW)", "Pertemuan Kelompok Kerja (Pokja)"],
     "KIE": ["Penyuluhan Kelompok", "Konseling Individu", "Kunjungan Rumah (Door-to-door)", "Penyebaran Media Informasi"],
@@ -966,16 +919,14 @@ function updateSubstansi() {
     "Pencatatan & Pelaporan": ["Pemutakhiran Data Keluarga (Verval)", "Pemetaan Sasaran (PUS Unmet Need)", "Pengisian Buku Bantu / K0", "Input Laporan ke New SIGA"]
   };
 
-  // 2. RESET KONDISI AWAL
   if (inputPeserta) {
     inputPeserta.disabled = false;
     inputPeserta.classList.remove("bg-slate-200");
-    inputPeserta.placeholder = "Jumlah"; // <-- Ganti jadi "Jumlah"
+    inputPeserta.placeholder = "Jumlah"; 
     if (inputPeserta.value == "0") inputPeserta.value = ""; 
   }
-  if (labelPeserta) labelPeserta.innerText = "TARGET & SATUAN"; // <-- Sesuaikan judul baru
+  if (labelPeserta) labelPeserta.innerText = "TARGET & SATUAN"; 
   
-  // 3. LOGIKA KHUSUS PER JENIS (DINAMIS)
   if (jenis === "Pertemuan") {
     if (labelSasaran) labelSasaran.innerText = "UNSUR PESERTA / UNDANGAN";
     if (inputSasaran) inputSasaran.placeholder = "Contoh: Tokoh Masyarakat, Kader, RT/RW...";
@@ -993,16 +944,13 @@ function updateSubstansi() {
     if (inputSasaran) inputSasaran.placeholder = "Contoh: Keluarga, Kader Sub-PPKBD, PUS...";
   }
   else {
-    // Default (Lainnya)
     if (labelSasaran) labelSasaran.innerText = "SASARAN KEGIATAN";
     if (inputSasaran) inputSasaran.placeholder = "Contoh: Masyarakat umum, PUS...";
   }
 
-  // 4. UPDATE DROPDOWN SUBSTANSI
   selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
   
   if (jenis === "Lainnya" || jenis === "") {
-    // Jika pilih Lainnya atau belum pilih apa-apa, SEMBUNYIKAN dropdown substansi
     if (wrapperSub) wrapperSub.classList.add("hidden");
     if (labelDeskripsi) labelDeskripsi.innerText = "Deskripsi Kegiatan";
     
@@ -1011,11 +959,9 @@ function updateSubstansi() {
     opt.selected = true;
     selectSub.appendChild(opt);
   } else {
-    // Jika pilih kategori SIGA, MUNCULKAN dropdown substansi
     if (wrapperSub) wrapperSub.classList.remove("hidden");
     if (labelDeskripsi) labelDeskripsi.innerText = "Keterangan Tambahan (Opsional)";
     
-    // Isi pilihan anak
     if (dataSubstansi[jenis]) {
       dataSubstansi[jenis].forEach(item => {
         let opt = document.createElement("option");
@@ -1023,21 +969,16 @@ function updateSubstansi() {
         opt.innerHTML = item;
         selectSub.appendChild(opt);
       });
-      // Tambahkan pilihan "Lainnya" di setiap kategori
       let optLain = document.createElement("option");
       optLain.value = "Lainnya di " + jenis;
       optLain.innerHTML = "Lainnya...";
       selectSub.appendChild(optLain);
     }
   }
-	// Panggil AI Satuan dan Indikator agar langsung sinkron!
   updateSatuanOtomatis();
   generateIndikator();
-} // <-- Ini kurung kurawal penutup fungsi updateSubstansi
+}
 
-// ==========================================
-// LOGIKA DROPDOWN SUBSTANSI (LAPORAN - LUAR RENJA)
-// ==========================================
 function updateSubstansiLaporan() {
   const jenis = document.getElementById("lap-kegiatan").value;
   const wrapperSub = document.getElementById("wrapper-substansi-lap");
@@ -1047,7 +988,6 @@ function updateSubstansiLaporan() {
   const labelKet = document.getElementById("label-lap-keterangan");
   const inputRealisasi = document.getElementById("lap-realisasi");
 
-  // 1. MAPPING DATA (Sama persis dengan Renja)
   const dataSubstansi = {
     "Pertemuan": ["Pertemuan Rutin Kader", "Rapat Koordinasi (Desa/RW)", "Pertemuan Kelompok Kerja (Pokja)"],
     "KIE": ["Penyuluhan Kelompok", "Konseling Individu", "Kunjungan Rumah (Door-to-door)", "Penyebaran Media Informasi"],
@@ -1055,21 +995,17 @@ function updateSubstansiLaporan() {
     "Pencatatan & Pelaporan": ["Pemutakhiran Data Keluarga (Verval)", "Pemetaan Sasaran (PUS Unmet Need)", "Pengisian Buku Bantu / K0", "Input Laporan ke New SIGA"]
   };
 
-  // 2. RESET INPUT REALISASI (Sama seperti logika input peserta di Renja)
   if (inputRealisasi) {
     inputRealisasi.disabled = false;
     inputRealisasi.classList.remove("bg-slate-200");
     if (inputRealisasi.value == "0") inputRealisasi.value = ""; 
   }
 
-  // 3. UPDATE TAMPILAN DROPDOWN DAN KETERANGAN
   selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
 
   if (jenis === "Lainnya" || jenis === "") {
-    // Sembunyikan Substansi
     if (wrapperSub) wrapperSub.classList.add("hidden");
     
-    // Tampilkan Keterangan jika "Lainnya", Sembunyikan semua jika kosong
     if (jenis === "Lainnya") {
       if (wrapperKet) wrapperKet.classList.remove("hidden");
       if (labelKet) labelKet.innerText = "Deskripsi Kegiatan Lainnya";
@@ -1077,19 +1013,16 @@ function updateSubstansiLaporan() {
       if (wrapperKet) wrapperKet.classList.add("hidden");
     }
     
-    // Set value default untuk form submission
     let opt = document.createElement("option");
     opt.value = "Lainnya";
     opt.selected = true;
     selectSub.appendChild(opt);
 
   } else {
-    // Munculkan Substansi dan Keterangan
     if (wrapperSub) wrapperSub.classList.remove("hidden");
     if (wrapperKet) wrapperKet.classList.remove("hidden");
     if (labelKet) labelKet.innerText = "Dasar Pelaksanaan / Keterangan";
     
-    // Isi pilihan anak
     if (dataSubstansi[jenis]) {
       dataSubstansi[jenis].forEach(item => {
         let opt = document.createElement("option");
@@ -1097,7 +1030,6 @@ function updateSubstansiLaporan() {
         opt.innerHTML = item;
         selectSub.appendChild(opt);
       });
-      // Tambahkan pilihan "Lainnya" di akhir
       let optLain = document.createElement("option");
       optLain.value = "Lainnya di " + jenis;
       optLain.innerHTML = "Lainnya...";
@@ -1138,35 +1070,31 @@ function updateSatuanOtomatis() {
 function batasiTanggalLaporan() {
   const inputTgl = document.getElementById("lap-tgl");
   if (inputTgl) {
-    // Ambil tanggal hari ini dalam format YYYY-MM-DD
     const today = new Date().toISOString().split('T')[0];
-    
-    // Set atribut 'max' pada input kalender
     inputTgl.setAttribute("max", today);
   }
 }
 
 // ==========================================
-// FUNGSI AI: AUTO-GENERATE TAHUN (RENJA & DASHBOARD)
+// FUNGSI AI: AUTO-GENERATE TAHUN (DASHBOARD & RENJA)
 // ==========================================
 function setTahunOtomatis() {
   const tahunSekarang = new Date().getFullYear(); 
   
-  // 1. Otomatisasi untuk Dropdown Form Renja (Tahun Ini & Tahun Depan)
-  const selectTahunRenja = document.getElementById("renja-tahun");
-  if (selectTahunRenja) {
-    selectTahunRenja.innerHTML = `
+  // 1. OTOMATISASI DROPDOWN DASHBOARD (filter-tahun)
+  const filterTahun = document.getElementById("filter-tahun");
+  if (filterTahun) {
+    filterTahun.innerHTML = `
+      <option value="${tahunSekarang - 1}">${tahunSekarang - 1}</option>
       <option value="${tahunSekarang}" selected>${tahunSekarang}</option>
       <option value="${tahunSekarang + 1}">${tahunSekarang + 1}</option>
     `;
   }
 
-  // 2. Otomatisasi untuk Dropdown Filter Dashboard
-  const selectFilterTahun = document.getElementById("filter-tahun");
-  if (selectFilterTahun) {
-    // Khusus dashboard, saya tambahkan Tahun Lalu agar admin bisa lihat historis
-    selectFilterTahun.innerHTML = `
-      <option value="${tahunSekarang - 1}">${tahunSekarang - 1}</option>
+  // 2. OTOMATISASI DROPDOWN RENJA (renja-tahun)
+  const selectTahunRenja = document.getElementById("renja-tahun");
+  if (selectTahunRenja) {
+    selectTahunRenja.innerHTML = `
       <option value="${tahunSekarang}" selected>${tahunSekarang}</option>
       <option value="${tahunSekarang + 1}">${tahunSekarang + 1}</option>
     `;
@@ -1177,24 +1105,20 @@ function setTahunOtomatis() {
 function loadGrafik() {
   const role = localStorage.getItem("role");
   const nikLogin = localStorage.getItem("nik");
-  const kecAdmin = localStorage.getItem("kecamatan"); // Ambil kecamatan admin
+  const kecAdmin = localStorage.getItem("kecamatan"); 
   
   const tahun = document.getElementById("filter-tahun").value;
   const bulan = document.getElementById("filter-bulan").value;
   const userEl = document.getElementById("filter-user");
   const userSelect = userEl ? userEl.value : "";
 
-  // 1. LOGIKA ADMIN: Munculkan Filter & Isi Dropdown
   if (role === 'admin') {
-    // TAMPILKAN AREA FILTER (Ini yang tadi kelupaan, Pak!)
     const adminArea = document.getElementById("admin-filter-area");
     if (adminArea) {
       adminArea.classList.remove("hidden");
     }
 
-    // ISI DROPDOWN KADER (Hanya jika masih kosong)
     if (userEl && userEl.options.length <= 1) {
-      console.log("Mengambil daftar kader untuk kecamatan:", kecAdmin);
       fetch(`${API_URL}?action=get_users&kecamatan=${kecAdmin}`)
         .then(res => res.json())
         .then(users => {
@@ -1210,15 +1134,12 @@ function loadGrafik() {
         .catch(err => console.error("Gagal ambil daftar kader:", err));
     }
   }
-  // 2. TENTUKAN SIAPA YANG DILIHAT
-  // Jika Admin belum pilih kader, nikTarget jadi kosong (artinya: Lihat Total Se-Kecamatan)
+
   let nikTarget = (role === 'admin') ? userSelect : nikLogin;
 
-  // 3. TARIK DATA STATISTIK
   fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
     .then(res => res.json())
     .then(data => {
-      // --- UPDATE KARTU RINGKASAN ---
       const totalTarget = data.target.reduce((a, b) => a + b, 0);
       const totalReal = data.realisasi.reduce((a, b) => a + b, 0);
       const persen = totalTarget > 0 ? Math.round((totalReal / totalTarget) * 100) : 0;
@@ -1227,7 +1148,6 @@ function loadGrafik() {
       document.getElementById("total-persen").innerText = persen + "%";
       document.getElementById("progress-bar").style.width = (persen > 100 ? 100 : persen) + "%";
 
-     // --- UPDATE GRAFIK LINGKARAN (DONUT CHART) ---
       const canvas = document.getElementById('myChart');
       if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -1238,7 +1158,7 @@ function loadGrafik() {
           data: {
             labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
             datasets: [{
-              data: data.realisasi, // Hanya mengambil data hasil (frekuensi)
+              data: data.realisasi, 
               backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#94a3b8'],
               borderWidth: 2,
               borderColor: '#ffffff',
@@ -1248,11 +1168,11 @@ function loadGrafik() {
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '65%', // Ukuran lubang tengah
+            cutout: '65%', 
             plugins: { 
               legend: { 
                 display: true,
-                position: 'bottom', // Pindah ke bawah agar pas di HP
+                position: 'bottom', 
                 labels: { 
                   usePointStyle: true, 
                   padding: 15, 
@@ -1271,7 +1191,6 @@ function loadGrafik() {
         });
       }
 
-      // --- UPDATE RANKING (Jika Admin) ---
       if (role === 'admin') {
         const rankArea = document.getElementById("section-peringkat");
         if (rankArea) rankArea.classList.remove("hidden");
@@ -1283,7 +1202,6 @@ function loadGrafik() {
     });
 }
 
-// ================= RENDER LIST PERINGKAT =================
 function renderPeringkat(dataRanking) {
   const listPeringkat = document.getElementById("list-peringkat");
   if (!listPeringkat) return;
@@ -1320,25 +1238,19 @@ const daftarMotivasi = [
 function tampilkanMotivasi() {
   const elMotivasi = document.getElementById("teks-motivasi");
   if (elMotivasi) {
-    // Pilih angka acak dari 0 sampai jumlah kalimat
     const randomIndex = Math.floor(Math.random() * daftarMotivasi.length);
     elMotivasi.innerText = daftarMotivasi[randomIndex];
   }
 }
 
-// Jalankan fungsi ini otomatis saat halaman login dibuka
-document.addEventListener("DOMContentLoaded", tampilkanMotivasi);
-
 // =========================================================
-// BAGIAN MONITORING & CETAK (Tambahkan ke script.js)
+// BAGIAN MONITORING & CETAK
 // =========================================================
 
-// 1. FUNGSI LOAD RIWAYAT (Untuk Monitoring & Cetak)
 function loadRiwayat() {
   const nik = localStorage.getItem("nik");
   const container = document.getElementById("list-riwayat");
 
-  // Jika sedang di halaman monitoring, tampilkan loading
   if (container) {
     container.innerHTML = `<p class="text-center text-sm text-gray-400 py-10 italic">Memuat riwayat laporan...</p>`;
   }
@@ -1346,9 +1258,8 @@ function loadRiwayat() {
   fetch(API_URL + "?action=get_riwayat&nik=" + nik)
     .then(res => res.json())
     .then(data => {
-      dataRiwayatGlobal = data; // Simpan data ke variabel global
+      dataRiwayatGlobal = data; 
 
-      // Jika container ada (berarti sedang di halaman monitoring.html)
       if (container) {
         container.innerHTML = "";
 
@@ -1357,7 +1268,6 @@ function loadRiwayat() {
           return;
         }
 
-        // Tampilkan dari yang terbaru
         data.reverse().forEach(lap => {
           let isDraft = lap.status === "Draft";
           let statusWarna = isDraft ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700";
@@ -1388,7 +1298,6 @@ function loadRiwayat() {
     });
 }
 
-// 2. FUNGSI HAPUS LAPORAN (Hanya untuk status Draft)
 function hapusLaporan(id) {
   if (!confirm("Yakin ingin menghapus laporan ini? Data yang dihapus tidak bisa dikembalikan.")) return;
 
@@ -1400,7 +1309,7 @@ function hapusLaporan(id) {
   .then(res => {
     if (res === "success") {
       alert("Laporan berhasil dihapus.");
-      loadRiwayat(); // Refresh data
+      loadRiwayat(); 
     } else if (res === "ditolak") {
       alert("Gagal! Laporan sudah disetujui Admin dan tidak bisa dihapus.");
     } else {
@@ -1409,14 +1318,12 @@ function hapusLaporan(id) {
   });
 }
 
-// 3. FUNGSI CETAK VISUM (Filter Per Bulan)
 function cetakPDFPerBulan() {
   if (dataRiwayatGlobal.length === 0) return alert("Data belum siap atau kosong. Tunggu sebentar atau pastikan Anda sudah pernah melapor.");
 
   const bulanPilih = document.getElementById("bulan-cetak").value;
   const namaBulan = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
   
-  // Filter data berdasarkan bulan
   const dataTerfilter = dataRiwayatGlobal.filter(lap => {
     let tglLap = new Date(lap.tanggal);
     let bulanLap = String(tglLap.getMonth() + 1).padStart(2, '0');
@@ -1516,14 +1423,7 @@ function cetakPDFPerBulan() {
   printWindow.document.write(html);
   printWindow.document.close();
 }
-// Pastikan ini ada agar saat buka halaman, data langsung ditarik di background
-document.addEventListener("DOMContentLoaded", () => {
-  if (document.getElementById("pilih-renja")) {
-    loadRenjaUntukLaporan();
-  }
-});
 
-// FUNGSI JEMBATAN UNTUK MEMBUKA GALERI/KAMERA
 function bukaKamera() {
   const inputFile = document.getElementById('lap-foto-file');
   if (inputFile) {
@@ -1537,7 +1437,6 @@ function bukaKamera() {
 // FUNGSI AI: AUTO-GENERATE INDIKATOR RENJA
 // ==========================================
 function generateIndikator() {
-  // 1. Tangkap semua nilai dari form
   const jenis = document.getElementById("renja-jenis").value;
   const substansiEl = document.getElementById("renja-substansi");
   const substansi = substansiEl && substansiEl.value ? substansiEl.value : "";
@@ -1549,12 +1448,11 @@ function generateIndikator() {
   
   const inputIndikator = document.getElementById("renja-indikator");
 
-  // Jika jenis kegiatan belum dipilih, kosongkan indikator
   if (!jenis || jenis === "") {
     inputIndikator.value = "";
     return;
   }
-  // Tentukan nama kegiatan (HANYA SATU KALI DECLARE)
+  
   let namaKegiatan = (substansi && substansi !== "") ? substansi : jenis;
   if (jenis === "Lainnya") {
     namaKegiatan = "kegiatan operasional";
@@ -1565,29 +1463,44 @@ function generateIndikator() {
 
   switch (jenis) {
     case "Pertemuan":
-      // Menghilangkan kata baku "peserta" karena sudah diwakilkan oleh satuan
       kalimatBaku = `Terselenggaranya agenda ${detailKegiatan} serta meningkatnya kesepahaman pada ${peserta} dari unsur ${sasaran} di wilayah kerja.`;
       break;
-      
     case "KIE":
-      // Menghilangkan kata "orang"
       kalimatBaku = `Meningkatnya pengetahuan dan kesadaran ${peserta} sasaran ${sasaran} mengenai program Bangga Kencana melalui edukasi ${detailKegiatan}.`;
       break;
-      
     case "Pelayanan & Penggerakan":
-      // Dibuat lebih netral
       kalimatBaku = `Terlaksananya fasilitasi bagi ${peserta} sasaran ${sasaran} melalui aktivitas ${detailKegiatan} secara optimal.`;
       break;
-      
     case "Pencatatan & Pelaporan":
-      // Tata bahasa disesuaikan agar cocok dengan satuan "Dokumen" atau "Keluarga"
       kalimatBaku = `Tersusunnya administrasi ${detailKegiatan} untuk sasaran ${sasaran} sebanyak ${peserta} yang valid, akurat, dan dapat dipertanggungjawabkan tepat waktu.`;
       break;
-      
     default:
       kalimatBaku = `Terlaksananya ${detailKegiatan} dengan capaian ${peserta} dari target ${sasaran} sesuai dengan rencana kerja operasional.`;
   }
   inputIndikator.value = kalimatBaku;
 }
 
+// =========================================================
+// MASTER PENGGERAK OTOMATIS (JALAN SAAT HALAMAN DIBUKA)
+// =========================================================
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Setel Tahun Otomatis (Dashboard & Renja)
+  if (typeof setTahunOtomatis === 'function') {
+    setTahunOtomatis();
+  }
 
+  // 2. Tarik Data Renja Otomatis (Khusus Halaman Laporan)
+  if (document.getElementById("pilih-renja")) {
+    loadRenjaUntukLaporan();
+  }
+
+  // 3. Batasi Kalender Maksimal Hari Ini (Khusus Halaman Laporan)
+  if (document.getElementById("lap-tgl") && typeof batasiTanggalLaporan === 'function') {
+    batasiTanggalLaporan();
+  }
+
+  // 4. Tampilkan Kata Motivasi (Khusus Halaman Login)
+  if (document.getElementById("teks-motivasi") && typeof tampilkanMotivasi === 'function') {
+    tampilkanMotivasi();
+  }
+});
