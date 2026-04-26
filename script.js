@@ -27,6 +27,7 @@ function login() {
       localStorage.setItem("role", data.role);
       localStorage.setItem("kecamatan", data.kecamatan);
       localStorage.setItem("desa", data.desa);
+      localStorage.setItem("foto", data.foto || "");
       window.location.href = data.role.includes("admin") ? "dashboard-admin.html" : "dashboard-kader.html";
     } else { info.innerText = "NIK atau Password Salah!"; }
   });
@@ -249,19 +250,32 @@ function initDashboard() {
   const role = localStorage.getItem("role");
   const kec = localStorage.getItem("kecamatan");
   const desa = localStorage.getItem("desa");
+  const foto = localStorage.getItem("foto"); // Ambil data foto dari storage
 
   const elNama = document.getElementById("namaUser");
   const elRole = document.getElementById("labelRole");
   const elWilayah = document.getElementById("wilayahOtoritas");
   const elIcon = document.getElementById("iconRole");
+  const elFotoHeader = document.getElementById("fotoProfilHeader"); // ID foto di header
 
   if (elNama) elNama.innerText = nama;
 
+  // --- LOGIKA FOTO PROFIL (BARU) ---
+  if (elFotoHeader) {
+    if (foto && foto !== "" && foto !== "-") {
+      // Jika ada foto, tampilkan foto Base64
+      elFotoHeader.src = "data:image/jpeg;base64," + foto;
+    } else {
+      // Jika kosong, tampilkan ikon orang standar
+      elFotoHeader.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+    }
+  }
+
   let roleText = "";
   let wilayahText = "";
-  let iconEmoji = "👤"; // Default ikon
+  let iconEmoji = "👤"; 
 
-  // LOGIKA PENENTUAN ICON & LABEL
+  // --- LOGIKA PENENTUAN ICON ROLE (MILIK BAPAK) ---
   if (role === "super_admin") {
     roleText = "Super Administrator";
     wilayahText = "Kabupaten Bekasi";
@@ -280,7 +294,6 @@ function initDashboard() {
     iconEmoji = "👤";
   }
 
-  // Masukkan data ke tampilan
   if (elRole) elRole.innerText = roleText;
   if (elWilayah) elWilayah.innerText = "📍 Wilayah: " + wilayahText;
   if (elIcon) elIcon.innerText = iconEmoji;
