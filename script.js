@@ -87,13 +87,24 @@ function loadWilayahDatabase() {
 }
 
 function updateDropdownDesa(desaTerpilih = "") {
+  const roleLogin = localStorage.getItem("role"); // Cek siapa yang sedang login
   const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
   const selDesa = document.getElementById("user-wilayah");
   if (!selDesa || !selKec) return;
 
+  const kecDipilih = selKec.value;
   selDesa.innerHTML = '<option value="">-- Pilih Desa --</option>';
-  const filtered = GLOBAL_WILAYAH.filter(item => item.nama_kec === selKec.value);
   
+  // LOGIKA PROTEKSI: Hanya Super Admin yang bisa melihat opsi "SEMUA DESA"
+  if (kecDipilih && roleLogin === "super_admin") {
+    let optSemua = document.createElement("option");
+    optSemua.value = "SEMUA DESA";
+    optSemua.innerHTML = "--- SEMUA DESA (OTORITAS KEC) ---";
+    selDesa.appendChild(optSemua);
+  }
+  
+  // Ambil daftar desa asli dari database wilayah
+  const filtered = GLOBAL_WILAYAH.filter(item => item.nama_kec === kecDipilih);
   filtered.forEach(item => {
     if(item.nama_desa && item.nama_desa !== "-") {
       let opt = document.createElement("option");
