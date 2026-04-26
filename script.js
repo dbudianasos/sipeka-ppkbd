@@ -99,7 +99,7 @@ function updateDropdownDesa(desaTerpilih = "") {
   if (kecDipilih && roleLogin === "super_admin") {
     let optSemua = document.createElement("option");
     optSemua.value = "SEMUA DESA";
-    optSemua.innerHTML = "--- SEMUA DESA (OTORITAS KEC) ---";
+    optSemua.innerHTML = "SEMUA DESA";
     selDesa.appendChild(optSemua);
   }
   
