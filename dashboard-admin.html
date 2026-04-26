@@ -2,17 +2,33 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Dashboard - SIPEKA</title>
-  <link rel="icon" type="image/png" href="logo-sipeka.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | siPeKa</title>
+  <link rel="icon" type="image/png" href="logo-sipeka.png">
+  
+  <script src="script.js"></script>
 
+  <script>
+    // 2. CEK LOGIN LANGSUNG (Tanpa nunggu loading)
+    // Tujuannya agar orang yang gak berhak langsung ditendang 
+    // sebelum sempat melihat isi dashboard.
+    cekLogin(); 
+
+    // 3. BARU JALANKAN ISI UI (Nunggu elemen HTML siap)
+    window.onload = function() {
+      if (typeof initAdminDashboard === 'function') {
+        initAdminDashboard();
+      }
+    };
+  </script>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  
   <style>
     body { font-family: 'Poppins', sans-serif; }
     .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
