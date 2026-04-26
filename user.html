@@ -14,113 +14,120 @@
   
   <style>
     body { font-family: 'Poppins', sans-serif; }
-    /* Disamakan persis dengan warna dashboard */
-    .nav-gradient { background: linear-gradient(135deg, #004a99 0%, #002d5f 100%); }
+    .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
+    input:disabled, select:disabled { background-color: #f1f5f9; cursor: not-allowed; color: #94a3b8; }
   </style>
 </head>
 
 <body class="bg-slate-50 min-h-screen pb-20">
 
-<header class="sticky top-0 z-50 nav-gradient py-2.5 px-5 rounded-b-[1.5rem] shadow-lg shadow-blue-900/20 transition-all duration-300">
-  <div class="flex items-center gap-3 max-w-5xl mx-auto text-white">
-    
-    <button onclick="window.location.href='dashboard.html'" 
-            class="bg-white/10 hover:bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10 transition active:scale-95 shadow-sm flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
-    </button>
+  <header class="sticky top-0 z-50 nav-gradient py-2.5 px-5 rounded-b-[1.5rem] shadow-lg shadow-blue-900/20">
+    <div class="flex items-center gap-3 max-w-5xl mx-auto text-white">
+      <button onclick="window.location.href='dashboard-admin.html'" 
+              class="bg-white/10 hover:bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10 transition active:scale-95 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
 
-    <div class="leading-tight">
-      <h1 class="font-bold text-base md:text-lg tracking-wide">Manajemen User</h1>
-      <p class="text-[9px] text-blue-200 uppercase tracking-widest font-bold mt-0.5">Daftarkan akun baru</p>
-    </div>
-
-  </div>
-</header>
-<main class="px-4 pt-6 max-w-5xl mx-auto">
-
-<script src="script.js"></script>
-
-<script>
-  cekLogin();
-  if (localStorage.getItem("role") !== "admin") {
-      alert("Akses Ditolak! Halaman ini khusus Admin.");
-      window.location.href = "dashboard.html";
-  }
-</script>
-
-<div class="bg-white p-6 rounded-2xl shadow border-t-4 border-blue-900">
-  <h3 class="font-bold text-md mb-4 text-gray-800">👥 Form Pendaftaran Kader</h3>
-  
-  <div class="space-y-4">
-    <div>
-      <label class="text-xs font-bold text-gray-500">NAMA LENGKAP</label>
-      <input id="user-nama" type="text" placeholder="Sesuai KTP" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-    </div>
-
-    <div>
-      <label class="text-xs font-bold text-gray-500">NIK (16 Digit)</label>
-      <input id="user-nik" type="number" placeholder="Akan digunakan sebagai ID Login" class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-    </div>
-
-    <div>
-      <label class="text-xs font-bold text-gray-500">NO WHATSAPP</label>
-      <input id="user-hp" type="number" placeholder="Contoh: 0812345678" class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-    </div>
-
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="text-xs font-bold text-gray-500">KECAMATAN</label>
-        <input id="user-kecamatan" type="text" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-      </div>
-      <div>
-        <label class="text-xs font-bold text-gray-500">DESA/WILAYAH</label>
-        <input id="user-wilayah" type="text" placeholder="Desa Tugas" class="w-full p-3 text-sm placeholder:text-xs bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+      <div class="leading-tight">
+        <h1 class="font-bold text-base md:text-lg tracking-wide uppercase">Manajemen User</h1>
+        <p id="sub-title-admin" class="text-[9px] text-blue-200 uppercase tracking-widest font-bold mt-0.5">Otoritas Wilayah ...</p>
       </div>
     </div>
+  </header>
 
-    <div class="grid grid-cols-2 gap-4">
-      <div>
-        <label class="text-xs font-bold text-gray-500">ROLE AKUN</label>
-        <select id="user-role" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-          <option value="users">User / Kader</option>
-          <option value="admin">Admin UPTD</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-xs font-bold text-gray-500">PASSWORD AWAL</label>
-        <input id="user-password" type="text" value="123456" class="w-full p-3 text-sm bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+  <main class="px-4 pt-6 max-w-5xl mx-auto">
+
+    <div class="bg-white p-6 rounded-[2rem] shadow-sm border-t-4 border-blue-900 mb-8">
+      <h3 class="font-bold text-sm mb-5 text-slate-800 flex items-center gap-2">
+        <span>👤</span> Form Registrasi Akun Baru
+      </h3>
+      
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Nama Lengkap</label>
+            <input id="user-nama" type="text" placeholder="Nama sesuai KTP" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">NIK (16 Digit)</label>
+            <input id="user-nik" type="number" placeholder="ID Login User" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Kecamatan</label>
+            <select id="user-kecamatan" onchange="updateDropdownDesa()" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
+              <option value="">-- Pilih --</option>
+              <option value="SETU">SETU</option>
+              <option value="CIBITUNG">CIBITUNG</option>
+              <option value="CIKARANG PUSAT">CIKARANG PUSAT</option>
+              <option value="CIKARANG SELATAN">CIKARANG SELATAN</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Desa / Wilayah</label>
+            <select id="user-wilayah" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
+              <option value="">-- Pilih Desa --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Jabatan (Role)</label>
+            <select id="user-role" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
+              </select>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">No. WhatsApp</label>
+            <input id="user-hp" type="number" placeholder="0812..." class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Password Awal</label>
+          <input id="user-password" type="text" value="123456" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none">
+        </div>
+
+        <button onclick="tambahUser()" id="btn-tambah-user"
+          class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-900/20 hover:bg-blue-800 transition-all active:scale-95 mt-4 uppercase tracking-widest text-xs">
+          Simpan Data Pengguna
+        </button>
+        <p id="info-user" class="text-center text-[10px] mt-2 font-bold"></p>
       </div>
     </div>
 
-    <button onclick="tambahUser()" id="btn-tambah-user"
-      class="w-full bg-blue-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-800 transition mt-2">
-      SIMPAN USER BARU
-    </button>
-    <p id="info-user" class="text-center text-sm mt-2 font-bold"></p>
-  </div>
-</div>
+    <div class="mt-10 mb-10">
+      <div class="flex justify-between items-center mb-4 px-2">
+        <h3 class="font-bold text-xs text-slate-800 uppercase tracking-tighter">📋 Kader di Wilayah Anda</h3>
+        <button onclick="loadUsers()" class="text-blue-600 text-[10px] font-black uppercase tracking-widest bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 active:scale-95 transition">🔄 Refresh</button>
+      </div>
 
-<div class="mt-8 mb-10">
-  <div class="flex justify-between items-center mb-4 px-2">
-    <h3 class="font-bold text-md text-gray-800">📋 Daftar Kader Terdaftar</h3>
-    <button onclick="loadUsers()" class="text-blue-600 text-xs font-bold uppercase tracking-widest bg-blue-100 px-3 py-1 rounded-lg">🔄 Refresh</button>
-  </div>
+      <div id="container-daftar-user" class="space-y-3">
+        <p class="text-center text-[10px] text-slate-400 py-10 italic">Sedang menyinkronkan data...</p>
+      </div>
+    </div>
+  </main>
 
-  <div id="container-daftar-user" class="space-y-3">
-    <p class="text-center text-sm text-gray-400 py-10 italic">Memuat data kader...</p>
-  </div>
-</div>
-</main>
-<script>
-  // Otomatis mengisi kolom Kecamatan & Panggil daftar user
-  document.getElementById("user-kecamatan").value = localStorage.getItem("kecamatan") || "";
-  loadUsers();
-</script>
-<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
-  &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
-  Aplikasi Pelaporan Kinerja PPKBD
-</footer>
+  <script src="script.js"></script>
+  <script>
+    // 1. SATPAM CEK
+    cekLogin();
+
+    // 2. INISIALISASI HALAMAN (LOCK WILAYAH & ROLE)
+    window.onload = function() {
+      // Pastikan fungsi ini ada di script.js Bapak
+      if (typeof initUserPage === 'function') initUserPage();
+      if (typeof loadUsers === 'function') loadUsers();
+    };
+  </script>
+
+  <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 px-10">
+    &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
+    Sistem Manajemen SDM Kabupaten Bekasi
+  </footer>
 </body>
 </html>
