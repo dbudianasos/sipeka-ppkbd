@@ -1221,25 +1221,46 @@ function loadGrafik() {
       document.getElementById("total-persen").innerText = persen + "%";
       document.getElementById("progress-bar").style.width = (persen > 100 ? 100 : persen) + "%";
 
-      // --- UPDATE GRAFIK BATANG ---
+     // --- UPDATE GRAFIK LINGKARAN (DONUT CHART) ---
       const canvas = document.getElementById('myChart');
       if (canvas) {
         const ctx = canvas.getContext('2d');
         if (myChartInstance) myChartInstance.destroy();
+        
         myChartInstance = new Chart(ctx, {
-          type: 'bar',
+          type: 'doughnut',
           data: {
             labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
-            datasets: [
-              { label: 'Target', data: data.target, backgroundColor: '#e2e8f0', borderRadius: 6 },
-              { label: 'Realisasi', data: data.realisasi, backgroundColor: '#1e3a8a', borderRadius: 6 }
-            ]
+            datasets: [{
+              data: data.realisasi, // Hanya mengambil data hasil (frekuensi)
+              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#94a3b8'],
+              borderWidth: 2,
+              borderColor: '#ffffff',
+              hoverOffset: 6
+            }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
-            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            cutout: '65%', // Ukuran lubang tengah
+            plugins: { 
+              legend: { 
+                display: true,
+                position: 'bottom', // Pindah ke bawah agar pas di HP
+                labels: { 
+                  usePointStyle: true, 
+                  padding: 15, 
+                  font: { size: 11, family: "'Poppins', sans-serif" } 
+                } 
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return ` ${context.label}: ${context.raw} Laporan`;
+                  }
+                }
+              }
+            }
           }
         });
       }
