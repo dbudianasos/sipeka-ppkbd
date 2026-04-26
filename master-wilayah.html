@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master Wilayah | siPeKa</title>
+  <script src="script.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <header class="bg-blue-900 py-4 px-5 text-white shadow-lg rounded-b-3xl">
+    <div class="flex items-center gap-4 max-w-5xl mx-auto">
+      <button onclick="window.location.href='dashboard-admin.html'" class="text-xl">⬅️</button>
+      <h1 class="font-black text-sm uppercase">Master Data Wilayah</h1>
+    </div>
+  </header>
+
+  <main class="p-6 max-w-5xl mx-auto">
+    <div class="bg-white p-6 rounded-[2rem] shadow-sm">
+      <div id="status-wilayah" class="mb-6 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+        <p class="text-[10px] font-bold text-blue-900 uppercase">Wilayah Otoritas:</p>
+        <h2 id="display-wilayah" class="text-lg font-black text-slate-800 uppercase">Memuat...</h2>
+      </div>
+
+      <div class="space-y-4">
+        <label class="text-[10px] font-black text-slate-400 uppercase">Input Nama-Nama Desa (Pisah Koma):</label>
+        <textarea id="bulk-input" oninput="hitung()" placeholder="Contoh: Desa A, Desa B, Desa C..."
+          class="w-full h-44 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 text-sm font-bold uppercase"></textarea>
+        
+        <div class="flex justify-between items-center">
+          <p class="text-[9px] text-slate-400 italic font-bold">Gunankan tanda koma (,) sebagai pemisah</p>
+          <div class="bg-blue-900 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase">
+            Jumlah: <span id="counter">0</span>
+          </div>
+        </div>
+
+        <button onclick="simpanData()" id="btn-save" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg mt-4 text-xs uppercase tracking-widest">
+          Simpan Ke Database
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    cekLogin();
+    const role = localStorage.getItem("role");
+    const kec = localStorage.getItem("kecamatan");
+    const kodeKec = localStorage.getItem("kode_kecamatan") || "321618"; // Default Setu jika belum ada
+
+    window.onload = () => {
+      document.getElementById("display-wilayah").innerText = (role === "super_admin") ? "Seluruh Kabupaten Bekasi" : "Kecamatan " + kec;
+    };
+
+    function hitung() {
+      const val = document.getElementById("bulk-input").value;
+      document.getElementById("counter").innerText = val.split(",").filter(i => i.trim() !== "").length;
+    }
+
+    function simpanData() {
+      const input = document.getElementById("bulk-input").value;
+      if(!input) return alert("Data kosong!");
+      
+      const btn = document.getElementById("btn-save");
+      btn.innerText = "⏳ MEMPROSES...";
+      btn.disabled = true;
+
+      fetch(API_URL, {
+        method: "POST",
+        body: new URLSearchParams({
+          action: "save_bulk_wilayah",
+          type: (role === "super_admin") ? "kecamatan" : "desa",
+          kode_kec: kodeKec,
+          nama_kec: kec,
+          data_list: input
+        })
+      })
+      .then(res => res.text())
+      .then(msg => {
+        alert(msg);
+        location.reload();
+      });
+    }
+  </script>
+</body>
+</html>
