@@ -286,8 +286,138 @@ function initDashboard() {
   if (elIcon) elIcon.innerText = iconEmoji;
 }
 
+//====================== 4. LOAD STATISTIK (GRAFIK KINERJA) ==========================//
 function loadGrafik() {
-  // Biarkan kosong jika tidak digunakan di hal ini, atau masukkan logika grafik lama Bapak di sini
+  const role = localStorage.getItem("role");
+  const nikLogin = localStorage.getItem("nik");
+  const kecAdmin = localStorage.getItem("kecamatan"); 
+  const desaAdmin = localStorage.getItem("desa");
+  
+  const elTahun = document.getElementById("filter-tahun");
+  const elBulan = document.getElementById("filter-bulan");
+  if (!elTahun || !elBulan) return; 
+
+  const tahun = elTahun.value;
+  const bulan = elBulan.value;
+  const userEl = document.getElementById("filter-user"); // Dropdown pilih kader
+  const userSelect = userEl ? userEl.value : "";
+
+  // 1. LOGIKA DROPDOWN PILIHAN KADER (KHUSUS ADMIN)
+  if (role && role.includes("admin")) {
+    const adminArea = document.getElementById("admin-filter-area");
+    if (adminArea) adminArea.classList.remove("hidden");
+
+    if (userEl && userEl.options.length <= 1) {
+      const params = new URLSearchParams({
+        action: "get_users",
+        role_admin: role,
+        kec_admin: kecAdmin,
+        desa_admin: desaAdmin
+      });
+
+      fetch(`${API_URL}?${params.toString()}`)
+        .then(res => res.json())
+        .then(users => {
+          users.forEach(u => {
+            const uRole = u.Role || u.role || "";
+            const uNama = u.Nama || u.nama || "Tanpa Nama";
+            const uNik = u.NIK || u.nik || "";
+            
+            if (uRole === 'kader') { 
+              let opt = document.createElement("option");
+              opt.value = uNik;
+              opt.innerHTML = uNama;
+              userEl.appendChild(opt);
+            }
+          });
+        });
+    }
+  }
+
+  // 2. TENTUKAN TARGET DATA
+  let nikTarget = (role && role.includes("admin") && userSelect !== "") ? userSelect : nikLogin;
+
+  // 3. TARIK DATA STATISTIK DARI APPS SCRIPT
+  fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
+    .then(res => res.json())
+    .then(data => {
+      
+      // --- UPDATE KARTU RINGKASAN ---
+      const totalReal = data.realisasi_tahunan.reduce((a, b) => a + b, 0);
+      const totalTarget = data.target_tahunan.reduce((a, b) => a + b, 0);
+      const persen = totalTarget > 0 ? Math.round((totalReal / totalTarget) * 100) : 0;
+
+      if (document.getElementById("total-realisasi")) 
+          document.getElementById("total-realisasi").innerText = totalReal;
+      
+      if (document.getElementById("total-persen")) 
+          document.getElementById("total-persen").innerText = persen + "%";
+      
+      const pb = document.getElementById("progress-bar");
+      if (pb) pb.style.width = (persen > 100 ? 100 : persen) + "%";
+
+      // --- UPDATE DIAGRAM DONUT ---
+      const canvas = document.getElementById('myChart');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (myChartInstance) myChartInstance.destroy();
+        
+        myChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
+            datasets: [{
+              data: data.realisasi_bulanan, 
+              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#94a3b8'],
+              borderWidth: 2,
+              borderColor: '#ffffff',
+              hoverOffset: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '65%',
+            plugins: {
+              legend: { display: true, position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } }
+            }
+          }
+        });
+      }
+
+      // --- UPDATE PERINGKAT (Hanya Admin) ---
+      const rankArea = document.getElementById("section-peringkat");
+      if (role && role.includes("admin") && rankArea) {
+        rankArea.classList.remove("hidden");
+        renderPeringkat(data.ranking);
+      }
+    })
+    .catch(err => console.error("Gagal load statistik:", err));
+}
+
+//====================== 5. RENDER PERINGKAT ==========================//
+function renderPeringkat(dataRanking) {
+  const listPeringkat = document.getElementById("list-peringkat");
+  if (!listPeringkat) return;
+
+  if (!dataRanking || dataRanking.length === 0) {
+    listPeringkat.innerHTML = "<p class='text-center text-[10px] text-gray-400 py-4'>Belum ada data laporan.</p>";
+    return;
+  }
+
+  listPeringkat.innerHTML = dataRanking.map((u, i) => {
+    const namaKader = u.Nama || u.nama || "Anonim";
+    const skorKader = u.Skor || u.skor || 0;
+
+    return `
+    <div class="flex items-center justify-between bg-white p-3 rounded-2xl shadow-sm border border-slate-50">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-6 h-6 rounded-full ${i === 0 ? 'bg-yellow-400' : 'bg-slate-100'} text-[10px] font-bold ${i === 0 ? 'text-white' : 'text-gray-400'}">${i+1}</span>
+        <p class="text-[11px] font-bold text-slate-700 uppercase">${namaKader}</p>
+      </div>
+      <span class="text-[9px] bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-bold">${skorKader} Lap</span>
+    </div>
+  `}).join('');
 }
 
 function tampilkanMotivasi() {
