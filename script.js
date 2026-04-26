@@ -34,7 +34,23 @@ function login() {
 
 function cekLogin() {
   const nik = localStorage.getItem("nik");
-  if (!nik) window.location.href = "index.html";
+  const role = localStorage.getItem("role");
+  const isLoginPage = window.location.pathname.includes("index.html") || window.location.pathname.endsWith("/");
+
+  // 1. JIKA BELUM LOGIN & BUKAN DI HALAMAN LOGIN -> Tendang ke Login
+  if (!nik && !isLoginPage) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  // 2. JIKA SUDAH LOGIN & MALAH BUKA HALAMAN LOGIN -> Lempar ke Dashboard masing-masing
+  if (nik && isLoginPage) {
+    if (role && role.includes("admin")) {
+      window.location.href = "dashboard-admin.html";
+    } else {
+      window.location.href = "dashboard-kader.html";
+    }
+  }
 }
 
 function logout() {
@@ -230,7 +246,44 @@ function hapusUser(nik, nama) {
 // ================= 4. DASHBOARD & STATISTIK (FUNGSI LAMA) =================
 function initDashboard() {
   const nama = localStorage.getItem("nama");
-  if (document.getElementById("namaUser")) document.getElementById("namaUser").innerText = nama;
+  const role = localStorage.getItem("role");
+  const kec = localStorage.getItem("kecamatan");
+  const desa = localStorage.getItem("desa");
+
+  const elNama = document.getElementById("namaUser");
+  const elRole = document.getElementById("labelRole");
+  const elWilayah = document.getElementById("wilayahOtoritas");
+  const elIcon = document.getElementById("iconRole");
+
+  if (elNama) elNama.innerText = nama;
+
+  let roleText = "";
+  let wilayahText = "";
+  let iconEmoji = "👤"; // Default ikon
+
+  // LOGIKA PENENTUAN ICON & LABEL
+  if (role === "super_admin") {
+    roleText = "Super Administrator";
+    wilayahText = "Kabupaten Bekasi";
+    iconEmoji = "👑";
+  } else if (role === "admin_kec") {
+    roleText = "Admin Kecamatan";
+    wilayahText = "Kecamatan " + kec;
+    iconEmoji = "🏛️";
+  } else if (role === "admin_desa") {
+    roleText = "Admin Desa";
+    wilayahText = "Desa " + desa;
+    iconEmoji = "🏠";
+  } else {
+    roleText = "Kader PPKBD";
+    wilayahText = "Desa " + desa;
+    iconEmoji = "👤";
+  }
+
+  // Masukkan data ke tampilan
+  if (elRole) elRole.innerText = roleText;
+  if (elWilayah) elWilayah.innerText = "📍 Wilayah: " + wilayahText;
+  if (elIcon) elIcon.innerText = iconEmoji;
 }
 
 function loadGrafik() {
@@ -253,4 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
   cekLogin();
   if (typeof setTahunOtomatis === 'function') setTahunOtomatis();
   if (document.getElementById("motivasi-login")) tampilkanMotivasi();
+
+  // Jika di halaman dashboard, jalankan initDashboard
+  if (document.getElementById("namaUser")) initDashboard();
 });
