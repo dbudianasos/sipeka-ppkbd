@@ -1140,14 +1140,17 @@ function loadGrafik() {
   fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
     .then(res => res.json())
     .then(data => {
-      const totalTarget = data.target.reduce((a, b) => a + b, 0);
-      const totalReal = data.realisasi.reduce((a, b) => a + b, 0);
-      const persen = totalTarget > 0 ? Math.round((totalReal / totalTarget) * 100) : 0;
+      // --- UPDATE KARTU RINGKASAN (SELALU TAHUNAN) ---
+      const totalTargetTahunan = data.target_tahunan.reduce((a, b) => a + b, 0);
+      const totalRealTahunan = data.realisasi_tahunan.reduce((a, b) => a + b, 0);
+      const persen = totalTargetTahunan > 0 ? Math.round((totalRealTahunan / totalTargetTahunan) * 100) : 0;
 
-      document.getElementById("total-realisasi").innerText = totalReal;
+      // Isi kartu dengan angka akumulasi tahunan
+      document.getElementById("total-realisasi").innerText = totalRealTahunan;
       document.getElementById("total-persen").innerText = persen + "%";
       document.getElementById("progress-bar").style.width = (persen > 100 ? 100 : persen) + "%";
 
+      // --- UPDATE DIAGRAM DONUT (DINAMIS BULANAN) ---
       const canvas = document.getElementById('myChart');
       if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -1158,7 +1161,7 @@ function loadGrafik() {
           data: {
             labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
             datasets: [{
-              data: data.realisasi, 
+              data: data.realisasi_bulanan, 
               backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#94a3b8'],
               borderWidth: 2,
               borderColor: '#ffffff',
