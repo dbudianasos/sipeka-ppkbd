@@ -1516,3 +1516,97 @@ document.addEventListener("DOMContentLoaded", () => {
     tampilkanMotivasi();
   }
 });
+
+// ================= SINKRONISASI WILAYAH GLOBAL =================
+let GLOBAL_WILAYAH = []; 
+
+// 1. Fungsi Ambil Data dari Spreadsheet (Dipakai di User & Master Wilayah)
+function loadWilayahDatabase() {
+  const selKecUser = document.getElementById("user-kecamatan"); // di user.html
+  const selKecMaster = document.getElementById("select-kecamatan"); // di master-wilayah.html
+  
+  const targetDropdown = selKecUser || selKecMaster;
+  if (!targetDropdown) return;
+
+  fetch(`${API_URL}?action=get_wilayah_lengkap`)
+    .then(res => res.json())
+    .then(data => {
+      GLOBAL_WILAYAH = data;
+      
+      // Ambil daftar Kecamatan Unik
+      const uniqueKec = [...new Map(data.map(item => [item['kode_kec'], item])).values()];
+      
+      targetDropdown.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+      uniqueKec.forEach(item => {
+        if(item.nama_kec && item.nama_kec !== "-") {
+          let opt = document.createElement("option");
+          opt.value = item.nama_kec;
+          opt.setAttribute("data-kode", item.kode_kec); 
+          opt.innerHTML = item.nama_kec;
+          targetDropdown.appendChild(opt);
+        }
+      });
+
+      // Panggil inisialisasi halaman setelah data siap
+      if (typeof initUserPage === 'function') initUserPage();
+      if (typeof updateInfoWilayah === 'function') updateInfoWilayah();
+    })
+    .catch(err => console.error("Gagal load wilayah:", err));
+}
+
+// 2. Fungsi Update Dropdown Desa
+function updateDropdownDesa(desaTerpilih = "") {
+  const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
+  const selDesa = document.getElementById("user-wilayah");
+  if (!selDesa || !selKec) return;
+
+  const kecDipilih = selKec.value;
+  selDesa.innerHTML = '<option value="">-- Pilih Desa --</option>';
+  
+  const filtered = GLOBAL_WILAYAH.filter(item => item.nama_kec === kecDipilih);
+  filtered.forEach(item => {
+    if(item.nama_desa && item.nama_desa !== "-") {
+      let opt = document.createElement("option");
+      opt.value = item.nama_desa;
+      opt.innerHTML = item.nama_desa;
+      if(item.nama_desa === desaTerpilih) opt.selected = true;
+      selDesa.appendChild(opt);
+    }
+  });
+}
+
+// 3. Inisialisasi Header & Kunci Wilayah (Halaman User)
+function initUserPage() {
+  const role = localStorage.getItem("role");
+  const kec = localStorage.getItem("kecamatan");
+  const desa = localStorage.getItem("desa");
+  
+  const subTitle = document.getElementById("sub-title-admin");
+  const selRole = document.getElementById("user-role");
+  const selKec = document.getElementById("user-kecamatan");
+  const selDesa = document.getElementById("user-wilayah");
+
+  // Update Teks Header Otoritas
+  if (subTitle) {
+    if (role === "super_admin") subTitle.innerText = "Otoritas: Kabupaten Bekasi";
+    else if (role === "admin_kec") subTitle.innerText = "Otoritas: Kec. " + kec;
+    else subTitle.innerText = "Otoritas: Desa " + desa;
+  }
+
+  if (!selRole) return;
+
+  // Kunci Dropdown & Role berdasarkan Jabatan
+  if (role === "super_admin") {
+    selRole.innerHTML = `
+      <option value="admin_kec">Admin Kecamatan</option>
+      <option value="admin_desa">Admin Desa</option>
+      <option value="kader">Kader PPKBD</option>`;
+  } else if (role === "admin_kec") {
+    selRole.innerHTML = `<option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
+    if (selKec) { selKec.value = kec; selKec.disabled = true; updateDropdownDesa(); }
+  } else {
+    selRole.innerHTML = `<option value="kader">Kader PPKBD</option>`;
+    if (selKec) { selKec.value = kec; selKec.disabled = true; }
+    if (selDesa) { updateDropdownDesa(desa); selDesa.disabled = true; }
+  }
+}
