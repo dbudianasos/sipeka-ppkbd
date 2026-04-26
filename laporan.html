@@ -87,26 +87,16 @@
   </div>
 
   <div id="area-manual" class="p-4 bg-amber-50/50 rounded-2xl border border-amber-100 space-y-4" style="display:none;">
+    
+    <div class="bg-amber-100/50 p-3 rounded-lg border border-amber-200 text-[10px] text-amber-800 font-medium">
+      <span class="font-bold">Info:</span> Gunakan opsi ini <b>hanya</b> untuk kegiatan insidental/dadakan yang tidak ada di dalam Rencana Kerja Anda (Misal: Undangan mendadak dari Kades/Kecamatan).
+    </div>
+
     <div>
-      <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Jenis Kegiatan Luar Renja</label>
-      <select id="lap-kegiatan" onchange="updateSubstansiLaporan(); updateLabelSatuanLaporan(); validasiFotoLaporan()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm">
-          <option value="">-- Pilih Jenis Kegiatan --</option>
-          <option value="Pertemuan">1. Pertemuan</option>
-          <option value="KIE">2. KIE (Komunikasi, Informasi, Edukasi)</option>
-          <option value="Pelayanan & Penggerakan">3. Pelayanan & Penggerakan</option>
-          <option value="Pencatatan & Pelaporan">4. Pencatatan & Pelaporan</option>
-          <option value="Lainnya">5. Lainnya</option>
-      </select>
-    </div>
-  
-    <div id="wrapper-substansi-lap" class="hidden">
-      <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Substansi Kegiatan</label>
-      <select id="lap-substansi" onchange="validasiFotoLaporan()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm"></select>
-    </div>
-  
-    <div id="wrapper-keterangan-lap" class="hidden">
-      <label id="label-lap-keterangan" class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Dasar Pelaksanaan / Keterangan</label>
-      <input id="lap-keterangan" type="text" placeholder="Misal: Instruksi Kades / Undangan Bidan..." class="w-full p-4 text-sm font-semibold text-blue-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all placeholder:font-normal shadow-sm">
+      <label class="text-[10px] font-bold text-amber-800 uppercase tracking-widest ml-2 mb-1 block">Nama & Uraian Kegiatan (Luar Renja)</label>
+      <textarea id="lap-kegiatan-manual" rows="3" oninput="validasiFotoLaporan()" 
+        placeholder="Contoh: Menghadiri rapat Musrenbang tingkat desa atas undangan Kepala Desa..." 
+        class="w-full p-4 text-sm font-semibold text-amber-900 bg-white border border-amber-200 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"></textarea>
     </div>
   </div>
 
@@ -116,7 +106,7 @@
   </div>
 
   <div>
-    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Jumlah Realisasi Capaian</label>
+    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Hasil / Jumlah Sasaran Kegiatan</label>
     <div class="flex gap-3">
       <input id="lap-realisasi" type="number" placeholder="0" class="w-1/3 p-4 text-xl text-center font-black text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
       
