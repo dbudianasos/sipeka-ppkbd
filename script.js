@@ -1524,8 +1524,8 @@ let GLOBAL_WILAYAH = [];
 function loadWilayahDatabase() {
   const selKecUser = document.getElementById("user-kecamatan"); // di user.html
   const selKecMaster = document.getElementById("select-kecamatan"); // di master-wilayah.html
-  
   const targetDropdown = selKecUser || selKecMaster;
+  
   if (!targetDropdown) return;
 
   fetch(`${API_URL}?action=get_wilayah_lengkap`)
