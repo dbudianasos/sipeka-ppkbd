@@ -1552,6 +1552,7 @@ function loadWilayahDatabase() {
       if (typeof updateInfoWilayah === 'function') updateInfoWilayah();
     })
     .catch(err => console.error("Gagal load wilayah:", err));
+    targetDropdown.innerHTML = '<option value="">❌ Gagal Memuat Data</option>';
 }
 
 // 2. Fungsi Update Dropdown Desa
