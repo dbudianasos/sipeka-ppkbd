@@ -23,6 +23,16 @@
         <h2 id="display-wilayah" class="text-lg font-black text-slate-800 uppercase">Memuat...</h2>
       </div>
 
+      <div class="mb-4">
+        <label class="text-[10px] font-black text-slate-400 uppercase">Target Kecamatan:</label>
+        <select id="select-kecamatan" onchange="updateInfoWilayah()" class="w-full p-3 mt-1 text-sm bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-600">
+          <option value="">-- Pilih Kecamatan --</option>
+          </select>
+        <p id="msg-kecamatan" class="text-[9px] text-red-500 font-bold mt-1 hidden">*Pilih kecamatan tujuan terlebih dahulu</p>
+      </div>
+      
+      <textarea id="bulk-input" ...
+        
       <div class="space-y-4">
         <label class="text-[10px] font-black text-slate-400 uppercase">Input Nama-Nama Desa (Pisah Koma):</label>
         <textarea id="bulk-input" oninput="hitung()" placeholder="Contoh: Desa A, Desa B, Desa C..."
