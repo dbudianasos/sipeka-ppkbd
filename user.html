@@ -38,74 +38,56 @@
   </header>
 
   <main class="px-4 pt-6 max-w-5xl mx-auto">
-
-    <div class="bg-white p-6 rounded-[2rem] shadow-sm border-t-4 border-blue-900 mb-8">
-      <h3 class="font-bold text-sm mb-5 text-slate-800 flex items-center gap-2">
-        <span>👤</span> Form Registrasi Akun Baru
-      </h3>
-      
-      <div class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Nama Lengkap</label>
-            <input id="user-nama" type="text" placeholder="Nama sesuai KTP" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-          </div>
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">NIK (16 Digit)</label>
-            <input id="user-nik" type="number" placeholder="ID Login User" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Kecamatan</label>
-            <select id="user-kecamatan" onchange="updateDropdownDesa()" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
-            <option value="">-- Pilih Kecamatan --</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Desa / Wilayah</label>
-            <select id="user-wilayah" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
-              <option value="">-- Pilih Desa --</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Jabatan (Role)</label>
-            <select id="user-role" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
-              </select>
-          </div>
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">No. WhatsApp</label>
-            <input id="user-hp" type="number" placeholder="0812..." class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-600">
-          </div>
-        </div>
-
+  <div class="bg-white p-6 rounded-[2rem] shadow-sm border-t-4 border-blue-900 mb-8">
+    <h3 class="font-bold text-sm mb-5 text-slate-800 flex items-center gap-2">
+      <span>👤</span> Form Registrasi Akun Baru
+    </h3>
+    
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Password Awal</label>
-          <input id="user-password" type="text" value="123456" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none">
+          <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Nama Lengkap</label>
+          <input id="user-nama" type="text" placeholder="Nama sesuai KTP" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none">
         </div>
-
-        <button onclick="tambahUser()" id="btn-tambah-user"
-          class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-900/20 hover:bg-blue-800 transition-all active:scale-95 mt-4 uppercase tracking-widest text-xs">
-          Simpan Data Pengguna
-        </button>
-        <p id="info-user" class="text-center text-[10px] mt-2 font-bold"></p>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">NIK (16 Digit)</label>
+          <input id="user-nik" type="number" placeholder="ID Login User" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none">
+        </div>
       </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Kecamatan</label>
+          <select id="user-kecamatan" onchange="updateDropdownDesa()" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
+            <option value="">-- Pilih Kecamatan --</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Desa / Wilayah</label>
+          <select id="user-wilayah" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
+            <option value="">-- Pilih Desa --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Jabatan (Role)</label>
+          <select id="user-role" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
+          </select>
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">No. WhatsApp</label>
+          <input id="user-hp" type="number" placeholder="0812..." class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none">
+        </div>
+      </div>
+
+      <button onclick="tambahUser()" id="btn-tambah-user" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg mt-4 uppercase tracking-widest text-xs active:scale-95 transition-all">
+        Simpan Data Pengguna
+      </button>
+      <p id="info-user" class="text-center text-[10px] mt-2 font-bold"></p>
     </div>
-
-    <div class="mt-10 mb-10">
-      <div class="flex justify-between items-center mb-4 px-2">
-        <h3 class="font-bold text-xs text-slate-800 uppercase tracking-tighter">📋 Kader di Wilayah Anda</h3>
-        <button onclick="loadUsers()" class="text-blue-600 text-[10px] font-black uppercase tracking-widest bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 active:scale-95 transition">🔄 Refresh</button>
-      </div>
-
-      <div id="container-daftar-user" class="space-y-3">
-        <p class="text-center text-[10px] text-slate-400 py-10 italic">Sedang menyinkronkan data...</p>
-      </div>
-    </div>
+  </div>
   </main>
 
   <script src="script.js"></script>
