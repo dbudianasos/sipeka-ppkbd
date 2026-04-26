@@ -92,21 +92,23 @@
 
   <script src="script.js"></script>
   <script>
-    // 1. SATPAM CEK
-    cekLogin();
+  // 1. SATPAM CEK
+  cekLogin();
 
-    // 2. INISIALISASI HALAMAN
-    window.onload = function() {
-      // Panggil ini dulu agar dropdown Kecamatan terisi dari database
-      if (typeof loadWilayahDatabase === 'function') loadWilayahDatabase(); 
-      
-      // Panggil ini untuk mengatur kunci role (Super Admin vs Admin Kec)
-      if (typeof initUserPage === 'function') initUserPage();
-      
-      // Panggil ini untuk menampilkan daftar kader di bawah
-      if (typeof loadUsers === 'function') loadUsers();
-    };
-  </script>
+  // 2. JALANKAN SATU FUNGSI SAJA
+  window.onload = function() {
+    // Fungsi ini akan mengambil data wilayah, 
+    // lalu di dalamnya dia akan otomatis memanggil initUserPage()
+    if (typeof loadWilayahDatabase === 'function') {
+        loadWilayahDatabase();
+    }
+    
+    // Daftar user tetap diload seperti biasa
+    if (typeof loadUsers === 'function') {
+        loadUsers();
+    }
+  };
+</script>
 
   <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 px-10">
     &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
