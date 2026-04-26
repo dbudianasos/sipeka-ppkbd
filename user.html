@@ -60,11 +60,7 @@
           <div>
             <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Kecamatan</label>
             <select id="user-kecamatan" onchange="updateDropdownDesa()" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
-              <option value="">-- Pilih --</option>
-              <option value="SETU">SETU</option>
-              <option value="CIBITUNG">CIBITUNG</option>
-              <option value="CIKARANG PUSAT">CIKARANG PUSAT</option>
-              <option value="CIKARANG SELATAN">CIKARANG SELATAN</option>
+            <option value="">-- Pilih Kecamatan --</option>
             </select>
           </div>
           <div>
@@ -117,10 +113,15 @@
     // 1. SATPAM CEK
     cekLogin();
 
-    // 2. INISIALISASI HALAMAN (LOCK WILAYAH & ROLE)
+    // 2. INISIALISASI HALAMAN
     window.onload = function() {
-      // Pastikan fungsi ini ada di script.js Bapak
+      // Panggil ini dulu agar dropdown Kecamatan terisi dari database
+      if (typeof loadWilayahDatabase === 'function') loadWilayahDatabase(); 
+      
+      // Panggil ini untuk mengatur kunci role (Super Admin vs Admin Kec)
       if (typeof initUserPage === 'function') initUserPage();
+      
+      // Panggil ini untuk menampilkan daftar kader di bawah
       if (typeof loadUsers === 'function') loadUsers();
     };
   </script>
