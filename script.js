@@ -793,61 +793,37 @@ function tambahUser() {
   const btn = document.getElementById("btn-tambah-user");
   const info = document.getElementById("info-user");
 
-  const nama = document.getElementById("user-nama").value;
-  const nik = document.getElementById("user-nik").value;
-  const hp = document.getElementById("user-hp").value;
-  const kecamatan = document.getElementById("user-kecamatan").value;
-  const wilayah = document.getElementById("user-wilayah").value;
-  const role = document.getElementById("user-role").value;
-  const password = document.getElementById("user-password").value;
+  const payload = {
+    action: "tambah_user",
+    user_nik: document.getElementById("user-nik").value,
+    nama: document.getElementById("user-nama").value,
+    password: document.getElementById("user-password").value,
+    role: document.getElementById("user-role").value,
+    kecamatan: document.getElementById("user-kecamatan").value,
+    desa: document.getElementById("user-wilayah").value, // Mengambil dari select desa
+    hp: document.getElementById("user-hp").value
+  };
 
-  if (!nama || !nik || !wilayah || !kecamatan || !password) {
-    info.innerText = "Harap lengkapi semua form data user!";
-    info.className = "text-center text-sm mt-2 text-red-500 font-bold";
+  if (!payload.user_nik || !payload.nama || !payload.desa) {
+    info.innerText = "❌ Semua data wajib diisi!";
+    info.className = "text-center text-sm mt-2 font-bold text-red-500";
     return;
   }
 
-  if (nik.length < 15) {
-    info.innerText = "Peringatan: NIK kurang dari 16 digit!";
-    info.className = "text-center text-sm mt-2 text-red-500 font-bold";
-    return;
-  }
-
-  btn.disabled = true; btn.innerText = "MENYIMPAN DATA...";
-
+  info.innerText = "⏳ Menyimpan User...";
+  
   fetch(API_URL, {
     method: "POST",
-    body: new URLSearchParams({
-      action: "tambah_user",
-      nama: nama,
-      nik: nik,
-      hp: hp,
-      kecamatan: kecamatan,
-      wilayah: wilayah,
-      role: role,
-      password: password
-    })
+    body: new URLSearchParams(payload)
   })
   .then(res => res.text())
   .then(res => {
     if (res === "success") {
-      info.innerText = "User berhasil didaftarkan!";
-      info.className = "text-center text-sm mt-2 text-green-600 font-bold";
-      
-      document.getElementById("user-nama").value = "";
-      document.getElementById("user-nik").value = "";
-      document.getElementById("user-hp").value = "";
-      document.getElementById("user-wilayah").value = "";
-    } else {
-      info.innerText = "Gagal mendaftarkan user ke Database!";
-      info.className = "text-center text-sm mt-2 text-red-500 font-bold";
+      info.innerText = "✅ User Berhasil Didaftarkan!";
+      info.className = "text-center text-sm mt-2 font-bold text-green-600";
+      // Reset form atau refresh list
+      loadUsers();
     }
-    btn.disabled = false; btn.innerText = "SIMPAN USER BARU";
-  })
-  .catch(() => {
-    info.innerText = "Koneksi Error. Coba lagi!";
-    info.className = "text-center text-sm mt-2 text-red-500 font-bold";
-    btn.disabled = false; btn.innerText = "SIMPAN USER BARU";
   });
 }
 
