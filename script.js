@@ -147,10 +147,13 @@ function initUserPage() {
 }
 
 // ================= MANAJEMEN USER (TAMBAH, LIST, HAPUS) =================
+let DATA_USERS_ALL = []; // Variabel global untuk menampung data
+
 function tambahUser() {
   const btn = document.getElementById("btn-tambah-user");
   const info = document.getElementById("info-user");
 
+  // Kita buat payload dengan kunci yang sesuai dengan doPost di GAS Bapak
   const payload = {
     action: "tambah_user",
     user_nik: document.getElementById("user-nik").value,
@@ -185,9 +188,10 @@ function tambahUser() {
     }
   });
 }
-let DATA_USERS_ALL = [];
+
 function loadUsers() {
   const container = document.getElementById("container-daftar-user");
+  const filterWil = document.getElementById("filter-wilayah"); // Pastikan ID ini ada di HTML
   if (!container) return;
 
   const roleAdmin = localStorage.getItem("role");
@@ -206,33 +210,57 @@ function loadUsers() {
   fetch(`${API_URL}?${params.toString()}`)
     .then(res => res.json())
     .then(data => {
-      DATA_USERS_ALL = data; // Simpan ke variabel global
+      DATA_USERS_ALL = data; 
       
-      // Isi Dropdown Filter Kecamatan (Hanya jika Super Admin)
-      const filterKec = document.getElementById("filter-kecamatan");
-      if(filterKec && roleAdmin === "super_admin" && filterKec.options.length <= 1) {
-        const listKec = [...new Set(data.map(u => u.kecamatan))];
-        listKec.forEach(k => {
-          if(k) filterKec.innerHTML += `<option value="${k}">${k}</option>`;
-        });
+      // LOGIKA FILTER WILAYAH OTOMATIS
+      if (filterWil) {
+        filterWil.innerHTML = '<option value="">Semua Wilayah</option>';
+        if (roleAdmin === "super_admin") {
+          // Super Admin melihat daftar KECAMATAN
+          const listKec = [...new Set(data.map(u => u.Kecamatan || u.kecamatan))].sort();
+          listKec.forEach(k => { if(k && k !== "SEMUA") filterWil.innerHTML += `<option value="${k}">${k}</option>`; });
+        } else if (roleAdmin === "admin_kec") {
+          // Admin Kec melihat daftar DESA
+          const listDesa = [...new Set(data.map(u => u.Desa || u.desa))].sort();
+          listDesa.forEach(d => { if(d && d !== "SEMUA DESA") filterWil.innerHTML += `<option value="${d}">${d}</option>`; });
+        } else {
+          filterWil.classList.add("hidden");
+        }
       }
 
-      applyFilters(); // Jalankan tampilan pertama kali
+      applyFilters(); 
+    })
+    .catch(err => {
+      container.innerHTML = `<p class="text-center text-red-500 text-[10px]">Gagal memuat data. Periksa koneksi atau Apps Script.</p>`;
     });
 }
 
 function applyFilters() {
   const container = document.getElementById("container-daftar-user");
+  const roleAdmin = localStorage.getItem("role");
   const searchQuery = document.getElementById("search-user").value.toUpperCase();
   const filterRole = document.getElementById("filter-role").value;
-  const filterKec = document.getElementById("filter-kecamatan").value;
+  const filterValue = document.getElementById("filter-wilayah").value;
 
-  // Proses Filter
   const filteredData = DATA_USERS_ALL.filter(u => {
-    const matchSearch = u.nama.toUpperCase().includes(searchQuery) || u.nik.includes(searchQuery);
-    const matchRole = filterRole === "" || u.role === filterRole;
-    const matchKec = filterKec === "" || u.kecamatan === filterKec;
-    return matchSearch && matchRole && matchKec;
+    // FIX UNDEFINED: Cek Huruf Besar & Kecil sekaligus
+    const uNama = (u.Nama || u.nama || "").toUpperCase();
+    const uNik = (u.NIK || u.nik || "").toString();
+    const uKec = u.Kecamatan || u.kecamatan || "";
+    const uDesa = u.Desa || u.desa || "";
+    const uRole = u.Role || u.role || "";
+
+    const matchSearch = uNama.includes(searchQuery) || uNik.includes(searchQuery);
+    const matchRole = filterRole === "" || uRole === filterRole;
+    
+    let matchWil = true;
+    if (roleAdmin === "super_admin") {
+      matchWil = filterValue === "" || uKec === filterValue;
+    } else if (roleAdmin === "admin_kec") {
+      matchWil = filterValue === "" || uDesa === filterValue;
+    }
+    
+    return matchSearch && matchRole && matchWil;
   });
 
   container.innerHTML = "";
@@ -243,41 +271,37 @@ function applyFilters() {
   }
 
   filteredData.forEach(u => {
-    let statusColor = u.status === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
-    
-    // PENJELASAN UNDEFINED: Pastikan menggunakan u.kecamatan dan u.desa (sesuai JSON dari GAS)
-    // Jika masih undefined, ganti menjadi u.nama_kec atau u.nama_desa sesuai kolom di spreadsheet
-    const kecTampil = u.kecamatan || "-";
-    const desaTampil = u.desa || "-";
+    // Penyesuaian variabel agar tidak undefined
+    const Nama = u.Nama || u.nama || "Tanpa Nama";
+    const NIK = u.NIK || u.nik || "-";
+    const Kec = u.Kecamatan || u.kecamatan || "-";
+    const Desa = u.Desa || u.desa || "-";
+    const Role = u.Role || u.role || "";
+    const Status = u.Status || u.status || "aktif";
 
-    let roleLabel = "";
-    if(u.role === "super_admin") roleLabel = "👑 Super Admin";
-    else if(u.role === "admin_kec") roleLabel = "🏛️ Admin Kec";
-    else if(u.role === "admin_desa") roleLabel = "🏠 Admin Desa";
-    else roleLabel = "👤 Kader";
-    
-    let btnStatus = u.status === "aktif" 
-      ? `<button onclick="ubahStatusUser('${u.nik}', 'nonaktif')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">⏸ NONAKTIFKAN</button>`
-      : `<button onclick="ubahStatusUser('${u.nik}', 'aktif')" class="flex-1 bg-green-50 text-green-700 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">▶ AKTIFKAN</button>`;
+    let statusColor = Status === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+    let roleLabel = Role === "super_admin" ? "👑 Super Admin" : (Role === "admin_kec" ? "🏛️ Admin Kec" : (Role === "admin_desa" ? "🏠 Admin Desa" : "👤 Kader"));
+
+    let btnStatus = Status === "aktif" 
+      ? `<button onclick="ubahStatusUser('${NIK}', 'nonaktif')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">⏸ NONAKTIFKAN</button>`
+      : `<button onclick="ubahStatusUser('${NIK}', 'aktif')" class="flex-1 bg-green-50 text-green-700 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">▶ AKTIFKAN</button>`;
 
     container.innerHTML += `
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden mb-2">
         <div class="flex justify-between items-start mb-3">
           <div>
-            <p class="text-[11px] font-black text-blue-900 uppercase leading-tight">${u.nama}</p>
-            <p class="text-[9px] text-slate-400 font-bold">${u.nik}</p>
+            <p class="text-[11px] font-black text-blue-900 uppercase leading-tight">${Nama}</p>
+            <p class="text-[9px] text-slate-400 font-bold">${NIK}</p>
           </div>
-          <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase shadow-sm">${u.status}</span>
+          <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase shadow-sm">${Status}</span>
         </div>
-        
         <div class="bg-slate-50 p-2 rounded-lg mb-3">
-           <p class="text-[9px] text-slate-500 font-bold">📍 ${kecTampil} - ${desaTampil}</p>
+           <p class="text-[9px] text-slate-500 font-bold">📍 ${Kec} - ${Desa}</p>
            <p class="text-[9px] text-blue-700 font-black mt-0.5 uppercase tracking-tighter">${roleLabel}</p>
         </div>
-        
         <div class="flex gap-2">
           ${btnStatus}
-          <button onclick="hapusUser('${u.nik}', '${u.nama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">🗑 HAPUS</button>
+          <button onclick="hapusUser('${NIK}', '${Nama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">🗑 HAPUS</button>
         </div>
       </div>
     `;
