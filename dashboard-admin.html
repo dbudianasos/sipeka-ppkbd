@@ -9,17 +9,7 @@
   <script src="script.js"></script>
 
   <script>
-    // 2. CEK LOGIN LANGSUNG (Tanpa nunggu loading)
-    // Tujuannya agar orang yang gak berhak langsung ditendang 
-    // sebelum sempat melihat isi dashboard.
     cekLogin(); 
-
-    // 3. BARU JALANKAN ISI UI (Nunggu elemen HTML siap)
-    window.onload = function() {
-      if (typeof initAdminDashboard === 'function') {
-        initAdminDashboard();
-      }
-    };
   </script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,6 +25,8 @@
     .admin-card { transition: 0.3s; }
     .admin-card:hover { transform: translateY(-3px); }
     select:disabled { background-color: #f1f5f9; cursor: not-allowed; color: #94a3b8; }
+    /* Mencegah layar goyang ke samping di HP */
+    body, html { overflow-x: hidden; width: 100%; }
   </style>
 </head>
 
@@ -54,7 +46,7 @@
     </div>
   </header>
 
-  <main class="px-5 pt-6 max-w-5xl mx-auto">
+  <main class="w-full px-5 pt-6 max-w-5xl mx-auto overflow-x-hidden">
     
     <div class="bg-white p-5 rounded-[1.5rem] mb-6 shadow-sm border-l-8 border-blue-900 flex items-center justify-between">
       <div>
@@ -143,8 +135,7 @@
       <h3 class="text-xs font-black text-slate-800 mb-4 ml-1 uppercase flex items-center gap-2">
         <span>🏆</span> Top 5 Performa Kader
       </h3>
-      <div id="list-peringkat" class="space-y-3">
-         </div>
+      <div id="list-peringkat" class="space-y-3"></div>
     </div>
 
   </main>
@@ -154,17 +145,15 @@
     Sistem Informasi Pelaporan Kinerja Kabupaten Bekasi
   </footer>
 
-  <script src="script.js"></script>
   <script>
-    // FUNGSI INISIALISASI DASHBOARD ADMIN (HIRARKI LOCK)
+    // FUNGSI INISIALISASI (Taruh di sini saja agar rapi)
     function initAdminDashboard() {
       const role = localStorage.getItem("role");
       const nama = localStorage.getItem("nama");
       const kec = localStorage.getItem("kecamatan");
       const desa = localStorage.getItem("desa");
 
-      // 1. Tampilkan Nama & Role yang Gagah
-      document.getElementById("namaUser").innerText = nama;
+      if (document.getElementById("namaUser")) document.getElementById("namaUser").innerText = nama;
       
       let roleText = "";
       let wilayahText = "";
@@ -175,37 +164,29 @@
       } else if (role === "admin_kec") {
         roleText = "Administrator Kecamatan";
         wilayahText = "Kecamatan " + kec;
-        
-        // LOCK Kecamatan filter
         const selKec = document.getElementById("filter-kecamatan");
-        selKec.value = kec;
-        selKec.disabled = true;
+        if(selKec) { selKec.value = kec; selKec.disabled = true; }
       } else if (role === "admin_desa") {
         roleText = "Administrator Desa";
         wilayahText = "Desa " + desa + " (" + kec + ")";
-        
-        // LOCK Kecamatan & Desa filter
         const selKec = document.getElementById("filter-kecamatan");
         const selDesa = document.getElementById("filter-desa");
-        
-        selKec.value = kec;
-        selKec.disabled = true;
-        
-        // Buat opsi desa manual karena selDesa mungkin belum ditarik datanya
-        selDesa.innerHTML = `<option value="${desa}">${desa}</option>`;
-        selDesa.value = desa;
-        selDesa.disabled = true;
+        if(selKec) { selKec.value = kec; selKec.disabled = true; }
+        if(selDesa) {
+          selDesa.innerHTML = `<option value="${desa}">${desa}</option>`;
+          selDesa.value = desa;
+          selDesa.disabled = true;
+        }
       }
 
-      document.getElementById("labelRole").innerText = roleText;
-      document.getElementById("wilayahOtoritas").innerText = "📍 Otoritas: " + wilayahText;
+      if(document.getElementById("labelRole")) document.getElementById("labelRole").innerText = roleText;
+      if(document.getElementById("wilayahOtoritas")) document.getElementById("wilayahOtoritas").innerText = "📍 Otoritas: " + wilayahText;
       
-      // Jalankan Grafik Pertama Kali
       if (typeof loadGrafik === 'function') loadGrafik();
     }
 
-    // Jalankan Init dengan sedikit jeda agar DOM siap
-    window.onload = initAdminDashboard;
+    // Jalankan saat halaman siap
+    window.addEventListener('load', initAdminDashboard);
   </script>
 </body>
 </html>
