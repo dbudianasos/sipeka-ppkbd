@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Kader - SIPEKA</title>
+  <link rel="icon" type="image/png" href="logo-sipeka.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .nav-gradient { background: linear-gradient(135deg, #004a99 0%, #002d5f 100%); }
+    .menu-card { transition: 0.3s; cursor: pointer; }
+    .menu-card:hover { transform: translateY(-5px); }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen pb-10">
+
+  <header class="sticky top-0 z-50 nav-gradient py-2.5 px-5 rounded-b-[1.5rem] shadow-lg shadow-blue-900/20">
+    <div class="flex justify-between items-center max-w-5xl mx-auto">
+      <div class="flex items-center gap-3">
+        <img src="logo-sipeka-dashbord.png" alt="SIPEKA" class="h-9 md:h-11 w-auto">
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="window.location.href='profil.html'" class="bg-white/10 hover:bg-white/20 p-2 rounded-xl text-base backdrop-blur-md border border-white/10 text-white">👤</button>
+        <button onclick="logout()" class="bg-red-500/80 hover:bg-red-600 p-2 rounded-xl text-base text-white">❌</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-5 pt-6 max-w-5xl mx-auto">
+    
+    <div class="bg-white p-4 rounded-[1.5rem] mb-6 shadow-sm border-t-4 border-blue-900 flex items-center justify-between">
+      <div>
+        <p class="text-[9px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">Kader PPKBD,</p>
+        <h1 id="namaUser" class="text-lg font-black text-blue-900 tracking-tight leading-tight">Memuat...</h1>
+      </div>
+      <div class="text-right">
+        <p id="desaUser" class="text-[9px] text-blue-700 font-bold bg-blue-50 border border-blue-100 px-3 py-1.5 rounded-full uppercase tracking-tighter">DESA ...</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div onclick="window.location.href='renja.html'" class="menu-card bg-white p-4 rounded-[1.5rem] text-center shadow-sm border border-slate-100">
+        <div class="text-2xl mb-1.5">📋</div>
+        <p class="text-xs font-bold text-gray-700">Rencana Kerja</p>
+      </div>
+      <div onclick="window.location.href='laporan.html'" class="menu-card bg-white p-4 rounded-[1.5rem] text-center shadow-sm border border-slate-100">
+        <div class="text-2xl mb-1.5">📊</div>
+        <p class="text-xs font-bold text-gray-700">Input Laporan</p>
+      </div>
+      <div onclick="window.location.href='monitoring.html'" class="menu-card bg-white p-4 rounded-[1.5rem] text-center shadow-sm border border-slate-100">
+        <div class="text-2xl mb-1.5">📈</div>
+        <p class="text-xs font-bold text-gray-700">Monitoring</p>
+      </div>
+      <div onclick="window.location.href='cetak.html'" class="menu-card bg-white p-4 rounded-[1.5rem] text-center shadow-sm border border-slate-100">
+        <div class="text-2xl mb-1.5">🖨️</div>
+        <p class="text-xs font-bold text-gray-700">Cetak Visum</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mt-6 mb-6">
+      <div class="bg-gradient-to-br from-blue-800 to-blue-900 p-4 rounded-[1.5rem] text-white shadow-md">
+        <div class="flex items-center gap-1.5 mb-1">
+          <span class="text-[10px]">✅</span>
+          <p class="text-[8px] opacity-80 uppercase font-bold tracking-widest">Realisasi (Tahun)</p>
+        </div>
+        <h2 id="total-realisasi" class="text-2xl font-black">0</h2>
+      </div>
+      
+      <div class="bg-white p-4 rounded-[1.5rem] border-t-4 border-blue-900 shadow-sm">
+        <div class="flex items-center gap-1.5 mb-1">
+          <span class="text-[10px]">🎯</span>
+          <p class="text-[8px] text-gray-400 uppercase font-bold tracking-widest">Progres Target</p>
+        </div>
+        <h2 id="total-persen" class="text-2xl font-black text-blue-900">0%</h2>
+        <div class="w-full bg-slate-100 h-1.5 rounded-full mt-2 overflow-hidden">
+          <div id="progress-bar" class="bg-blue-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-[1.5rem] shadow-sm border border-slate-100 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xs font-bold text-blue-900 uppercase">📊 Detail Bulanan</h3>
+      </div>
+
+      <div class="flex gap-2 mb-4">
+        <select id="filter-tahun" onchange="loadGrafik()" class="flex-1 text-[10px] p-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900"></select>
+        <select id="filter-bulan" onchange="loadGrafik()" class="flex-[2] text-[10px] p-2.5 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
+          <option value="">Jan-Des</option>
+          <option value="Januari">Januari</option>
+          <option value="Februari">Februari</option>
+          <option value="Maret">Maret</option>
+          <option value="April">April</option>
+          <option value="Mei">Mei</option>
+          <option value="Juni">Juni</option>
+          <option value="Juli">Juli</option>
+          <option value="Agustus">Agustus</option>
+          <option value="September">September</option>
+          <option value="Oktober">Oktober</option>
+          <option value="November">November</option>
+          <option value="Desember">Desember</option>
+        </select>
+      </div>
+      
+      <div class="relative w-full" style="min-height: 200px;">
+        <canvas id="myChart"></canvas>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
+    &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
+    UPTD Pengendalian Penduduk Wilayah V
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    // Pemicu otomatis saat login kader
+    setTimeout(() => {
+        if (typeof cekLogin === 'function') cekLogin();      
+        
+        // Isi data Kader secara spesifik
+        const nama = localStorage.getItem("nama");
+        const desa = localStorage.getItem("desa");
+        if (document.getElementById("namaUser")) document.getElementById("namaUser").innerText = nama;
+        if (document.getElementById("desaUser")) document.getElementById("desaUser").innerText = "DESA " + desa;
+
+        if (typeof loadGrafik === 'function') loadGrafik();
+    }, 100);
+  </script>
+</body>
+</html>
