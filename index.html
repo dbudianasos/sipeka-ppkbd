@@ -57,7 +57,13 @@
       Masuk Sekarang
     </button>
   </div>
-
+<script>
+  // Begitu buka halaman login, hapus semua sisa login lama
+  localStorage.clear(); 
+  
+  // Munculkan motivasi
+  if (typeof tampilkanMotivasi === 'function') tampilkanMotivasi();
+</script>
 <script src="script.js"></script>
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
     &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
