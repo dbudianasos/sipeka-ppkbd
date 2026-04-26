@@ -121,11 +121,14 @@ function initUserPage() {
   const role = localStorage.getItem("role");
   const kec = localStorage.getItem("kecamatan");
   const desa = localStorage.getItem("desa");
+  
   const subTitle = document.getElementById("sub-title-admin");
-  const selRole = document.getElementById("user-role");
-  const selKec = document.getElementById("user-kecamatan");
-  const selDesa = document.getElementById("user-wilayah");
+  const selRole = document.getElementById("user-role"); // Dropdown di Form
+  const filterRole = document.getElementById("filter-role"); // Dropdown di Filter
+  const selKec = document.getElementById("user-kecamatan"); // Dropdown Kecamatan di Form
+  const selDesa = document.getElementById("user-wilayah"); // Dropdown Desa di Form
 
+  // 1. UPDATE HEADER OTORITAS
   if (subTitle) {
     if (role === "super_admin") subTitle.innerText = "Otoritas: Kabupaten Bekasi";
     else if (role === "admin_kec") subTitle.innerText = "Otoritas: Kecamatan " + kec;
@@ -134,16 +137,31 @@ function initUserPage() {
 
   if (!selRole) return;
 
+  // 2. LOGIKA ROLE & KUNCI FORM (MILIK PAK DIAN + FILTER)
+  let ops = "";
   if (role === "super_admin") {
-    selRole.innerHTML = `<option value="admin_kec">Admin Kecamatan</option><option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
-  } else if (role === "admin_kec") {
-    selRole.innerHTML = `<option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
-    if(selKec) { selKec.value = kec; selKec.disabled = true; updateDropdownDesa(); }
-  } else {
-    selRole.innerHTML = `<option value="kader">Kader PPKBD</option>`;
+    ops = `<option value="admin_kec">Admin Kecamatan</option><option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
+  } 
+  else if (role === "admin_kec") {
+    ops = `<option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
+    // Kunci Kecamatan di Form agar Admin Kec tidak bisa pilih kecamatan lain
+    if(selKec) { 
+      selKec.value = kec; 
+      selKec.disabled = true; 
+      updateDropdownDesa(); 
+    }
+  } 
+  else {
+    ops = `<option value="kader">Kader PPKBD</option>`;
+    // Kunci Kecamatan & Desa di Form untuk Admin Desa
     if(selKec) { selKec.value = kec; selKec.disabled = true; }
     if(selDesa) { updateDropdownDesa(desa); selDesa.disabled = true; }
   }
+
+  // Isi Pilihan di Form Registrasi
+  selRole.innerHTML = ops;
+  // Isi Pilihan di Filter (Ditambah opsi "Semua Role")
+  if(filterRole) filterRole.innerHTML = `<option value="">Semua Role</option>` + ops;
 }
 
 // ================= MANAJEMEN USER (TAMBAH, LIST, HAPUS) =================
@@ -240,71 +258,69 @@ function applyFilters() {
   const roleAdmin = localStorage.getItem("role");
   const searchQuery = document.getElementById("search-user").value.toUpperCase();
   const filterRole = document.getElementById("filter-role").value;
-  const filterValue = document.getElementById("filter-wilayah").value;
+  const filterWil = document.getElementById("filter-wilayah").value;
 
   const filteredData = DATA_USERS_ALL.filter(u => {
-    // FIX UNDEFINED: Cek Huruf Besar & Kecil sekaligus
-    const uNama = (u.Nama || u.nama || "").toUpperCase();
-    const uNik = (u.NIK || u.nik || "").toString();
-    const uKec = u.Kecamatan || u.kecamatan || "";
-    const uDesa = u.Desa || u.desa || "";
-    const uRole = u.Role || u.role || "";
+    // Mapping data sesuai Header Spreadsheet Bapak (Huruf Besar)
+    const namaUser = (u.Nama || "").toUpperCase();
+    const nikUser = (u.NIK || "").toString();
+    const roleUser = u.Role || "";
+    const kecUser = u.Kecamatan || "";
+    const desaUser = u.Desa || "";
 
-    const matchSearch = uNama.includes(searchQuery) || uNik.includes(searchQuery);
-    const matchRole = filterRole === "" || uRole === filterRole;
+    const matchSearch = namaUser.includes(searchQuery) || nikUser.includes(searchQuery);
+    const matchRole = filterRole === "" || roleUser === filterRole;
     
     let matchWil = true;
     if (roleAdmin === "super_admin") {
-      matchWil = filterValue === "" || uKec === filterValue;
+      matchWil = filterWil === "" || kecUser === filterWil;
     } else if (roleAdmin === "admin_kec") {
-      matchWil = filterValue === "" || uDesa === filterValue;
+      matchWil = filterWil === "" || desaUser === filterWil;
     }
     
     return matchSearch && matchRole && matchWil;
   });
 
   container.innerHTML = "";
-
   if (filteredData.length === 0) {
-    container.innerHTML = `<p class="text-center text-[10px] text-slate-400 py-10 italic">Data tidak ditemukan...</p>`;
+    container.innerHTML = `<p class="text-center text-[10px] text-slate-400 py-10 italic">Data tidak ditemukan.</p>`;
     return;
   }
 
   filteredData.forEach(u => {
-    // Penyesuaian variabel agar tidak undefined
-    const Nama = u.Nama || u.nama || "Tanpa Nama";
-    const NIK = u.NIK || u.nik || "-";
-    const Kec = u.Kecamatan || u.kecamatan || "-";
-    const Desa = u.Desa || u.desa || "-";
-    const Role = u.Role || u.role || "";
-    const Status = u.Status || u.status || "aktif";
+    // Render data menggunakan key Huruf Besar sesuai Spreadsheet
+    const Nama = u.Nama || "-";
+    const NIK = u.NIK || "-";
+    const Kec = u.Kecamatan || "-";
+    const Desa = u.Desa || "-";
+    const Role = u.Role || "";
+    const Status = u.Status || "aktif";
 
     let statusColor = Status === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
-    let roleLabel = Role === "super_admin" ? "👑 Super Admin" : (Role === "admin_kec" ? "🏛️ Admin Kec" : (Role === "admin_desa" ? "🏠 Admin Desa" : "👤 Kader"));
-
-    let btnStatus = Status === "aktif" 
-      ? `<button onclick="ubahStatusUser('${NIK}', 'nonaktif')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">⏸ NONAKTIFKAN</button>`
-      : `<button onclick="ubahStatusUser('${NIK}', 'aktif')" class="flex-1 bg-green-50 text-green-700 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">▶ AKTIFKAN</button>`;
+    let roleLabel = Role === "super_admin" ? "👑 Super Admin" : 
+                    Role === "admin_kec" ? "🏛️ Admin Kec" : 
+                    Role === "admin_desa" ? "🏠 Admin Desa" : "👤 Kader";
 
     container.innerHTML += `
-      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden mb-2">
-        <div class="flex justify-between items-start mb-3">
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-2">
+        <div class="flex justify-between items-start mb-2">
           <div>
             <p class="text-[11px] font-black text-blue-900 uppercase leading-tight">${Nama}</p>
             <p class="text-[9px] text-slate-400 font-bold">${NIK}</p>
           </div>
           <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase shadow-sm">${Status}</span>
         </div>
-        <div class="bg-slate-50 p-2 rounded-lg mb-3">
+        <div class="bg-slate-50 p-2 rounded-lg mb-2">
            <p class="text-[9px] text-slate-500 font-bold">📍 ${Kec} - ${Desa}</p>
            <p class="text-[9px] text-blue-700 font-black mt-0.5 uppercase tracking-tighter">${roleLabel}</p>
         </div>
         <div class="flex gap-2">
-          ${btnStatus}
-          <button onclick="hapusUser('${NIK}', '${Nama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-black py-2.5 rounded-xl transition active:scale-95">🗑 HAPUS</button>
+           <button onclick="ubahStatusUser('${NIK}', '${Status === 'aktif' ? 'nonaktif' : 'aktif'}')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-bold py-2 rounded-xl active:scale-95 transition">
+             ${Status === 'aktif' ? '⏸ NONAKTIFKAN' : '▶ AKTIFKAN'}
+           </button>
+           <button onclick="hapusUser('${NIK}', '${Nama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-bold py-2 rounded-xl active:scale-95 transition">🗑 HAPUS</button>
         </div>
-      </div>
-    `;
+      </div>`;
   });
 }
 
