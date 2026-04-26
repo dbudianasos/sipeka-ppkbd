@@ -18,6 +18,10 @@ function login() {
     return;
   }
 
+  // Tampilkan loading saat proses
+  info.innerText = "⏳ Memverifikasi...";
+  info.classList.replace("text-red-500", "text-blue-500");
+
   fetch(API_URL, {
     method: "POST",
     body: new URLSearchParams({
@@ -29,26 +33,59 @@ function login() {
   .then(res => res.json())
   .then(data => {
     if (data.status === "success") {
+      // Simpan data ke memori browser
       localStorage.setItem("nik", data.nik);
       localStorage.setItem("nama", data.nama);
       localStorage.setItem("role", data.role);
       localStorage.setItem("kecamatan", data.kecamatan);
-      window.location.href = "dashboard.html";
+      localStorage.setItem("desa", data.desa);
+      localStorage.setItem("foto", data.foto || "");
+
+      // JALUR REDIRECT:
+      // Jika role-nya mengandung kata 'admin', lempar ke dashboard-admin
+      if (data.role.includes("admin")) {
+        window.location.href = "dashboard-admin.html";
+      } else {
+        window.location.href = "dashboard-kader.html";
+      }
+
     } else if (data.status === "nonaktif") {
-      info.innerText = "Akun tidak aktif!";
+      info.innerText = "Akun Anda dinonaktifkan Admin!";
+      info.classList.replace("text-blue-500", "text-red-500");
     } else {
-      info.innerText = "Login gagal!";
+      info.innerText = "NIK atau Password Salah!";
+      info.classList.replace("text-blue-500", "text-red-500");
     }
   })
   .catch(() => {
-    info.innerText = "Koneksi error!";
+    info.innerText = "Koneksi Error!";
+    info.classList.replace("text-blue-500", "text-red-500");
   });
 }
 
-// ================= CEK LOGIN =================
+// ================= SATPAM DIGITAL (CEK LOGIN & ROLE) =================
 function cekLogin() {
-  if (!localStorage.getItem("nik")) {
+  const nik = localStorage.getItem("nik");
+  const role = localStorage.getItem("role");
+  const path = window.location.pathname;
+
+  // 1. Cek: Apakah sudah login?
+  if (!nik) {
     window.location.href = "index.html";
+    return;
+  }
+
+  // 2. Proteksi Halaman Admin: 
+  // Jika sedang di dashboard-admin tapi role-nya bukan admin, tendang ke dashboard kader!
+  if (path.includes("dashboard-admin.html") && !role.includes("admin")) {
+    alert("⛔ Akses Ditolak! Anda bukan Administrator.");
+    window.location.href = "dashboard-kader.html";
+  }
+
+  // 3. Proteksi Halaman Kader:
+  // Jika admin iseng mau masuk dashboard-kader, arahkan ke dashboard-admin saja
+  if (path.includes("dashboard-kader.html") && role.includes("admin")) {
+    
   }
 }
 
@@ -1239,10 +1276,13 @@ const daftarMotivasi = [
 ];
 
 function tampilkanMotivasi() {
-  const elMotivasi = document.getElementById("teks-motivasi");
+  const elMotivasi = document.getElementById("motivasi-login"); // ID disamakan dengan HTML
   if (elMotivasi) {
     const randomIndex = Math.floor(Math.random() * daftarMotivasi.length);
     elMotivasi.innerText = daftarMotivasi[randomIndex];
+    // Tambahkan sedikit efek transisi biar keren
+    elMotivasi.style.opacity = 0;
+    setTimeout(() => { elMotivasi.style.opacity = 1; }, 100);
   }
 }
 
@@ -1503,7 +1543,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 4. Tampilkan Kata Motivasi (Khusus Halaman Login)
-  if (document.getElementById("teks-motivasi") && typeof tampilkanMotivasi === 'function') {
+  if (document.getElementById("motivasi-login")) {
     tampilkanMotivasi();
   }
 });
