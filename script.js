@@ -561,8 +561,11 @@ function validasiFotoLaporan() {
   if (sumber === "renja") {
     if (document.getElementById("pilih-renja").value) kegiatanOk = true;
   } else {
-    // Jika luar renja, harus pilih jenis kegiatan & substansi
-    if (document.getElementById("lap-kegiatan").value && document.getElementById("lap-substansi").value) kegiatanOk = true;
+    // PERUBAHAN: Cek isi Textarea Luar Renja (Minimal 5 karakter)
+    const manualTeks = document.getElementById("lap-kegiatan-manual");
+    if (manualTeks && manualTeks.value.trim().length >= 5) {
+      kegiatanOk = true;
+    }
   }
 
   // SYARAT MUTLAK: Tanggal ADA + Lokasi ADA + Kegiatan DIPILIH
@@ -633,14 +636,14 @@ async function simpanLaporan() {
 
   } else {
     renja_id = "LUAR-RENJA";
-    const jenisLuar = document.getElementById("lap-kegiatan").value;
-    const substansiLuar = document.getElementById("lap-substansi").value;
-    const keteranganLuar = document.getElementById("lap-keterangan").value;
+    const manualTeks = document.getElementById("lap-kegiatan-manual");
+    const kegiatanManual = manualTeks ? manualTeks.value.trim() : "";
 
-    if (!jenisLuar || !substansiLuar || !keteranganLuar) {
-      return alert("Harap lengkapi Jenis, Substansi, dan Keterangan Luar Renja!");
+    if (!kegiatanManual || kegiatanManual.length < 5) {
+      alert("⚠️ Harap isi Nama & Uraian Kegiatan Luar Renja dengan jelas (minimal 5 karakter)!");
+      return;
     }
-    namaKegiatanFinal = `Tambahan: ${jenisLuar} - ${substansiLuar} (${keteranganLuar})`;
+    namaKegiatanFinal = `Insidental: ${kegiatanManual}`;
   }
 
   if (!tanggal || !realisasi || !lokasi) return alert("Lengkapi Tanggal, Lokasi, dan Jumlah Realisasi!");
@@ -688,10 +691,20 @@ function previewFoto(input) {
   const file = input.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  const label = document.getElementById("label-foto");
+  // 1. Deklarasi HANYA SATU KALI di sini
+  const loading = document.getElementById("loading-foto");
   const preview = document.getElementById("img-preview");
+  const ikon = document.getElementById("ikon-kamera");
+  const label = document.getElementById("label-foto");
 
+  // 2. Munculkan loading, sembunyikan yang lain
+  if(loading) loading.classList.remove("hidden");
+  if(preview) preview.classList.add("hidden");
+  if(ikon) ikon.classList.add("hidden");
+  label.innerText = "Mohon Tunggu...";
+	
+  const reader = new FileReader();
+  
   const tglInput = document.getElementById("lap-tgl").value;
   const lokasiRaw = (document.getElementById("lap-lokasi").value || "LOKASI TIDAK DIISI").toUpperCase();
   const realisasi = document.getElementById("lap-realisasi").value || "0";
@@ -712,7 +725,8 @@ function previewFoto(input) {
     const drp = document.getElementById("pilih-renja");
     teksKegiatan = drp.selectedIndex > 0 ? drp.options[drp.selectedIndex].text : "Kegiatan Renja";
   } else {
-    teksKegiatan = document.getElementById("lap-substansi").value || "Kegiatan Luar Renja";
+    const manualTeks = document.getElementById("lap-kegiatan-manual");
+    teksKegiatan = manualTeks && manualTeks.value ? manualTeks.value : "Kegiatan Luar Renja";
   }
 
   reader.onload = function(e) {
@@ -734,7 +748,7 @@ function previewFoto(input) {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, width, height);
 
-      const boxHeight = height * 0.15; // Box sedikit lebih tinggi untuk 2 baris teks
+      const boxHeight = height * 0.15; 
       ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; 
       ctx.fillRect(0, height - boxHeight, width, boxHeight);
 
@@ -751,8 +765,7 @@ function previewFoto(input) {
       const cetakKegiatan = teksKegiatan.length > 40 ? teksKegiatan.substring(0, 40) + "..." : teksKegiatan;
       ctx.fillText(cetakKegiatan, padding, height - (boxHeight * 0.4));
       
-      // BARIS BARU DI WATERMARK: Hasil Capaian
-      ctx.fillStyle = "#FFD700"; // Warna kuning emas agar mencolok
+      ctx.fillStyle = "#FFD700"; 
       ctx.font = `bold ${fontSizeSmall}px Arial`;
       ctx.fillText(`HASIL: ${realisasi} ${satuan}`, padding, height - (boxHeight * 0.15));
 
@@ -765,9 +778,12 @@ function previewFoto(input) {
 
       base64Foto = canvas.toDataURL("image/jpeg", 0.7);
       preview.src = base64Foto;
+
+      // 3. Sembunyikan loading setelah selesai
+      if(loading) loading.classList.add("hidden");
       preview.classList.remove("hidden");
       label.innerText = "Foto Visum Terverifikasi!";
-      if(document.getElementById("ikon-kamera")) document.getElementById("ikon-kamera").classList.add("hidden");
+      if(ikon) ikon.classList.add("hidden");
     }
   }
   reader.readAsDataURL(file);
