@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - SIPEKA</title>
+  <link rel="icon" type="image/png" href="logo-sipeka.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
+    .admin-card { transition: 0.3s; }
+    .admin-card:hover { transform: translateY(-3px); }
+    select:disabled { background-color: #f1f5f9; cursor: not-allowed; color: #94a3b8; }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen pb-10">
+
+  <header class="sticky top-0 z-50 nav-gradient py-2.5 px-5 rounded-b-[1.5rem] shadow-lg shadow-blue-900/20">
+    <div class="flex justify-between items-center max-w-5xl mx-auto">
+      <div class="flex items-center gap-3">
+        <img src="logo-sipeka-dashbord.png" alt="SIPEKA ADMIN" class="h-9 md:h-11 w-auto">
+        <span class="bg-yellow-400 text-blue-900 text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm">ADMIN PANEL</span>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="window.location.href='profil.html'" class="bg-white/10 hover:bg-white/20 p-2 rounded-xl text-base text-white border border-white/10">👤</button>
+        <button onclick="logout()" class="bg-red-500/80 hover:bg-red-600 p-2 rounded-xl text-base text-white">❌</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-5 pt-6 max-w-5xl mx-auto">
+    
+    <div class="bg-white p-5 rounded-[1.5rem] mb-6 shadow-sm border-l-8 border-blue-900 flex items-center justify-between">
+      <div>
+        <p id="labelRole" class="text-[9px] text-blue-600 uppercase tracking-widest font-black mb-0.5">MEMUAT...</p>
+        <h1 id="namaUser" class="text-xl font-black text-slate-800 tracking-tight leading-tight">Memuat...</h1>
+        <p id="wilayahOtoritas" class="text-[10px] text-slate-400 font-bold uppercase mt-1">📍 Wilayah: ...</p>
+      </div>
+      <div class="bg-blue-50 p-3 rounded-2xl text-2xl shadow-inner">👑</div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-8">
+      <button onclick="window.location.href='approve.html'" class="admin-card bg-white p-4 rounded-[1.5rem] border border-blue-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div class="text-3xl mb-2">✅</div>
+        <p class="text-[11px] font-bold text-slate-700">Validasi Laporan</p>
+        <span class="text-[8px] text-blue-500 font-bold mt-1 uppercase tracking-tighter">Perlu Approve</span>
+      </button>
+
+      <button onclick="window.location.href='user.html'" class="admin-card bg-white p-4 rounded-[1.5rem] border border-blue-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div class="text-3xl mb-2">👥</div>
+        <p class="text-[11px] font-bold text-slate-700">Manajemen User</p>
+        <span class="text-[8px] text-blue-500 font-bold mt-1 uppercase tracking-tighter">Kader & Admin</span>
+      </button>
+
+      <button onclick="window.location.href='monitoring.html'" class="admin-card bg-white p-4 rounded-[1.5rem] border border-blue-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div class="text-3xl mb-2">📈</div>
+        <p class="text-[11px] font-bold text-slate-700">Monitoring Wilayah</p>
+        <span class="text-[8px] text-blue-500 font-bold mt-1 uppercase tracking-tighter">Semua Kader</span>
+      </button>
+
+      <button onclick="window.location.href='cetak.html'" class="admin-card bg-white p-4 rounded-[1.5rem] border border-blue-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
+        <div class="text-3xl mb-2">🖨️</div>
+        <p class="text-[11px] font-bold text-slate-700">Rekapitulasi</p>
+        <span class="text-[8px] text-blue-500 font-bold mt-1 uppercase tracking-tighter">Cetak Bulanan</span>
+      </button>
+    </div>
+
+    <div class="bg-white p-4 md:p-6 rounded-[2rem] shadow-sm border border-slate-100 mb-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-xs font-black text-blue-900 uppercase tracking-widest">📊 Statistik Performa</h3>
+        <span class="text-[8px] bg-blue-100 text-blue-700 px-2 py-1 rounded-lg font-bold">REAL-TIME</span>
+      </div>
+
+      <div class="space-y-2 mb-6">
+        <div class="flex gap-2">
+          <select id="filter-tahun" onchange="loadGrafik()" class="flex-1 text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900"></select>
+          <select id="filter-bulan" onchange="loadGrafik()" class="flex-[2] text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900">
+            <option value="">Semua Bulan (Kumulatif)</option>
+            <option value="Januari">Januari</option><option value="Februari">Februari</option><option value="Maret">Maret</option>
+            <option value="April">April</option><option value="Mei">Mei</option><option value="Juni">Juni</option>
+            <option value="Juli">Juli</option><option value="Agustus">Agustus</option><option value="September">September</option>
+            <option value="Oktober">Oktober</option><option value="November">November</option><option value="Desember">Desember</option>
+          </select>
+        </div>
+
+        <div id="admin-filter-area" class="grid grid-cols-1 gap-2">
+          <select id="filter-kecamatan" onchange="loadGrafik()" class="text-[10px] p-3 bg-blue-50/50 border border-blue-100 rounded-xl font-bold text-blue-900">
+             <option value="">-- Pilih Kecamatan --</option>
+             <option value="SETU">SETU</option>
+             </select>
+          <select id="filter-desa" onchange="loadGrafik()" class="text-[10px] p-3 bg-blue-50/50 border border-blue-100 rounded-xl font-bold text-blue-900">
+             <option value="">-- Pilih Desa --</option>
+          </select>
+          <select id="filter-user" onchange="loadGrafik()" class="w-full text-[10px] p-3 bg-blue-50 border border-blue-200 rounded-xl font-black text-blue-900 shadow-sm">
+            <option value="">-- Semua Kader (Total Wilayah) --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="relative w-full mb-4" style="min-height: 250px;">
+        <canvas id="myChart"></canvas>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 border-t pt-5 mt-5">
+        <div class="text-center border-r">
+          <p class="text-[8px] text-slate-400 uppercase font-bold mb-1">Total Laporan</p>
+          <h2 id="total-realisasi" class="text-2xl font-black text-blue-900">0</h2>
+        </div>
+        <div class="text-center">
+          <p class="text-[8px] text-slate-400 uppercase font-bold mb-1">Capaian Target</p>
+          <h2 id="total-persen" class="text-2xl font-black text-green-600">0%</h2>
+        </div>
+      </div>
+    </div>
+
+    <div id="section-peringkat" class="mt-8">
+      <h3 class="text-xs font-black text-slate-800 mb-4 ml-1 uppercase flex items-center gap-2">
+        <span>🏆</span> Top 5 Performa Kader
+      </h3>
+      <div id="list-peringkat" class="space-y-3">
+         </div>
+    </div>
+
+  </main>
+
+  <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 italic px-10 leading-relaxed">
+    &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
+    Sistem Informasi Pelaporan Kinerja Kabupaten Bekasi
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    // FUNGSI INISIALISASI DASHBOARD ADMIN (HIRARKI LOCK)
+    function initAdminDashboard() {
+      const role = localStorage.getItem("role");
+      const nama = localStorage.getItem("nama");
+      const kec = localStorage.getItem("kecamatan");
+      const desa = localStorage.getItem("desa");
+
+      // 1. Tampilkan Nama & Role yang Gagah
+      document.getElementById("namaUser").innerText = nama;
+      
+      let roleText = "";
+      let wilayahText = "";
+
+      if (role === "super_admin") {
+        roleText = "Administrator Kabupaten";
+        wilayahText = "Kabupaten Bekasi";
+      } else if (role === "admin_kec") {
+        roleText = "Administrator Kecamatan";
+        wilayahText = "Kecamatan " + kec;
+        
+        // LOCK Kecamatan filter
+        const selKec = document.getElementById("filter-kecamatan");
+        selKec.value = kec;
+        selKec.disabled = true;
+      } else if (role === "admin_desa") {
+        roleText = "Administrator Desa";
+        wilayahText = "Desa " + desa + " (" + kec + ")";
+        
+        // LOCK Kecamatan & Desa filter
+        const selKec = document.getElementById("filter-kecamatan");
+        const selDesa = document.getElementById("filter-desa");
+        
+        selKec.value = kec;
+        selKec.disabled = true;
+        
+        // Buat opsi desa manual karena selDesa mungkin belum ditarik datanya
+        selDesa.innerHTML = `<option value="${desa}">${desa}</option>`;
+        selDesa.value = desa;
+        selDesa.disabled = true;
+      }
+
+      document.getElementById("labelRole").innerText = roleText;
+      document.getElementById("wilayahOtoritas").innerText = "📍 Otoritas: " + wilayahText;
+      
+      // Jalankan Grafik Pertama Kali
+      if (typeof loadGrafik === 'function') loadGrafik();
+    }
+
+    // Jalankan Init dengan sedikit jeda agar DOM siap
+    window.onload = initAdminDashboard;
+  </script>
+</body>
+</html>
