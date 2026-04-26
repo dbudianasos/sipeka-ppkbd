@@ -1147,25 +1147,31 @@ function batasiTanggalLaporan() {
 }
 
 // ==========================================
-// FUNGSI AI: AUTO-GENERATE TAHUN (TAHUN INI & DEPAN)
+// FUNGSI AI: AUTO-GENERATE TAHUN (RENJA & DASHBOARD)
 // ==========================================
 function setTahunOtomatis() {
-  const selectTahun = document.getElementById("renja-tahun");
+  const tahunSekarang = new Date().getFullYear(); 
   
-  if (selectTahun) {
-    // Ambil tahun dari kalender HP/Laptop kader saat ini
-    const tahunSekarang = new Date().getFullYear(); 
-    
-    // Masukkan Tahun Sekarang dan Tahun Depan ke dalam Dropdown
-    selectTahun.innerHTML = `
+  // 1. Otomatisasi untuk Dropdown Form Renja (Tahun Ini & Tahun Depan)
+  const selectTahunRenja = document.getElementById("renja-tahun");
+  if (selectTahunRenja) {
+    selectTahunRenja.innerHTML = `
+      <option value="${tahunSekarang}" selected>${tahunSekarang}</option>
+      <option value="${tahunSekarang + 1}">${tahunSekarang + 1}</option>
+    `;
+  }
+
+  // 2. Otomatisasi untuk Dropdown Filter Dashboard
+  const selectFilterTahun = document.getElementById("filter-tahun");
+  if (selectFilterTahun) {
+    // Khusus dashboard, saya tambahkan Tahun Lalu agar admin bisa lihat historis
+    selectFilterTahun.innerHTML = `
+      <option value="${tahunSekarang - 1}">${tahunSekarang - 1}</option>
       <option value="${tahunSekarang}" selected>${tahunSekarang}</option>
       <option value="${tahunSekarang + 1}">${tahunSekarang + 1}</option>
     `;
   }
 }
-
-// Pastikan fungsi ini jalan otomatis saat halaman renja dibuka
-document.addEventListener("DOMContentLoaded", setTahunOtomatis);
 
 //======================LOAD STATISTIK (GRAFIK KINERJA)==========================//
 function loadGrafik() {
