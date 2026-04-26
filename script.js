@@ -1138,29 +1138,44 @@ function setTahunOtomatis() {
   }
 }
 
-//======================LOAD STATISTIK (GRAFIK KINERJA)==========================//
+//====================== LOAD STATISTIK (GRAFIK KINERJA) ==========================//
 function loadGrafik() {
   const role = localStorage.getItem("role");
   const nikLogin = localStorage.getItem("nik");
   const kecAdmin = localStorage.getItem("kecamatan"); 
+  const desaAdmin = localStorage.getItem("desa");
   
-  const tahun = document.getElementById("filter-tahun").value;
-  const bulan = document.getElementById("filter-bulan").value;
+  // 1. CEK ELEMEN DASAR (Agar tidak error null)
+  const elTahun = document.getElementById("filter-tahun");
+  const elBulan = document.getElementById("filter-bulan");
+  if (!elTahun || !elBulan) return; // Berhenti jika elemen tidak ada di halaman ini
+
+  const tahun = elTahun.value;
+  const bulan = elBulan.value;
   const userEl = document.getElementById("filter-user");
   const userSelect = userEl ? userEl.value : "";
 
-  if (role === 'admin') {
+  // 2. LOGIKA TAMPILAN KHUSUS ADMIN (Multi-Level)
+  // Pakai .includes("admin") agar mencakup super_admin, admin_kec, dan admin_desa
+  if (role && role.includes("admin")) {
     const adminArea = document.getElementById("admin-filter-area");
-    if (adminArea) {
-      adminArea.classList.remove("hidden");
-    }
+    if (adminArea) adminArea.classList.remove("hidden");
 
+    // Ambil daftar kader jika dropdown user masih kosong
     if (userEl && userEl.options.length <= 1) {
-      fetch(`${API_URL}?action=get_users&kecamatan=${kecAdmin}`)
+      // Kirim parameter lengkap agar GAS bisa memfilter wilayah
+      const params = new URLSearchParams({
+        action: "get_users",
+        role_admin: role,
+        kec_admin: kecAdmin,
+        desa_admin: desaAdmin
+      });
+
+      fetch(`${API_URL}?${params.toString()}`)
         .then(res => res.json())
         .then(users => {
           users.forEach(u => {
-            if (u.role !== 'admin') {
+            if (u.role === 'kader') { // Hanya tampilkan kader di dropdown
               let opt = document.createElement("option");
               opt.value = u.nik;
               opt.innerHTML = u.nama;
@@ -1172,22 +1187,31 @@ function loadGrafik() {
     }
   }
 
-  let nikTarget = (role === 'admin') ? userSelect : nikLogin;
+  // 3. TENTUKAN SIAPA YANG MAU DILIHAT DATANYA
+  // Jika admin pilih nama di dropdown, gunakan NIK tersebut. Jika tidak, gunakan NIK sendiri.
+  let nikTarget = (role && role.includes("admin") && userSelect !== "") ? userSelect : nikLogin;
 
+  // 4. TARIK DATA STATISTIK
   fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
     .then(res => res.json())
     .then(data => {
-      // --- UPDATE KARTU RINGKASAN (SELALU TAHUNAN) ---
-      const totalTargetTahunan = data.target_tahunan.reduce((a, b) => a + b, 0);
-      const totalRealTahunan = data.realisasi_tahunan.reduce((a, b) => a + b, 0);
-      const persen = totalTargetTahunan > 0 ? Math.round((totalRealTahunan / totalTargetTahunan) * 100) : 0;
+      
+      // --- UPDATE KARTU RINGKASAN (TAHUNAN) ---
+      const totalReal = data.realisasi_tahunan.reduce((a, b) => a + b, 0);
+      const totalTarget = data.target_tahunan.reduce((a, b) => a + b, 0);
+      const persen = totalTarget > 0 ? Math.round((totalReal / totalTarget) * 100) : 0;
 
-      // Isi kartu dengan angka akumulasi tahunan
-      document.getElementById("total-realisasi").innerText = totalRealTahunan;
-      document.getElementById("total-persen").innerText = persen + "%";
-      document.getElementById("progress-bar").style.width = (persen > 100 ? 100 : persen) + "%";
+      // Cek keberadaan ID sebelum isi data (Safety Check)
+      if (document.getElementById("total-realisasi")) 
+          document.getElementById("total-realisasi").innerText = totalReal;
+      
+      if (document.getElementById("total-persen")) 
+          document.getElementById("total-persen").innerText = persen + "%";
+      
+      if (document.getElementById("progress-bar")) 
+          document.getElementById("progress-bar").style.width = (persen > 100 ? 100 : persen) + "%";
 
-      // --- UPDATE DIAGRAM DONUT (DINAMIS BULANAN) ---
+      // --- UPDATE DIAGRAM DONUT (BULANAN) ---
       const canvas = document.getElementById('myChart');
       if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -1208,60 +1232,44 @@ function loadGrafik() {
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '65%', 
-            plugins: { 
-              legend: { 
-                display: true,
-                position: 'bottom', 
-                labels: { 
-                  usePointStyle: true, 
-                  padding: 15, 
-                  font: { size: 11, family: "'Poppins', sans-serif" } 
-                } 
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    return ` ${context.label}: ${context.raw} Laporan`;
-                  }
-                }
-              }
+            cutout: '65%',
+            plugins: {
+              legend: { display: true, position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } }
             }
           }
         });
       }
 
-      if (role === 'admin') {
-        const rankArea = document.getElementById("section-peringkat");
-        if (rankArea) rankArea.classList.remove("hidden");
+      // --- UPDATE PERINGKAT (Hanya Admin) ---
+      const rankArea = document.getElementById("section-peringkat");
+      if (role && role.includes("admin") && rankArea) {
+        rankArea.classList.remove("hidden");
         renderPeringkat(data.ranking);
       }
     })
-    .catch(err => {
-      console.error("Gagal load statistik:", err);
-    });
+    .catch(err => console.error("Gagal load statistik:", err));
 }
 
+//====================== RENDER PERINGKAT ==========================//
 function renderPeringkat(dataRanking) {
   const listPeringkat = document.getElementById("list-peringkat");
   if (!listPeringkat) return;
 
   if (!dataRanking || dataRanking.length === 0) {
-    listPeringkat.innerHTML = "<p class='text-center text-xs text-gray-400 py-4 italic'>Belum ada data prestasi.</p>";
+    listPeringkat.innerHTML = "<p class='text-center text-[10px] text-gray-400 py-4'>Belum ada data laporan.</p>";
     return;
   }
 
   listPeringkat.innerHTML = dataRanking.map((u, i) => `
-    <div class="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-slate-50">
+    <div class="flex items-center justify-between bg-white p-3 rounded-2xl shadow-sm border border-slate-50">
       <div class="flex items-center gap-3">
         <span class="flex items-center justify-center w-6 h-6 rounded-full ${i === 0 ? 'bg-yellow-400' : 'bg-slate-100'} text-[10px] font-bold ${i === 0 ? 'text-white' : 'text-gray-400'}">${i+1}</span>
-        <p class="text-xs font-bold text-gray-700">${u.nama}</p>
+        <p class="text-[11px] font-bold text-slate-700">${u.nama}</p>
       </div>
-      <span class="text-[10px] bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">${u.skor} Laporan</span>
+      <span class="text-[9px] bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-bold">${u.skor} Lap</span>
     </div>
   `).join('');
 }
-
 // ==========================================
 // KATA-KATA MOTIVASI ACAK SAAT LOGIN
 // ==========================================
