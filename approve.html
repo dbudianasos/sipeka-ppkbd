@@ -47,7 +47,7 @@
         <select id="f-kecamatan" onchange="updateDesaFilter()" class="flex-1 text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">-- Semua Kecamatan --</option>
         </select>
-        <select id="f-desa" onchange="loadLaporanPending()" class="flex-1 text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-500">
+        <select id="f-desa" onchange="applyFiltersLaporan()" class="flex-1 text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">-- Semua Desa --</option>
         </select>
       </div>
@@ -66,6 +66,7 @@
 <script src="script.js"></script>
 <script>
   let MASTER_WILAYAH = [];
+  let DATA_LAPORAN_ALL = []; // Penampung data agar tidak perlu berkali-kali fetch
 
   window.onload = function() {
     cekLogin();
@@ -80,7 +81,6 @@
     const kec = localStorage.getItem("kecamatan");
     const desa = localStorage.getItem("desa");
     
-    // Setting Text Header
     if (role === "super_admin") {
       document.getElementById("sub-title").innerText = "Otoritas: Kabupaten Bekasi";
     } else if (role === "admin_kec") {
@@ -90,11 +90,10 @@
       document.getElementById("filter-area").classList.add("hidden"); 
     }
 
-    // Load Dropdown Wilayah dulu, baru load Laporan
     loadFilterWilayah();
   };
 
-  // 1. FUNGSI TARIK WILAYAH UNTUK FILTER
+  // 1. FUNGSI TARIK MASTER WILAYAH
   function loadFilterWilayah() {
     fetch(`${API_URL}?action=get_wilayah_lengkap`)
       .then(res => res.json())
@@ -106,19 +105,18 @@
         selKec.innerHTML = '<option value="">-- Semua Kecamatan --</option>';
         uniqueKec.forEach(k => selKec.innerHTML += `<option value="${k}">${k}</option>`);
 
-        // Kunci jika Admin Kecamatan
         const role = localStorage.getItem("role");
         if(role === "admin_kec") {
           selKec.value = localStorage.getItem("kecamatan");
           selKec.disabled = true;
-          updateDesaFilter(); // Langsung render pilihan desanya
+          updateDesaFilter(); 
         } else {
-          loadLaporanPending(); // Super admin langsung load semua
+          loadLaporanDatabase(); 
         }
       })
       .catch(err => {
         console.error("Gagal load wilayah", err);
-        loadLaporanPending(); // Tetap load data meski filter gagal
+        loadLaporanDatabase(); 
       });
   }
 
@@ -136,89 +134,120 @@
       }
     });
 
-    // Otomatis tarik data setelah dropdown berubah
-    loadLaporanPending(); 
+    applyFiltersLaporan(); 
   }
 
-  // 3. FUNGSI TARIK DATA LAPORAN
-  function loadLaporanPending() {
+  // 3. FUNGSI TARIK DATA LAPORAN (Hanya narik 1x dari Apps Script)
+  function loadLaporanDatabase() {
     const list = document.getElementById("listLaporan");
     const role = localStorage.getItem("role");
-    
-    // Ambil Filter (Kecamatan diambil dari dropdown atau localStorage jika disabled)
-    const selKec = document.getElementById("f-kecamatan").value || (role === 'admin_kec' ? localStorage.getItem("kecamatan") : "");
-    const selDesa = document.getElementById("f-desa").value;
+    const desa = localStorage.getItem("desa");
 
-    list.innerHTML = `<div class="text-center py-20 text-blue-900 font-bold text-xs uppercase animate-pulse">⏳ Mencari Antrian...</div>`;
+    list.innerHTML = `<div class="text-center py-20 text-blue-900 font-bold text-xs uppercase animate-pulse">⏳ Menarik Antrian...</div>`;
 
-    fetch(`${API_URL}?action=get_pending_reports&role=${role}&kec=${selKec}&desa=${selDesa}`)
+    fetch(`${API_URL}?action=get_pending_reports&role=${role}&desa=${desa}`)
       .then(res => res.json())
       .then(data => {
-        if (data.length === 0) {
-          list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase italic">☕ Tidak ada antrian laporan</div>`;
-          document.getElementById("count-pending").innerText = "0 ANTRIAN";
-          return;
-        }
-
-        document.getElementById("count-pending").innerText = data.length + " ANTRIAN";
-        list.innerHTML = "";
-
-        data.forEach(item => {
-          // LOGIKA FOTO SAKTI: Menggunakan Thumbnail Google Drive (TIDAK AKAN PECAH)
-          const thumbFoto = item.file_id && item.file_id !== "-" 
-            ? `https://drive.google.com/thumbnail?id=${item.file_id}&sz=w800` 
-            : "";
-          const linkAsli = item.file_id && item.file_id !== "-" ? `https://drive.google.com/uc?id=${item.file_id}` : "#";
-
-          list.innerHTML += `
-            <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden card-laporan">
-              <div class="p-5">
-                <div class="flex justify-between items-start mb-4">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-xl shadow-inner">👤</div>
-                    <div>
-                      <h4 class="font-black text-slate-800 text-xs uppercase tracking-tight">${item.nama_kader}</h4>
-                      <p class="text-[9px] font-bold text-slate-400 uppercase">${item.lokasi} | ${item.tanggal}</p>
-                    </div>
-                  </div>
-                  <div class="bg-yellow-100 text-yellow-700 text-[8px] font-black px-2 py-1 rounded-lg uppercase">PENDING</div>
-                </div>
-
-                <div class="bg-slate-50 p-4 rounded-2xl mb-4 space-y-2">
-                  <div>
-                    <p class="text-[8px] font-black text-slate-400 uppercase">Kegiatan:</p>
-                    <p class="text-xs font-bold text-slate-700">${item.kegiatan}</p>
-                  </div>
-                  <div>
-                    <p class="text-[8px] font-black text-slate-400 uppercase">Realisasi:</p>
-                    <p class="text-xs font-black text-blue-900">${item.realisasi}</p>
-                  </div>
-                </div>
-
-                ${thumbFoto ? `
-                  <div class="mb-4">
-                    <img src="${thumbFoto}" class="w-full h-48 object-cover rounded-2xl border-2 border-slate-50 shadow-sm" 
-                         onerror="this.src='https://placehold.co/400x200?text=Sedang+Memproses+Gambar...'"
-                         onclick="window.open('${linkAsli}', '_blank')">
-                    <p class="text-[8px] text-center text-slate-400 mt-2 font-bold italic">Klik foto untuk melihat ukuran penuh</p>
-                  </div>
-                ` : `<div class="bg-slate-100 py-4 rounded-2xl text-center text-[10px] text-slate-400 mb-4 font-bold">TIDAK ADA FOTO TERLAMPIR</div>`}
-
-                <div class="grid grid-cols-2 gap-3">
-                  <button onclick="prosesApprove('${item.id}', 'REJECT')" class="bg-red-50 text-red-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest border border-red-100 active:scale-95 transition">Tolak</button>
-                  <button onclick="prosesApprove('${item.id}', 'APPROVED')" class="bg-blue-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-blue-900/20 active:scale-95 transition">Terima</button>
-                </div>
-              </div>
-            </div>`;
-        });
+        DATA_LAPORAN_ALL = data;
+        applyFiltersLaporan(); // Arahkan ke penyaring
       })
       .catch(err => {
-        console.error(err);
         list.innerHTML = `<div class="text-center py-20 text-red-400 font-bold text-xs uppercase">Gagal memuat data!</div>`;
       });
   }
 
-  // 4. FUNGSI TERIMA / TOLAK
+  // 4. FUNGSI FILTER "SAPU JAGAT"
+  function applyFiltersLaporan() {
+    const list = document.getElementById("listLaporan");
+    const role = localStorage.getItem("role");
+    const kecLogin = localStorage.getItem("kecamatan");
+
+    const selKec = document.getElementById("f-kecamatan").value;
+    const selDesa = document.getElementById("f-desa").value;
+
+    const filteredData = DATA_LAPORAN_ALL.filter(item => {
+      const lokasiLaporan = (item.lokasi || "").toUpperCase();
+      
+      // Cari tahu desa ini masuk kecamatan mana
+      const dataWilayah = MASTER_WILAYAH.find(w => w.nama_desa.toUpperCase() === lokasiLaporan);
+      const kecamatanLaporan = dataWilayah ? dataWilayah.nama_kec.toUpperCase() : "";
+
+      // A. Otoritas Admin Kec
+      if (role === "admin_kec" && kecamatanLaporan !== kecLogin.toUpperCase()) {
+        return false;
+      }
+
+      // B. Filter Dropdown Kecamatan
+      if (selKec !== "" && kecamatanLaporan !== selKec.toUpperCase()) {
+        return false;
+      }
+
+      // C. Filter Dropdown Desa
+      if (selDesa !== "" && lokasiLaporan !== selDesa.toUpperCase()) {
+        return false;
+      }
+
+      return true;
+    });
+
+    // --- RENDER DOM ---
+    document.getElementById("count-pending").innerText = filteredData.length + " ANTRIAN";
+    
+    if (filteredData.length === 0) {
+      list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase italic">☕ Tidak ada antrian untuk wilayah ini</div>`;
+      return;
+    }
+
+    list.innerHTML = "";
+    filteredData.forEach(item => {
+      // LINK AJAIB: Konversi File ID jadi Thumbnail Google Drive
+      const thumbFoto = item.file_id && item.file_id !== "-" ? `https://drive.google.com/thumbnail?id=${item.file_id}&sz=w800` : "";
+      const linkAsli = item.file_id && item.file_id !== "-" ? `https://drive.google.com/uc?id=${item.file_id}` : "#";
+
+      list.innerHTML += `
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden card-laporan mb-4">
+          <div class="p-5">
+            <div class="flex justify-between items-start mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-xl shadow-inner">👤</div>
+                <div>
+                  <h4 class="font-black text-slate-800 text-xs uppercase tracking-tight">${item.nama_kader}</h4>
+                  <p class="text-[9px] font-bold text-slate-400 uppercase">${item.lokasi} | ${item.tanggal}</p>
+                </div>
+              </div>
+              <div class="bg-yellow-100 text-yellow-700 text-[8px] font-black px-2 py-1 rounded-lg uppercase">PENDING</div>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-2xl mb-4 space-y-2">
+              <div>
+                <p class="text-[8px] font-black text-slate-400 uppercase">Kegiatan:</p>
+                <p class="text-xs font-bold text-slate-700">${item.kegiatan}</p>
+              </div>
+              <div>
+                <p class="text-[8px] font-black text-slate-400 uppercase">Realisasi:</p>
+                <p class="text-xs font-black text-blue-900">${item.realisasi}</p>
+              </div>
+            </div>
+
+            ${thumbFoto ? `
+              <div class="mb-4">
+                <img src="${thumbFoto}" class="w-full h-48 object-cover rounded-2xl border-2 border-slate-50 shadow-sm" 
+                     onerror="this.src='https://placehold.co/400x200?text=Memuat+Gambar...'"
+                     onclick="window.open('${linkAsli}', '_blank')">
+                <p class="text-[8px] text-center text-slate-400 mt-2 font-bold italic">Klik foto untuk melihat ukuran penuh</p>
+              </div>
+            ` : `<div class="bg-slate-100 py-4 rounded-2xl text-center text-[10px] text-slate-400 mb-4 font-bold">TIDAK ADA BUKTI FOTO</div>`}
+
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="prosesApprove('${item.id}', 'REJECT')" class="bg-red-50 text-red-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest border border-red-100 active:scale-95 transition">Tolak</button>
+              <button onclick="prosesApprove('${item.id}', 'APPROVED')" class="bg-blue-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-blue-900/20 active:scale-95 transition">Terima</button>
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+
+  // 5. FUNGSI TERIMA / TOLAK
   function prosesApprove(id, status) {
     const confirmText = status === 'APPROVED' ? "Terima laporan ini?" : "Tolak laporan ini?";
     if (!confirm(confirmText)) return;
@@ -237,10 +266,10 @@
     .then(res => res.text())
     .then(res => {
       if (res === "success") {
-        loadLaporanPending(); // Reload daftar
+        loadLaporanDatabase(); // Tarik data baru setelah diubah
       } else {
         alert("Gagal: " + res);
-        loadLaporanPending();
+        loadLaporanDatabase();
       }
     });
   }
