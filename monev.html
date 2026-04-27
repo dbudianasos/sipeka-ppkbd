@@ -102,25 +102,29 @@
     }
   };
 
+  // 1. FUNGSI TARIK MASTER WILAYAH (Persis approve.html)
   function loadFilterWilayah() {
     fetch(`${API_URL}?action=get_wilayah_lengkap`).then(res => res.json()).then(data => {
       MASTER_WILAYAH = data;
       const selKec = document.getElementById("f-kecamatan");
       const uniqueKec = [...new Set(data.map(item => item.nama_kec))].filter(k => k && k !== "-").sort();
       
+      selKec.innerHTML = '<option value="">Semua Kecamatan</option>';
       uniqueKec.forEach(k => selKec.innerHTML += `<option value="${k}">${k}</option>`);
       
       const role = localStorage.getItem("role");
       if(role === "admin_kec") {
-        selKec.value = localStorage.getItem("kecamatan").toUpperCase();
+        selKec.value = localStorage.getItem("kecamatan");
         selKec.disabled = true;
-        updateDesaFilter();
-      } else {
-        loadDataMonitoring();
+        updateDesaFilter(); 
       }
+      
+      // WAJIB: Panggil tarik data dari server
+      loadDataMonitoring();
     });
   }
 
+  // 2. UPDATE DROPDOWN DESA (Persis approve.html)
   function updateDesaFilter() {
     const kec = document.getElementById("f-kecamatan").value;
     const selDesa = document.getElementById("f-desa");
@@ -128,10 +132,12 @@
     MASTER_WILAYAH.filter(item => item.nama_kec === kec).forEach(item => {
       if(item.nama_desa && item.nama_desa !== "-") selDesa.innerHTML += `<option value="${item.nama_desa}">${item.nama_desa}</option>`;
     });
-    renderList();
+    
+    // Panggil filter HTML-nya
+    if(DATA_MONITORING.length > 0) renderList(); 
   }
 
-  // TARIK DATA DARI SERVER
+  // 3. TARIK DATA DARI SERVER
   function loadDataMonitoring() {
     const list = document.getElementById("listMonitoring");
     const role = localStorage.getItem("role");
@@ -149,27 +155,37 @@
       .then(res => res.json())
       .then(data => {
         DATA_MONITORING = data;
-        renderList();
+        renderList(); // Arahkan ke penyaring
       });
   }
 
-  // RENDER KE LAYAR (SAPU JAGAT)
+  // 4. RENDER LIST & PENYARINGAN SAPU JAGAT (Persis applyFiltersLaporan)
   function renderList() {
     const list = document.getElementById("listMonitoring");
     const search = document.getElementById("search-nama").value.toUpperCase();
-    const selKec = document.getElementById("f-kecamatan") ? document.getElementById("f-kecamatan").value.toUpperCase() : "";
-    const selDesa = document.getElementById("f-desa") ? document.getElementById("f-desa").value.toUpperCase() : "";
+    const selKec = document.getElementById("f-kecamatan") ? document.getElementById("f-kecamatan").value.toUpperCase().trim() : "";
+    const selDesa = document.getElementById("f-desa") ? document.getElementById("f-desa").value.toUpperCase().trim() : "";
 
     const filtered = DATA_MONITORING.filter(item => {
       let pass = true;
+      
+      // Filter Nama
       if (search !== "" && !item.nama.toUpperCase().includes(search)) pass = false;
-      if (selKec !== "" && item.kecamatan !== selKec) pass = false;
-      if (selDesa !== "" && item.desa !== selDesa) pass = false;
+      
+      // Filter Kecamatan (Pola Approve)
+      if (selKec !== "" && (item.kecamatan_kader || "").toUpperCase().trim() !== selKec) {
+        pass = false;
+      }
+      // Filter Desa (Pola Approve)
+      if (selDesa !== "" && (item.desa_kader || "").toUpperCase().trim() !== selDesa) {
+        pass = false;
+      }
+
       return pass;
     });
 
     if (filtered.length === 0) {
-      list.innerHTML = `<div class="text-center py-10 text-slate-400 font-bold text-[10px] uppercase italic">Tidak ada kader ditemukan</div>`;
+      list.innerHTML = `<div class="text-center py-10 text-slate-400 font-bold text-[10px] uppercase italic">Tidak ada kader di wilayah ini</div>`;
       return;
     }
 
@@ -210,7 +226,7 @@
                 <p class="text-xs font-black text-slate-800 uppercase tracking-tight">${kader.nama}</p>
                 <div class="flex gap-2 items-center mt-1">
                   <span class="text-[8px] font-black ${statusClass} px-2 py-0.5 rounded-lg uppercase tracking-widest">${pillText}</span>
-                  <span class="text-[8px] font-bold text-slate-400 uppercase">${kader.desa}</span>
+                  <span class="text-[8px] font-bold text-slate-400 uppercase">${kader.desa_kader}</span>
                 </div>
               </div>
             </div>
@@ -220,7 +236,6 @@
               </svg>
             </div>
           </div>
-
           <div id="detail-${kader.nik}" class="accordion-content bg-slate-50/50">
             <div class="p-4 border-t border-slate-100">
               <h5 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">Riwayat Laporan (${document.getElementById("f-bulan").options[document.getElementById("f-bulan").selectedIndex].text} ${document.getElementById("f-tahun").value})</h5>
@@ -232,18 +247,14 @@
     });
   }
 
-  // FUNGSI ACCORDION (IDE BAPAK)
+  // FUNGSI ACCORDION (Sama)
   function toggleKader(nik) {
     const detailBox = document.getElementById(`detail-${nik}`);
     const iconBox = document.getElementById(`icon-${nik}`);
-    
-    // 1. Tutup yang sedang terbuka (kalau ada dan bukan yang diklik)
     if (currentOpenNik && currentOpenNik !== nik) {
       document.getElementById(`detail-${currentOpenNik}`).classList.remove('accordion-open');
       document.getElementById(`icon-${currentOpenNik}`).classList.remove('rotate-180');
     }
-
-    // 2. Buka / Tutup yang diklik
     if (!detailBox.classList.contains('accordion-open')) {
       detailBox.classList.add('accordion-open');
       iconBox.classList.add('rotate-180');
