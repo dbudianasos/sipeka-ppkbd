@@ -91,7 +91,7 @@
           <select id="f-kecamatan" onchange="updateDesaFilter()" class="p-3 text-[10px] font-bold bg-white border border-slate-200 rounded-xl outline-none text-blue-900 uppercase">
             <option value="">-- Semua Kecamatan --</option>
           </select>
-          <select id="f-desa" onchange="loadKaderDropdown()" class="p-3 text-[10px] font-bold bg-white border border-slate-200 rounded-xl outline-none text-blue-900 uppercase">
+          <select id="f-desa" onchange="loadKaderDropdown(); loadSettings();" class="p-3 text-[10px] font-bold bg-white border border-slate-200 rounded-xl outline-none text-blue-900 uppercase">
             <option value="">-- Semua Desa --</option>
           </select>
           <select id="f-kader" class="p-3 text-[10px] font-black bg-blue-100 border border-blue-200 rounded-xl outline-none text-blue-900 uppercase">
@@ -323,13 +323,11 @@
             updateDesaFilter();
             
             if(role === "admin_desa") {
-              setTimeout(() => {
-                const selDesa = document.getElementById("f-desa");
-                selDesa.value = localStorage.getItem("desa").toUpperCase();
-                selDesa.disabled = true;
-                loadKaderDropdown();
-              }, 500);
+              const selDesa = document.getElementById("f-desa");
+              selDesa.value = localStorage.getItem("desa").toUpperCase();
+              selDesa.disabled = true;
             }
+            loadKaderDropdown();
           }
       });
     }
@@ -342,7 +340,7 @@
         if(item.nama_desa && item.nama_desa !== "-") selDesa.innerHTML += `<option value="${item.nama_desa.toUpperCase()}">${item.nama_desa.toUpperCase()}</option>`;
       });
       loadSettings(); 
-      loadKaderDropdown();
+      
     }
 
     function loadKaderDropdown() {
