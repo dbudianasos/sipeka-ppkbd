@@ -250,32 +250,30 @@ function initDashboard() {
   const role = localStorage.getItem("role");
   const kec = localStorage.getItem("kecamatan");
   const desa = localStorage.getItem("desa");
-  const fotoBase64 = localStorage.getItem("foto"); // Ambil dari memori
-  const elFotoHeader = document.getElementById("fotoProfilHeader");
-  
+  const fotoBase64 = localStorage.getItem("foto");
+
   const elNama = document.getElementById("namaUser");
   const elRole = document.getElementById("labelRole");
   const elWilayah = document.getElementById("wilayahOtoritas");
   const elIcon = document.getElementById("iconRole");
-  const elFotoHeader = document.getElementById("fotoProfilHeader"); // ID foto di header
+  const elFotoHeader = document.getElementById("fotoProfilHeader"); 
 
-  if (elNama) elNama.innerText = nama;
+  if (elNama) elNama.innerText = nama || "Pengguna";
 
-  // --- LOGIKA FOTO PROFIL (BARU) ---
+  // --- LOGIKA FOTO PROFIL (FIXED) ---
   if (elFotoHeader) {
     if (fotoBase64 && fotoBase64 !== "" && fotoBase64 !== "-") {
-      // Pasang langsung ke elemen img
       elFotoHeader.src = "data:image/jpeg;base64," + fotoBase64;
     } else {
-      // Jika belum ada foto, pakai ikon default
+      // Pastikan file def-profil.png satu folder dengan file html
       elFotoHeader.src = "def-profil.png";
     }
   }
+
   let roleText = "";
   let wilayahText = "";
   let iconEmoji = "👤"; 
 
-  // --- LOGIKA PENENTUAN ICON ROLE (MILIK BAPAK) ---
   if (role === "super_admin") {
     roleText = "Super Administrator";
     wilayahText = "Kabupaten Bekasi";
