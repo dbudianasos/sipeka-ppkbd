@@ -194,143 +194,95 @@
   <script>
     let MASTER_WILAYAH = [];
 
-    // ==========================================
-    // 0. FITUR AUTO FORMAT (ALAMAT & JABATAN)
-    // ==========================================
+    // --- 0. AUTO FORMAT ---
     function formatAlamatRapi(el) {
-      let text = el.value.trim();
-      if(!text) return;
-      
-      // Auto Spasi setelah titik (jika depannya nyambung)
+      let text = el.value.trim(); if(!text) return;
       text = text.replace(/\.([^\s])/g, '. $1');
-      
-      // Title Case (Huruf besar di awal kata)
       text = text.toLowerCase().split(' ').map(word => {
-        // Pengecualian huruf besar untuk singkatan
         if (["RT", "RW", "NO", "KAB"].includes(word.toUpperCase())) return word.toUpperCase();
         return word.charAt(0).toUpperCase() + word.slice(1);
       }).join(' ');
-
       el.value = text;
     }
 
     function autoFillJabatan() {
       let uptd = document.getElementById("set-kop-uptd").value;
       const kec = document.getElementById("set-kop-kec").value;
-
-      // Rumus Ajaib: Singkat kata "Pengendalian Penduduk" menjadi "PP" agar muat 1 baris
-      if (uptd) {
-        uptd = uptd.replace(/PENGENDALIAN PENDUDUK/ig, "PP");
-      }
-
-      // Converter ke Title Case Khusus (Menjaga V, UPTD, dan PP tetap besar)
+      if (uptd) uptd = uptd.replace(/PENGENDALIAN PENDUDUK/ig, "PP");
       const uppers = ["UPTD", "PP", "V", "IV", "III", "II", "I", "VI", "VII", "VIII", "IX", "X", "XII", "XI"];
-      
-      const formatTitleCase = (str) => {
-        return str.toLowerCase().split(' ').map(word => {
-          if (uppers.includes(word.toUpperCase())) return word.toUpperCase();
-          return word.charAt(0).toUpperCase() + word.slice(1);
-        }).join(' ');
-      };
-
+      const formatTitleCase = (str) => str.toLowerCase().split(' ').map(word => uppers.includes(word.toUpperCase()) ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
       if(uptd) document.getElementById("set-ttd-jabatan").value = "Kepala " + formatTitleCase(uptd);
       if(kec) document.getElementById("set-ttd-wilayah").value = formatTitleCase(kec);
     }
 
-    // ==========================================
-    // 1. FITUR ZOOM MOBILE (PDF VIEWER SIMULATOR)
-    // ==========================================
+    // --- 1. ZOOM MOBILE ---
     function scalePrintArea() {
       const wrapper = document.getElementById('print-wrapper');
       const paper = document.getElementById('print-area');
-      const screenWidth = wrapper.clientWidth;
-
-      // Jika layar lebih kecil dari kertas 816px, lakukan Zoom Out
-      if (screenWidth < 850) {
-        const scaleRatio = screenWidth / 816; 
-        paper.style.transform = `scale(${scaleRatio})`;
-        wrapper.style.height = `${1248 * scaleRatio}px`; // Sesuaikan tinggi wadah
-      } else {
-        paper.style.transform = 'none';
-        wrapper.style.height = 'auto';
-      }
+      if (wrapper.clientWidth < 850) {
+        const ratio = wrapper.clientWidth / 816;
+        paper.style.transform = `scale(${ratio})`;
+        wrapper.style.height = `${1248 * ratio}px`;
+      } else { paper.style.transform = 'none'; wrapper.style.height = 'auto'; }
     }
-    // Pantau perubahan ukuran layar HP (Rotate/Landscape)
     window.addEventListener('resize', scalePrintArea);
 
-    // ==========================================
-    // 2. HAK AKSES & TARIK SETTINGAN
-    // ==========================================
+    // --- 2. HAK AKSES ---
     function terapkanHakAkses() {
       const role = localStorage.getItem("role");
       if (role !== "admin_kec") {
         document.getElementById("btn-simpan-setting").style.display = "none";
         ["set-kop-uptd", "set-kop-kec", "set-kop-alamat", "set-ttd-nama", "set-ttd-nip"].forEach(id => {
           const el = document.getElementById(id);
-          if(el) { el.readOnly = true; el.classList.add("bg-slate-100", "text-slate-500", "cursor-not-allowed"); el.classList.remove("bg-white"); }
+          if(el) { el.readOnly = true; el.classList.add("bg-slate-100", "cursor-not-allowed"); }
         });
       }
     }
 
-    function loadSettings() {
-      const kec = document.getElementById("f-kecamatan").value;
-      const role = localStorage.getItem("role");
-      
-      if (!kec) {
-        document.getElementById("set-kop-uptd").value = ""; document.getElementById("set-kop-kec").value = ""; document.getElementById("set-kop-alamat").value = "";
-        document.getElementById("set-ttd-jabatan").value = ""; document.getElementById("set-ttd-wilayah").value = ""; document.getElementById("set-ttd-nama").value = ""; document.getElementById("set-ttd-nip").value = "";
-        return;
-      }
-
-      fetch(`${API_URL}?action=get_settings_cetak&kecamatan=${kec}`)
-        .then(res => res.json())
-        .then(data => {
-          if (Object.keys(data).length > 0 && data.kop_uptd) {
-            document.getElementById("set-kop-uptd").value = data.kop_uptd;
-            document.getElementById("set-kop-kec").value = data.kop_kec;
-            document.getElementById("set-kop-alamat").value = data.kop_alamat;
-            document.getElementById("set-ttd-nama").value = data.ttd_nama || "";
-            document.getElementById("set-ttd-nip").value = data.ttd_nip || "";
-            autoFillJabatan(); // Isi otomatis jabatan dari data yang ditarik
-          } else {
-            document.getElementById("set-kop-uptd").value = ""; document.getElementById("set-kop-kec").value = ""; document.getElementById("set-kop-alamat").value = "";
-            document.getElementById("set-ttd-jabatan").value = ""; document.getElementById("set-ttd-wilayah").value = ""; document.getElementById("set-ttd-nama").value = ""; document.getElementById("set-ttd-nip").value = "";
-            if (role !== "admin_kec") alert(`Pemberitahuan: Admin Kecamatan ${kec} belum mengatur Kop Surat.`);
-          }
-        }).catch(err => console.log("Gagal menarik settingan."));
-    }
-
-    // ==========================================
-    // 3. INISIALISASI HALAMAN
-    // ==========================================
+    // --- 3. FIX LOGIKA KUNCI ADMIN DESA (POINT UTAMA) ---
     window.onload = function() {
       cekLogin();
       document.getElementById("bulan-cetak").value = new Date().getMonth() + 1;
       scalePrintArea(); 
       terapkanHakAkses();
-      
       toggleBulan(); 
+      
       fetch(`${API_URL}?action=get_wilayah_lengkap`).then(res => res.json()).then(data => {
           MASTER_WILAYAH = data;
           const selKec = document.getElementById("f-kecamatan");
+          const selDesa = document.getElementById("f-desa");
+          
+          // Isi Pilihan Kecamatan
           const uniqueKec = [...new Set(data.map(item => item.nama_kec.toUpperCase().trim()))].sort();
           uniqueKec.forEach(k => { if(k && k !== "-") selKec.innerHTML += `<option value="${k}">${k}</option>`; });
           
           const role = localStorage.getItem("role");
+          const userKec = (localStorage.getItem("kecamatan") || "").toUpperCase();
+          const userDesa = (localStorage.getItem("desa") || "").toUpperCase();
+
+          // PROSES PENGUNCIAN SINKRON
           if(role === "admin_kec" || role === "admin_desa") {
-            selKec.value = localStorage.getItem("kecamatan").toUpperCase();
+            selKec.value = userKec;
             selKec.disabled = true;
-            updateDesaFilter();
             
+            // Langsung isi Dropdown Desa
+            selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
+            MASTER_WILAYAH.filter(item => item.nama_kec.toUpperCase().trim() === userKec).forEach(item => {
+              if(item.nama_desa && item.nama_desa !== "-") {
+                selDesa.innerHTML += `<option value="${item.nama_desa.toUpperCase()}">${item.nama_desa.toUpperCase()}</option>`;
+              }
+            });
+
+            // JIKA ADMIN DESA, KUNCI DISINI (Tanpa Timer!)
             if(role === "admin_desa") {
-              setTimeout(() => {
-                const selDesa = document.getElementById("f-desa");
-                selDesa.value = localStorage.getItem("desa").toUpperCase();
-                selDesa.disabled = true;
-                loadKaderDropdown();
-              }, 500);
+              selDesa.value = userDesa;
+              selDesa.disabled = true;
             }
           }
+          
+          // Setelah wilayah FIX terkunci, baru tarik data pendukung
+          loadSettings(); 
+          loadKaderDropdown(); 
       });
     }
 
@@ -341,7 +293,6 @@
       MASTER_WILAYAH.filter(item => item.nama_kec.toUpperCase().trim() === kec).forEach(item => {
         if(item.nama_desa && item.nama_desa !== "-") selDesa.innerHTML += `<option value="${item.nama_desa.toUpperCase()}">${item.nama_desa.toUpperCase()}</option>`;
       });
-      loadSettings(); 
       loadKaderDropdown();
     }
 
@@ -349,168 +300,69 @@
       const kec = document.getElementById("f-kecamatan").value;
       const desa = document.getElementById("f-desa").value;
       const selKader = document.getElementById("f-kader");
-      selKader.innerHTML = '<option value="">⏳ Memuat Kader...</option>';
+      selKader.innerHTML = '<option value="">⏳...</option>';
       fetch(`${API_URL}?action=get_kader_list&kec=${kec}&desa=${desa}`).then(res => res.json()).then(data => {
           selKader.innerHTML = '<option value="">-- PILIH KADER (WAJIB) --</option>';
           data.forEach(kader => { selKader.innerHTML += `<option value="${kader.nama}">${kader.nama}</option>`; });
       });
     }
 
-    function toggleBulan() {
-      document.getElementById("bulan-cetak").style.display = document.getElementById("jenis-cetak").value === "RENJA" ? "none" : "block";
-    }
-
-    // ==========================================
-    // 4. SIMPAN SETTINGS & TARIK PREVIEW PDF
-    // ==========================================
-    function simpanPengaturan() {
-      const kecSasaran = document.getElementById("f-kecamatan").value;
-      if (!kecSasaran) return alert("Sistem terkunci. Kecamatan tidak valid.");
-      const btn = document.getElementById("btn-simpan-setting");
-      btn.innerText = "⏳..."; btn.disabled = true;
-
-      const payload = {
-        action: "save_settings_cetak",
-        kecamatan: kecSasaran,
-        settings: JSON.stringify({
-          kop_uptd: document.getElementById("set-kop-uptd").value,
-          kop_kec: document.getElementById("set-kop-kec").value,
-          kop_alamat: document.getElementById("set-kop-alamat").value,
-          ttd_jabatan: document.getElementById("set-ttd-jabatan").value,
-          ttd_wilayah: document.getElementById("set-ttd-wilayah").value,
-          ttd_nama: document.getElementById("set-ttd-nama").value,
-          ttd_nip: document.getElementById("set-ttd-nip").value
-        })
-      };
-      fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) }).then(() => {
-          alert(`Pengaturan Kop & TTD untuk wilayah ${kecSasaran} tersimpan permanen!`);
-          btn.innerText = "SIMPAN PERMANEN"; btn.disabled = false;
+    function loadSettings() {
+      const kec = document.getElementById("f-kecamatan").value;
+      if (!kec) return;
+      fetch(`${API_URL}?action=get_settings_cetak&kecamatan=${kec}`).then(res => res.json()).then(data => {
+          if (data && data.kop_uptd) {
+            document.getElementById("set-kop-uptd").value = data.kop_uptd;
+            document.getElementById("set-kop-kec").value = data.kop_kec;
+            document.getElementById("set-kop-alamat").value = data.kop_alamat;
+            document.getElementById("set-ttd-nama").value = data.ttd_nama || "";
+            document.getElementById("set-ttd-nip").value = data.ttd_nip || "";
+            autoFillJabatan();
+          }
       });
     }
 
+    // --- 4. PREVIEW & PDF ---
     function previewCetak() {
-      // 1. Validasi: Wajib Pilih Kader
-      const namaKaderDipilih = document.getElementById("f-kader") ? document.getElementById("f-kader").value : "";
-      if (namaKaderDipilih === "") {
-        alert("Peringatan: Silakan pilih Nama Kader sasaran terlebih dahulu!");
-        return;
-      }
-
+      const namaKader = document.getElementById("f-kader").value;
+      if (!namaKader) return alert("Pilih Nama Kader!");
       const jenis = document.getElementById("jenis-cetak").value;
       const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
-      const blnValue = document.getElementById("bulan-cetak").value;
-      const thn = document.getElementById("tahun-cetak").value;
       const btn = document.getElementById("btn-preview");
 
-      // 2. Konfirmasi jika Kop belum di-setting
-      const isKopKosong = !document.getElementById("set-kop-uptd").value;
-      if (isKopKosong) {
-         if(!confirm("Kop Surat dan Pejabat belum diatur. Tetap lanjutkan cetak dengan format kosong?")) return;
-      }
-
-      // 3. Update Visual Preview (Kop & Tanda Tangan)
-      document.getElementById("prev-kop-uptd").innerText = document.getElementById("set-kop-uptd").value || "UPTD PENGENDALIAN PENDUDUK WILAYAH...";
+      document.getElementById("prev-kop-uptd").innerText = document.getElementById("set-kop-uptd").value || "UPTD...";
       document.getElementById("prev-kop-kec").innerText = document.getElementById("set-kop-kec").value || "KECAMATAN...";
       document.getElementById("prev-kop-alamat").innerText = document.getElementById("set-kop-alamat").value || "Alamat...";
-      
-      document.getElementById("prev-jabatan").innerText = document.getElementById("set-ttd-jabatan").value || "Kepala UPTD";
-      document.getElementById("prev-wilayah").innerText = document.getElementById("set-ttd-wilayah").value || "Wilayah";
-      document.getElementById("prev-nama").innerText = document.getElementById("set-ttd-nama").value || "_________________________";
-      document.getElementById("prev-nip").innerText = document.getElementById("set-ttd-nip").value || "_________________________";
-      
-      document.getElementById("prev-nama-kanan").innerText = `( ${namaKaderDipilih} )`;
-      document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} ${thn}`;
+      document.getElementById("prev-nama-kanan").innerText = `( ${namaKader} )`;
+      document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} 2026`;
 
-      // Set Judul Dokumen
-      if (jenis === "RENJA") {
-        document.getElementById("judul-dokumen").innerText = `REKAPITULASI RENCANA KERJA KADER`;
-        document.getElementById("sub-judul-dokumen").innerText = `TAHUN ANGGARAN ${thn}`;
-      } else {
-        document.getElementById("judul-dokumen").innerText = `REKAPITULASI REALISASI KINERJA KADER`;
-        document.getElementById("sub-judul-dokumen").innerText = `PERIODE BULAN ${blnText.toUpperCase()} ${thn}`;
-      }
-
-      btn.innerText = "⏳ MENYUSUN DOKUMEN...";
-
-      // 4. Fetch Data: Pakai role super_admin agar menarik semua data tervalidasi tanpa hambatan wilayah
-      fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${blnValue}&tahun=${thn}&role=super_admin`)
-        .then(res => res.json())
-        .then(data => {
-           // FILTER UTAMA: Membandingkan Nama Kader di Laporan (Index 3) dengan Pilihan di Dropdown
-           const dataKaderSaja = data.filter(row => row[3].trim().toUpperCase() === namaKaderDipilih.trim().toUpperCase());
-
-           let tbody = document.getElementById("isi-rekap");
-           if(dataKaderSaja.length === 0) {
-             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA APPROVED UNTUK KADER ${namaKaderDipilih} PADA PERIODE INI</td></tr>`;
-             document.getElementById("digital-footprint").innerText = `* Tidak ada data ditemukan.`;
-           } else {
-             let rows = "";
-             dataKaderSaja.forEach((row, index) => {
-                let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
-                let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
-                let validator = row[11] ? row[11] : "Sistem";
-
-                rows += `<tr>
-                          <td class="text-center">${index+1}</td>
-                          <td>
-                            <p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p>
-                            <p class="text-[8px] text-slate-600">📍 ${row[8]}</p>
-                            <p class="text-[8px] text-slate-600">📅 ${row[4]}</p>
-                          </td>
-                          <td>
-                            <p class="font-bold text-[10px] mb-1">${row[5]}</p>
-                            <p class="text-[9px] text-blue-800">Capaian: <span class="font-bold">${row[6]}</span></p>
-                          </td>
-                          <td class="text-center p-2">${thumbFoto}</td>
-                          <td class="text-center">
-                            <p class="text-[8px] text-slate-500 uppercase mb-1">Disetujui Oleh:</p>
-                            <p class="text-[9px] font-bold text-green-700 uppercase">${validator}</p>
-                          </td>
-                        </tr>`;
+      btn.innerText = "⏳ MENYUSUN...";
+      fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${document.getElementById("bulan-cetak").value}&tahun=2026&role=super_admin`)
+        .then(res => res.json()).then(data => {
+           const filtered = data.filter(row => row[3].trim().toUpperCase() === namaKader.trim().toUpperCase());
+           let rows = "";
+           if(filtered.length === 0) rows = `<tr><td colspan="5" class="text-center py-10 text-red-500 font-bold">TIDAK ADA DATA</td></tr>`;
+           else {
+             filtered.forEach((row, index) => {
+                let img = row[13] && row[13] !== "-" ? `<img src="https://drive.google.com/thumbnail?id=${row[13]}&sz=w400" style="width: 80px;">` : 'No Photo';
+                rows += `<tr><td class="text-center">${index+1}</td><td>${row[3]}</td><td>${row[5]}</td><td class="text-center">${img}</td><td class="text-center">${row[11] || 'Sistem'}</td></tr>`;
              });
-             tbody.innerHTML = rows;
-             
-             const printDate = new Date();
-             document.getElementById("digital-footprint").innerText = `* Dicetak otomatis pada ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB. Status: APPROVED.`;
            }
+           document.getElementById("isi-rekap").innerHTML = rows;
            btn.innerText = "Tarik Data Dokumen";
         });
     }
 
-    // ==========================================
-    // 5. EXPORT JADI PDF AMAN
-    // ==========================================
     function downloadPDF() {
       const paper = document.getElementById('print-area');
       const wrapper = document.getElementById('print-wrapper');
-      
-      // Matikan zoom agar kualitas render PDF maksimal
-      paper.style.transform = 'none';
-      wrapper.style.height = 'auto';
-
-      const jenis = document.getElementById("jenis-cetak").value;
-      const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
-      const thn = document.getElementById("tahun-cetak").value;
-      const namaKader = document.getElementById("f-kader").value.replace(/\s+/g, '_'); 
-      
-      let namaFile = jenis === "RENJA" ? `Renja_${namaKader}_${thn}.pdf` : `Laporan_${namaKader}_${blnText}_${thn}.pdf`;
-
-      const opt = {
-        margin:       0, 
-        filename:     namaFile,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' } 
-      };
-
-      const btnPdf = document.querySelector("button[onclick='downloadPDF()']");
-      const oriIcon = btnPdf.innerHTML;
-      btnPdf.innerHTML = `<span class="text-xs font-black">⏳</span>`;
-
-      html2pdf().set(opt).from(paper).save().then(() => {
-        btnPdf.innerHTML = oriIcon; 
-        scalePrintArea(); // Nyalakan zoom kembali
-      });
+      paper.style.transform = 'none'; wrapper.style.height = 'auto';
+      const opt = { margin: 0, filename: 'Laporan.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: [215, 330], orientation: 'portrait' } };
+      setTimeout(() => { html2pdf().set(opt).from(paper).save().then(() => scalePrintArea()); }, 500);
+    }
+    
+    function toggleBulan() {
+      document.getElementById("bulan-cetak").style.display = document.getElementById("jenis-cetak").value === "RENJA" ? "none" : "block";
     }
   </script>
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
