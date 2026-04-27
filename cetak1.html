@@ -214,11 +214,16 @@
     }
 
     function autoFillJabatan() {
-      const uptd = document.getElementById("set-kop-uptd").value;
+      let uptd = document.getElementById("set-kop-uptd").value;
       const kec = document.getElementById("set-kop-kec").value;
 
-      // Converter ke Title Case Khusus (Menjaga V, UPTD tetap besar)
-      const uppers = ["UPTD", "PP", "V", "IV", "III", "II", "I", "VI", "VII", "VIII", "IX", "X"];
+      // Rumus Ajaib: Singkat kata "Pengendalian Penduduk" menjadi "PP" agar muat 1 baris
+      if (uptd) {
+        uptd = uptd.replace(/PENGENDALIAN PENDUDUK/ig, "PP");
+      }
+
+      // Converter ke Title Case Khusus (Menjaga V, UPTD, dan PP tetap besar)
+      const uppers = ["UPTD", "PP", "V", "IV", "III", "II", "I", "VI", "VII", "VIII", "IX", "X", "XII", "XI"];
       
       const formatTitleCase = (str) => {
         return str.toLowerCase().split(' ').map(word => {
