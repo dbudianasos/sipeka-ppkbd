@@ -45,21 +45,7 @@
       <p id="wilayah-info" class="text-[10px] font-bold text-blue-900 uppercase tracking-tighter">Memuat...</p>
     </div>
   </div>
-  
-  <div id="filter-container" class="px-5 mb-4 space-y-2">
-  <div class="flex gap-2">
-    <select id="f-kecamatan" onchange="loadLaporanPending()" class="flex-1 text-[10px] p-3 bg-white border border-slate-200 rounded-xl font-bold text-blue-900 shadow-sm outline-none">
-      <option value="">-- Semua Kecamatan --</option>
-      <option value="SETU">SETU</option>
-      <option value="CIKARANG PUSAT">CIKARANG PUSAT</option>
-      </select>
-    
-    <select id="f-desa" onchange="loadLaporanPending()" class="flex-1 text-[10px] p-3 bg-white border border-slate-200 rounded-xl font-bold text-blue-900 shadow-sm outline-none">
-      <option value="">-- Semua Desa --</option>
-    </select>
-  </div>
-</div>
-  
+
   <div id="listLaporan" class="space-y-4">
     <div class="flex flex-col items-center justify-center py-20 text-slate-300">
       <div class="text-5xl mb-4 animate-bounce">📁</div>
@@ -105,15 +91,11 @@
   function loadLaporanPending() {
     const list = document.getElementById("listLaporan");
     const role = localStorage.getItem("role");
-    
-    // Ambil nilai filter
-    const filKec = document.getElementById("f-kecamatan").value;
-    const filDesa = document.getElementById("f-desa").value;
-  
-    // Tampilkan loading
-    list.innerHTML = `<div class="text-center py-20 animate-pulse">🔎 Mencari data...</div>`;
-  
-    fetch(`${API_URL}?action=get_pending_reports&role=${role}&kec=${filKec}&desa=${filDesa}`)
+    const kec = localStorage.getItem("kecamatan");
+    const desa = localStorage.getItem("desa");
+
+    // Ambil data (Filter dilakukan di sisi Apps Script agar ringan)
+    fetch(`${API_URL}?action=get_pending_reports&role=${role}&kec=${kec}&desa=${desa}`)
       .then(res => res.json())
       .then(data => {
         if (data.length === 0) {
@@ -171,28 +153,10 @@
             </div>
           `;
         });
-      })
       .catch(err => {
         list.innerHTML = `<div class="text-center py-20 text-red-400 font-bold text-xs uppercase">Gagal memuat data!</div>`;
       });
   }
-  // Logika saat halaman pertama kali dibuka
-  window.onload = function() {
-    cekLogin();
-    const role = localStorage.getItem("role");
-    const kec = localStorage.getItem("kecamatan");
-    const desa = localStorage.getItem("desa");
-  
-    // Atur visibilitas filter berdasarkan role
-    if (role === "admin_kec") {
-      document.getElementById("f-kecamatan").value = kec;
-      document.getElementById("f-kecamatan").disabled = true;
-    } else if (role === "admin_desa") {
-      document.getElementById("filter-container").classList.add("hidden");
-    }
-    
-    loadLaporanPending();
-  };
 
   // 3. FUNGSI APPROVE / REJECT
   function prosesApprove(id, status) {
