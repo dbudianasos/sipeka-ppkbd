@@ -1,521 +1,521 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Cetak Laporan Admin | siPeKa</title>
-  <link rel="icon" type="image/png" href="logo-sipeka.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Poppins', sans-serif; background-color: #f1f5f9; }
-    .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
-    
-    /* Wadah Pembungkus Kertas untuk Fitur Zoom Out di Layar Kecil */
-    .print-wrapper { width: 100%; overflow: hidden; background: #e2e8f0; border-radius: 1rem; }
-    
-    /* Ukuran Baku Kertas F4 (816px x 1248px) - Resolusi Tinggi */
-    .f4-preview { 
-      width: 816px; 
-      min-height: 1248px; 
-      margin: 0 auto; 
-      background: white; 
-      padding: 50px 60px; /* Margin pinggir kertas */
-      position: relative;
-      box-sizing: border-box;
-      transform-origin: top left; /* Poros zoom out */
-    }
-    
-    .table-dinas { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-    .table-dinas th, .table-dinas td { border: 1.5px solid #000; padding: 6px; font-size: 11px; }
-    .table-dinas th { background-color: #e2e8f0; font-weight: bold; text-align: center; text-transform: uppercase; }
-    .table-dinas td { vertical-align: middle; }
-    
-    .system-footer { position: absolute; bottom: 15mm; left: 15mm; font-size: 9px; color: #64748b; font-style: italic; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Cetak Laporan Admin | siPeKa</title>
+  <link rel="icon" type="image/png" href="logo-sipeka.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #f1f5f9; }
+    .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
+    
+    /* Wadah Pembungkus Kertas untuk Fitur Zoom Out di Layar Kecil */
+    .print-wrapper { width: 100%; overflow: hidden; background: #e2e8f0; border-radius: 1rem; }
+    
+    /* Ukuran Baku Kertas F4 (816px x 1248px) - Resolusi Tinggi */
+    .f4-preview { 
+      width: 816px; 
+      min-height: 1248px; 
+      margin: 0 auto; 
+      background: white; 
+      padding: 50px 60px; /* Margin pinggir kertas */
+      position: relative;
+      box-sizing: border-box;
+      transform-origin: top left; /* Poros zoom out */
+    }
+    
+    .table-dinas { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    .table-dinas th, .table-dinas td { border: 1.5px solid #000; padding: 6px; font-size: 11px; }
+    .table-dinas th { background-color: #e2e8f0; font-weight: bold; text-align: center; text-transform: uppercase; }
+    .table-dinas td { vertical-align: middle; }
+    
+    .system-footer { position: absolute; bottom: 15mm; left: 15mm; font-size: 9px; color: #64748b; font-style: italic; }
+  </style>
 </head>
 <body class="pb-20">
 
-  <header class="sticky top-0 z-50 nav-gradient py-3 px-5 rounded-b-[1.5rem] shadow-lg mb-6">
-    <div class="flex items-center gap-3 max-w-5xl mx-auto text-white">
-      <button onclick="window.location.href='dashboard-admin.html'" class="bg-white/10 p-2 rounded-xl border border-white/10 active:scale-95">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-      </button>
-      <div>
-        <h1 class="font-black text-sm uppercase tracking-widest">Cetak Dokumen</h1>
-        <p class="text-[9px] text-blue-200 font-bold uppercase">Renja & Pelaporan</p>
-      </div>
-    </div>
-  </header>
+  <header class="sticky top-0 z-50 nav-gradient py-3 px-5 rounded-b-[1.5rem] shadow-lg mb-6">
+    <div class="flex items-center gap-3 max-w-5xl mx-auto text-white">
+      <button onclick="window.location.href='dashboard-admin.html'" class="bg-white/10 p-2 rounded-xl border border-white/10 active:scale-95">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
+      <div>
+        <h1 class="font-black text-sm uppercase tracking-widest">Cetak Dokumen</h1>
+        <p class="text-[9px] text-blue-200 font-bold uppercase">Renja & Pelaporan</p>
+      </div>
+    </div>
+  </header>
 
-  <main class="max-w-5xl mx-auto px-4 space-y-6">
-    
-    <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200 space-y-5">
-      
-      <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl space-y-3">
-        <div class="flex justify-between items-center border-b border-blue-200 pb-2">
-          <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest">Pengaturan Kop & Tanda Tangan</p>
-          <button onclick="simpanPengaturan()" id="btn-simpan-setting" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Simpan Permanen</button>
-        </div>
+  <main class="max-w-5xl mx-auto px-4 space-y-6">
+    
+    <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200 space-y-5">
+      
+      <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl space-y-3">
+        <div class="flex justify-between items-center border-b border-blue-200 pb-2">
+          <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest">Pengaturan Kop & Tanda Tangan</p>
+          <button onclick="simpanPengaturan()" id="btn-simpan-setting" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95">Simpan Permanen</button>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="space-y-2">
-            <p class="text-[9px] font-bold text-slate-500 uppercase">Bagian Kop Surat</p>
-            <input type="text" id="set-kop-uptd" oninput="autoFillJabatan()" placeholder="Cth: UPTD PENGENDALIAN PENDUDUK WILAYAH V" class="w-full p-2.5 text-[10px] bg-white rounded-lg border font-bold uppercase">
-            <input type="text" id="set-kop-kec" oninput="autoFillJabatan()" placeholder="Cth: KECAMATAN CIKARANG BARAT - SETU" class="w-full p-2.5 text-[10px] bg-white rounded-lg border font-bold uppercase">
-            <input type="text" id="set-kop-alamat" onblur="formatAlamatRapi(this)" placeholder="Cth: Jalan Raya Imam Bonjol No. 19 (17520)..." class="w-full p-2.5 text-[10px] bg-white rounded-lg border">
-          </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <p class="text-[9px] font-bold text-slate-500 uppercase">Bagian Kop Surat</p>
+            <input type="text" id="set-kop-uptd" oninput="autoFillJabatan()" placeholder="Cth: UPTD PENGENDALIAN PENDUDUK WILAYAH V" class="w-full p-2.5 text-[10px] bg-white rounded-lg border font-bold uppercase">
+            <input type="text" id="set-kop-kec" oninput="autoFillJabatan()" placeholder="Cth: KECAMATAN CIKARANG BARAT - SETU" class="w-full p-2.5 text-[10px] bg-white rounded-lg border font-bold uppercase">
+            <input type="text" id="set-kop-alamat" onblur="formatAlamatRapi(this)" placeholder="Cth: Jalan Raya Imam Bonjol No. 19 (17520)..." class="w-full p-2.5 text-[10px] bg-white rounded-lg border">
+          </div>
 
-          <div class="space-y-2">
-            <p class="text-[9px] font-bold text-slate-500 uppercase">Bagian Tanda Tangan (Pimpinan)</p>
-            <div class="flex gap-2">
-              <input type="text" id="set-ttd-jabatan" class="w-1/2 p-2.5 text-[10px] bg-slate-200 text-slate-500 rounded-lg border font-bold cursor-not-allowed" readonly title="Terisi Otomatis dari Kop">
-              <input type="text" id="set-ttd-wilayah" class="w-1/2 p-2.5 text-[10px] bg-slate-200 text-slate-500 rounded-lg border font-bold cursor-not-allowed" readonly title="Terisi Otomatis dari Kop">
-            </div>
-            <div class="flex gap-2">
-              <input type="text" id="set-ttd-nama" placeholder="Nama Lengkap & Gelar Pimpinan" class="w-full p-2.5 text-[10px] bg-white rounded-lg border font-bold text-blue-900 border-blue-300">
-              <input type="text" id="set-ttd-nip" placeholder="NIP Pimpinan" class="w-1/2 p-2.5 text-[10px] bg-white rounded-lg border font-bold text-blue-900 border-blue-300">
-            </div>
-          </div>
-        </div>
-      </div>
+          <div class="space-y-2">
+            <p class="text-[9px] font-bold text-slate-500 uppercase">Bagian Tanda Tangan (Pimpinan)</p>
+            <div class="flex gap-2">
+              <input type="text" id="set-ttd-jabatan" class="w-1/2 p-2.5 text-[10px] bg-slate-200 text-slate-500 rounded-lg border font-bold cursor-not-allowed" readonly title="Terisi Otomatis dari Kop">
+              <input type="text" id="set-ttd-wilayah" class="w-1/2 p-2.5 text-[10px] bg-slate-200 text-slate-500 rounded-lg border font-bold cursor-not-allowed" readonly title="Terisi Otomatis dari Kop">
+            </div>
+            <div class="flex gap-2">
+              <input type="text" id="set-ttd-nama" placeholder="Nama Lengkap & Gelar Pimpinan" class="w-full p-2.5 text-[10px] bg-white rounded-lg border font-bold text-blue-900 border-blue-300">
+              <input type="text" id="set-ttd-nip" placeholder="NIP Pimpinan" class="w-1/2 p-2.5 text-[10px] bg-white rounded-lg border font-bold text-blue-900 border-blue-300">
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <hr class="border-slate-100">
+      <hr class="border-slate-100">
 
-      <div class="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
-        <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2">1. Pilih Kader Sasaran</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-          <select id="f-kecamatan" onchange="updateDesaFilter()" class="p-3 text-[10px] font-bold bg-white border border-slate-200 rounded-xl outline-none text-blue-900 uppercase">
-            <option value="">-- Semua Kecamatan --</option>
-          </select>
-          <select id="f-desa" onchange="loadKaderDropdown()" class="p-3 text-[10px] font-bold bg-white border border-slate-200 rounded-xl outline-none text-blue-900 uppercase">
-            <option value="">-- Semua Desa --</option>
-          </select>
-          <select id="f-kader" class="p-3 text-[10px] font-black bg-blue-100 border border-blue-200 rounded-xl outline-none text-blue-900 uppercase">
-            <option value="">-- PILIH KADER (WAJIB) --</option>
-          </select>
-        </div>
+      <div class="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+        <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2">1. Pilih Kader Sasaran</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <select id="f-kecamatan" onchange="updateDesaFilter()" class="p-3 text-[10px] font-bold bg-white border border-slate-200 rounded-xl outline-none text-blue-900 uppercase">
+            <option value="">-- Semua Kecamatan --</option>
+          </select>
+          <select id="f-desa" onchange="loadKaderDropdown()" class="p-3 text-[10px] font-bold bg-white border border-slate-200 rounded-xl outline-none text-blue-900 uppercase">
+            <option value="">-- Semua Desa --</option>
+          </select>
+          <select id="f-kader" class="p-3 text-[10px] font-black bg-blue-100 border border-blue-200 rounded-xl outline-none text-blue-900 uppercase">
+            <option value="">-- PILIH KADER (WAJIB) --</option>
+          </select>
+        </div>
 
-        <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2 pt-2">2. Pilih Dokumen</p>
-        <div class="grid grid-cols-3 gap-2">
-          <select id="jenis-cetak" onchange="toggleBulan()" class="p-3 bg-white rounded-xl border border-slate-200 text-[10px] font-black uppercase text-slate-700">
-            <option value="LAPORAN">Laporan Realisasi</option>
-            <option value="RENJA">Rencana Kerja</option>
-          </select>
-          <select id="bulan-cetak" class="p-3 bg-white rounded-xl border border-slate-200 text-[10px] font-bold uppercase text-slate-700">
-            <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
-            <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
-            <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
-            <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
-          </select>
-          <input type="number" id="tahun-cetak" value="2026" class="p-3 bg-white rounded-xl border border-slate-200 text-[10px] font-bold text-center">
-        </div>
-      </div>
-      
-      <button onclick="previewCetak()" id="btn-preview" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition">Tarik Data Dokumen</button>
+        <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2 pt-2">2. Pilih Dokumen</p>
+        <div class="grid grid-cols-3 gap-2">
+          <select id="jenis-cetak" onchange="toggleBulan()" class="p-3 bg-white rounded-xl border border-slate-200 text-[10px] font-black uppercase text-slate-700">
+            <option value="LAPORAN">Laporan Realisasi</option>
+            <option value="RENJA">Rencana Kerja</option>
+          </select>
+          <select id="bulan-cetak" class="p-3 bg-white rounded-xl border border-slate-200 text-[10px] font-bold uppercase text-slate-700">
+            <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+            <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+            <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+            <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+          </select>
+          <input type="number" id="tahun-cetak" value="2026" class="p-3 bg-white rounded-xl border border-slate-200 text-[10px] font-bold text-center">
+        </div>
+      </div>
+      
+      <button onclick="previewCetak()" id="btn-preview" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition">Tarik Data Dokumen</button>
 
-    </div>
+    </div>
 
-    <div id="print-wrapper" class="print-wrapper shadow-lg mb-10">
-      <div id="print-area" class="f4-preview">
-         
-         <div class="flex items-center justify-between border-b-[3px] border-black mb-1 pb-2 px-2">
-           
-           <div class="w-20 md:w-24">
-             <img src="bekasikab.png" class="w-full object-contain" alt="Logo Bekasi">
-           </div>
-           
-           <div class="flex-1 text-center px-2">
-             <h3 class="font-black text-[16px] md:text-[17px] uppercase leading-tight">PEMERINTAH KABUPATEN BEKASI</h3>
-             <h3 class="font-black text-[13px] md:text-[14px] uppercase leading-tight tracking-tighter">DINAS PENGENDALIAN PENDUDUK DAN KELUARGA BERENCANA</h3>
-             <h4 class="font-bold text-[12px] md:text-[13px] uppercase mt-1" id="prev-kop-uptd">UPTD PENGENDALIAN PENDUDUK WILAYAH...</h4>
-             <h4 class="font-bold text-[12px] md:text-[13px] uppercase" id="prev-kop-kec">KECAMATAN...</h4>
-             <p class="text-[10px] mt-1" id="prev-kop-alamat">Alamat...</p>
-           </div>
-           
-           <div class="w-20 md:w-24"></div> 
-           
-         </div> <div class="w-full border-b-[1px] border-black mb-6"></div> 
+    <div id="print-wrapper" class="print-wrapper shadow-lg mb-10">
+      <div id="print-area" class="f4-preview">
+         
+         <div class="flex items-center justify-between border-b-[3px] border-black mb-1 pb-2 px-2">
+           
+           <div class="w-20 md:w-24">
+             <img src="bekasikab.png" class="w-full object-contain" alt="Logo Bekasi">
+           </div>
+           
+           <div class="flex-1 text-center px-2">
+             <h3 class="font-black text-[16px] md:text-[17px] uppercase leading-tight">PEMERINTAH KABUPATEN BEKASI</h3>
+             <h3 class="font-black text-[13px] md:text-[14px] uppercase leading-tight tracking-tighter">DINAS PENGENDALIAN PENDUDUK DAN KELUARGA BERENCANA</h3>
+             <h4 class="font-bold text-[12px] md:text-[13px] uppercase mt-1" id="prev-kop-uptd">UPTD PENGENDALIAN PENDUDUK WILAYAH...</h4>
+             <h4 class="font-bold text-[12px] md:text-[13px] uppercase" id="prev-kop-kec">KECAMATAN...</h4>
+             <p class="text-[10px] mt-1" id="prev-kop-alamat">Alamat...</p>
+           </div>
+           
+           <div class="w-20 md:w-24"></div> 
+           
+         </div> <div class="w-full border-b-[1px] border-black mb-6"></div> 
 
-         <h2 id="judul-dokumen" class="text-center font-bold text-[16px] uppercase tracking-wide">REKAPITULASI DOKUMEN</h2>
-         <p id="sub-judul-dokumen" class="text-center font-bold text-[14px] mb-8 uppercase">PERIODE: -</p>
+         <h2 id="judul-dokumen" class="text-center font-bold text-[16px] uppercase tracking-wide">REKAPITULASI DOKUMEN</h2>
+         <p id="sub-judul-dokumen" class="text-center font-bold text-[14px] mb-8 uppercase">PERIODE: -</p>
 
-         <table class="table-dinas">
-           <thead>
-             <tr>
-               <th width="4%">NO</th>
-               <th width="26%">KADER & LOKASI</th>
-               <th width="35%">KEGIATAN & REALISASI</th>
-               <th width="20%">BUKTI FOTO</th>
-               <th width="15%">VALIDATOR</th>
-             </tr>
-           </thead>
-           <tbody id="isi-rekap">
-              <tr><td colspan="5" class="text-center text-slate-400 py-10 italic">Data belum ditarik...</td></tr>
-           </tbody>
-         </table>
+         <table class="table-dinas">
+           <thead>
+             <tr>
+               <th width="4%">NO</th>
+               <th width="26%">KADER & LOKASI</th>
+               <th width="35%">KEGIATAN & REALISASI</th>
+               <th width="20%">BUKTI FOTO</th>
+               <th width="15%">VALIDATOR</th>
+             </tr>
+           </thead>
+           <tbody id="isi-rekap">
+              <tr><td colspan="5" class="text-center text-slate-400 py-10 italic">Data belum ditarik...</td></tr>
+           </tbody>
+         </table>
 
-         <div class="flex justify-between items-start text-sm mt-16" style="page-break-inside: avoid;">
-           <div class="text-center w-72">
-             <p class="mb-1">Mengetahui,</p>
-             <p id="prev-jabatan" class="font-bold">Kepala UPTD...</p>
-             <p id="prev-wilayah" class="font-bold">Kecamatan...</p>
-             <div class="mt-24">
-               <p id="prev-nama" class="font-bold underline uppercase">_________________________</p>
-               <p>NIP. <span id="prev-nip">_________________</span></p>
-             </div>
-           </div>
-           <div class="text-center w-72">
-             <p class="mb-5" id="prev-tgl">Bekasi, ..........................</p>
-             <p class="font-bold">Pelapor,</p>
-             <p class="font-bold">Kader PPKBD</p>
-             <div class="mt-24">
-               <p id="prev-nama-kanan" class="font-bold uppercase">( ........................................ )</p>
-             </div>
-           </div>
-         </div>
+         <div class="flex justify-between items-start text-sm mt-16" style="page-break-inside: avoid;">
+           <div class="text-center w-72">
+             <p class="mb-1">Mengetahui,</p>
+             <p id="prev-jabatan" class="font-bold">Kepala UPTD...</p>
+             <p id="prev-wilayah" class="font-bold">Kecamatan...</p>
+             <div class="mt-24">
+               <p id="prev-nama" class="font-bold underline uppercase">_________________________</p>
+               <p>NIP. <span id="prev-nip">_________________</span></p>
+             </div>
+           </div>
+           <div class="text-center w-72">
+             <p class="mb-5" id="prev-tgl">Bekasi, ..........................</p>
+             <p class="font-bold">Pelapor,</p>
+             <p class="font-bold">Kader PPKBD</p>
+             <div class="mt-24">
+               <p id="prev-nama-kanan" class="font-bold uppercase">( ........................................ )</p>
+             </div>
+           </div>
+         </div>
 
-         <div class="system-footer" id="digital-footprint">
-           * Dokumen belum ditarik dari sistem.
-         </div>
+         <div class="system-footer" id="digital-footprint">
+           * Dokumen belum ditarik dari sistem.
+         </div>
 
-      </div>
-    </div>
+      </div>
+    </div>
 
-    <button onclick="downloadPDF()" class="fixed bottom-6 right-6 bg-red-600 text-white w-14 h-14 rounded-full shadow-[0_10px_20px_rgba(220,38,38,0.4)] flex items-center justify-center active:scale-90 transition z-50">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-    </button>
-  </main>
+    <button onclick="downloadPDF()" class="fixed bottom-6 right-6 bg-red-600 text-white w-14 h-14 rounded-full shadow-[0_10px_20px_rgba(220,38,38,0.4)] flex items-center justify-center active:scale-90 transition z-50">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+    </button>
+  </main>
 
-  <script src="script.js"></script>
-  <script>
-    let MASTER_WILAYAH = [];
+  <script src="script.js"></script>
+  <script>
+    let MASTER_WILAYAH = [];
 
-    // ==========================================
-    // 0. FITUR AUTO FORMAT (ALAMAT & JABATAN)
-    // ==========================================
-    function formatAlamatRapi(el) {
-      let text = el.value.trim();
-      if(!text) return;
-      
-      // Auto Spasi setelah titik (jika depannya nyambung)
-      text = text.replace(/\.([^\s])/g, '. $1');
-      
-      // Title Case (Huruf besar di awal kata)
-      text = text.toLowerCase().split(' ').map(word => {
-        // Pengecualian huruf besar untuk singkatan
-        if (["RT", "RW", "NO", "KAB"].includes(word.toUpperCase())) return word.toUpperCase();
-        return word.charAt(0).toUpperCase() + word.slice(1);
-      }).join(' ');
+    // ==========================================
+    // 0. FITUR AUTO FORMAT (ALAMAT & JABATAN)
+    // ==========================================
+    function formatAlamatRapi(el) {
+      let text = el.value.trim();
+      if(!text) return;
+      
+      // Auto Spasi setelah titik (jika depannya nyambung)
+      text = text.replace(/\.([^\s])/g, '. $1');
+      
+      // Title Case (Huruf besar di awal kata)
+      text = text.toLowerCase().split(' ').map(word => {
+        // Pengecualian huruf besar untuk singkatan
+        if (["RT", "RW", "NO", "KAB"].includes(word.toUpperCase())) return word.toUpperCase();
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }).join(' ');
 
-      el.value = text;
-    }
+      el.value = text;
+    }
 
-    function autoFillJabatan() {
-      let uptd = document.getElementById("set-kop-uptd").value;
-      const kec = document.getElementById("set-kop-kec").value;
+    function autoFillJabatan() {
+      let uptd = document.getElementById("set-kop-uptd").value;
+      const kec = document.getElementById("set-kop-kec").value;
 
-      // Rumus Ajaib: Singkat kata "Pengendalian Penduduk" menjadi "PP" agar muat 1 baris
-      if (uptd) {
-        uptd = uptd.replace(/PENGENDALIAN PENDUDUK/ig, "PP");
-      }
+      // Rumus Ajaib: Singkat kata "Pengendalian Penduduk" menjadi "PP" agar muat 1 baris
+      if (uptd) {
+        uptd = uptd.replace(/PENGENDALIAN PENDUDUK/ig, "PP");
+      }
 
-      // Converter ke Title Case Khusus (Menjaga V, UPTD, dan PP tetap besar)
-      const uppers = ["UPTD", "PP", "V", "IV", "III", "II", "I", "VI", "VII", "VIII", "IX", "X", "XII", "XI"];
-      
-      const formatTitleCase = (str) => {
-        return str.toLowerCase().split(' ').map(word => {
-          if (uppers.includes(word.toUpperCase())) return word.toUpperCase();
-          return word.charAt(0).toUpperCase() + word.slice(1);
-        }).join(' ');
-      };
+      // Converter ke Title Case Khusus (Menjaga V, UPTD, dan PP tetap besar)
+      const uppers = ["UPTD", "PP", "V", "IV", "III", "II", "I", "VI", "VII", "VIII", "IX", "X", "XII", "XI"];
+      
+      const formatTitleCase = (str) => {
+        return str.toLowerCase().split(' ').map(word => {
+          if (uppers.includes(word.toUpperCase())) return word.toUpperCase();
+          return word.charAt(0).toUpperCase() + word.slice(1);
+        }).join(' ');
+      };
 
-      if(uptd) document.getElementById("set-ttd-jabatan").value = "Kepala " + formatTitleCase(uptd);
-      if(kec) document.getElementById("set-ttd-wilayah").value = formatTitleCase(kec);
-    }
+      if(uptd) document.getElementById("set-ttd-jabatan").value = "Kepala " + formatTitleCase(uptd);
+      if(kec) document.getElementById("set-ttd-wilayah").value = formatTitleCase(kec);
+    }
 
-    // ==========================================
-    // 1. FITUR ZOOM MOBILE (PDF VIEWER SIMULATOR)
-    // ==========================================
-    function scalePrintArea() {
-      const wrapper = document.getElementById('print-wrapper');
-      const paper = document.getElementById('print-area');
-      const screenWidth = wrapper.clientWidth;
+    // ==========================================
+    // 1. FITUR ZOOM MOBILE (PDF VIEWER SIMULATOR)
+    // ==========================================
+    function scalePrintArea() {
+      const wrapper = document.getElementById('print-wrapper');
+      const paper = document.getElementById('print-area');
+      const screenWidth = wrapper.clientWidth;
 
-      // Jika layar lebih kecil dari kertas 816px, lakukan Zoom Out
-      if (screenWidth < 850) {
-        const scaleRatio = screenWidth / 816; 
-        paper.style.transform = `scale(${scaleRatio})`;
-        wrapper.style.height = `${1248 * scaleRatio}px`; // Sesuaikan tinggi wadah
-      } else {
-        paper.style.transform = 'none';
-        wrapper.style.height = 'auto';
-      }
-    }
-    // Pantau perubahan ukuran layar HP (Rotate/Landscape)
-    window.addEventListener('resize', scalePrintArea);
+      // Jika layar lebih kecil dari kertas 816px, lakukan Zoom Out
+      if (screenWidth < 850) {
+        const scaleRatio = screenWidth / 816; 
+        paper.style.transform = `scale(${scaleRatio})`;
+        wrapper.style.height = `${1248 * scaleRatio}px`; // Sesuaikan tinggi wadah
+      } else {
+        paper.style.transform = 'none';
+        wrapper.style.height = 'auto';
+      }
+    }
+    // Pantau perubahan ukuran layar HP (Rotate/Landscape)
+    window.addEventListener('resize', scalePrintArea);
 
-    // ==========================================
-    // 2. HAK AKSES & TARIK SETTINGAN
-    // ==========================================
-    function terapkanHakAkses() {
-      const role = localStorage.getItem("role");
-      if (role !== "admin_kec") {
-        document.getElementById("btn-simpan-setting").style.display = "none";
-        ["set-kop-uptd", "set-kop-kec", "set-kop-alamat", "set-ttd-nama", "set-ttd-nip"].forEach(id => {
-          const el = document.getElementById(id);
-          if(el) { el.readOnly = true; el.classList.add("bg-slate-100", "text-slate-500", "cursor-not-allowed"); el.classList.remove("bg-white"); }
-        });
-      }
-    }
+    // ==========================================
+    // 2. HAK AKSES & TARIK SETTINGAN
+    // ==========================================
+    function terapkanHakAkses() {
+      const role = localStorage.getItem("role");
+      if (role !== "admin_kec") {
+        document.getElementById("btn-simpan-setting").style.display = "none";
+        ["set-kop-uptd", "set-kop-kec", "set-kop-alamat", "set-ttd-nama", "set-ttd-nip"].forEach(id => {
+          const el = document.getElementById(id);
+          if(el) { el.readOnly = true; el.classList.add("bg-slate-100", "text-slate-500", "cursor-not-allowed"); el.classList.remove("bg-white"); }
+        });
+      }
+    }
 
-    function loadSettings() {
-      const kec = document.getElementById("f-kecamatan").value;
-      const role = localStorage.getItem("role");
-      
-      if (!kec) {
-        document.getElementById("set-kop-uptd").value = ""; document.getElementById("set-kop-kec").value = ""; document.getElementById("set-kop-alamat").value = "";
-        document.getElementById("set-ttd-jabatan").value = ""; document.getElementById("set-ttd-wilayah").value = ""; document.getElementById("set-ttd-nama").value = ""; document.getElementById("set-ttd-nip").value = "";
-        return;
-      }
+    function loadSettings() {
+      const kec = document.getElementById("f-kecamatan").value;
+      const role = localStorage.getItem("role");
+      
+      if (!kec) {
+        document.getElementById("set-kop-uptd").value = ""; document.getElementById("set-kop-kec").value = ""; document.getElementById("set-kop-alamat").value = "";
+        document.getElementById("set-ttd-jabatan").value = ""; document.getElementById("set-ttd-wilayah").value = ""; document.getElementById("set-ttd-nama").value = ""; document.getElementById("set-ttd-nip").value = "";
+        return;
+      }
 
-      fetch(`${API_URL}?action=get_settings_cetak&kecamatan=${kec}`)
-        .then(res => res.json())
-        .then(data => {
-          if (Object.keys(data).length > 0 && data.kop_uptd) {
-            document.getElementById("set-kop-uptd").value = data.kop_uptd;
-            document.getElementById("set-kop-kec").value = data.kop_kec;
-            document.getElementById("set-kop-alamat").value = data.kop_alamat;
-            document.getElementById("set-ttd-nama").value = data.ttd_nama || "";
-            document.getElementById("set-ttd-nip").value = data.ttd_nip || "";
-            autoFillJabatan(); // Isi otomatis jabatan dari data yang ditarik
-          } else {
-            document.getElementById("set-kop-uptd").value = ""; document.getElementById("set-kop-kec").value = ""; document.getElementById("set-kop-alamat").value = "";
-            document.getElementById("set-ttd-jabatan").value = ""; document.getElementById("set-ttd-wilayah").value = ""; document.getElementById("set-ttd-nama").value = ""; document.getElementById("set-ttd-nip").value = "";
-            if (role !== "admin_kec") alert(`Pemberitahuan: Admin Kecamatan ${kec} belum mengatur Kop Surat.`);
-          }
-        }).catch(err => console.log("Gagal menarik settingan."));
-    }
+      fetch(`${API_URL}?action=get_settings_cetak&kecamatan=${kec}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Object.keys(data).length > 0 && data.kop_uptd) {
+            document.getElementById("set-kop-uptd").value = data.kop_uptd;
+            document.getElementById("set-kop-kec").value = data.kop_kec;
+            document.getElementById("set-kop-alamat").value = data.kop_alamat;
+            document.getElementById("set-ttd-nama").value = data.ttd_nama || "";
+            document.getElementById("set-ttd-nip").value = data.ttd_nip || "";
+            autoFillJabatan(); // Isi otomatis jabatan dari data yang ditarik
+          } else {
+            document.getElementById("set-kop-uptd").value = ""; document.getElementById("set-kop-kec").value = ""; document.getElementById("set-kop-alamat").value = "";
+            document.getElementById("set-ttd-jabatan").value = ""; document.getElementById("set-ttd-wilayah").value = ""; document.getElementById("set-ttd-nama").value = ""; document.getElementById("set-ttd-nip").value = "";
+            if (role !== "admin_kec") alert(`Pemberitahuan: Admin Kecamatan ${kec} belum mengatur Kop Surat.`);
+          }
+        }).catch(err => console.log("Gagal menarik settingan."));
+    }
 
-    // ==========================================
-    // 3. INISIALISASI HALAMAN
-    // ==========================================
-    window.onload = function() {
-      cekLogin();
-      document.getElementById("bulan-cetak").value = new Date().getMonth() + 1;
-      scalePrintArea(); 
-      terapkanHakAkses();
-      
-      toggleBulan(); 
-      fetch(`${API_URL}?action=get_wilayah_lengkap`).then(res => res.json()).then(data => {
-          MASTER_WILAYAH = data;
-          const selKec = document.getElementById("f-kecamatan");
-          const uniqueKec = [...new Set(data.map(item => item.nama_kec.toUpperCase().trim()))].sort();
-          uniqueKec.forEach(k => { if(k && k !== "-") selKec.innerHTML += `<option value="${k}">${k}</option>`; });
-          
-          const role = localStorage.getItem("role");
-          if(role === "admin_kec" || role === "admin_desa") {
-            selKec.value = localStorage.getItem("kecamatan").toUpperCase();
-            selKec.disabled = true;
-            updateDesaFilter();
-            
-            if(role === "admin_desa") {
-              setTimeout(() => {
-                const selDesa = document.getElementById("f-desa");
-                selDesa.value = localStorage.getItem("desa").toUpperCase();
-                selDesa.disabled = true;
-                loadKaderDropdown();
-              }, 500);
-            }
-          }
-      });
-    }
+    // ==========================================
+    // 3. INISIALISASI HALAMAN
+    // ==========================================
+    window.onload = function() {
+      cekLogin();
+      document.getElementById("bulan-cetak").value = new Date().getMonth() + 1;
+      scalePrintArea(); 
+      terapkanHakAkses();
+      
+      toggleBulan(); 
+      fetch(`${API_URL}?action=get_wilayah_lengkap`).then(res => res.json()).then(data => {
+          MASTER_WILAYAH = data;
+          const selKec = document.getElementById("f-kecamatan");
+          const uniqueKec = [...new Set(data.map(item => item.nama_kec.toUpperCase().trim()))].sort();
+          uniqueKec.forEach(k => { if(k && k !== "-") selKec.innerHTML += `<option value="${k}">${k}</option>`; });
+          
+          const role = localStorage.getItem("role");
+          if(role === "admin_kec" || role === "admin_desa") {
+            selKec.value = localStorage.getItem("kecamatan").toUpperCase();
+            selKec.disabled = true;
+            updateDesaFilter();
+            
+            if(role === "admin_desa") {
+              setTimeout(() => {
+                const selDesa = document.getElementById("f-desa");
+                selDesa.value = localStorage.getItem("desa").toUpperCase();
+                selDesa.disabled = true;
+                loadKaderDropdown();
+              }, 500);
+            }
+          }
+      });
+    }
 
-    function updateDesaFilter() {
-      const kec = document.getElementById("f-kecamatan").value;
-      const selDesa = document.getElementById("f-desa");
-      selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
-      MASTER_WILAYAH.filter(item => item.nama_kec.toUpperCase().trim() === kec).forEach(item => {
-        if(item.nama_desa && item.nama_desa !== "-") selDesa.innerHTML += `<option value="${item.nama_desa.toUpperCase()}">${item.nama_desa.toUpperCase()}</option>`;
-      });
-      loadSettings(); 
-      loadKaderDropdown();
-    }
+    function updateDesaFilter() {
+      const kec = document.getElementById("f-kecamatan").value;
+      const selDesa = document.getElementById("f-desa");
+      selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
+      MASTER_WILAYAH.filter(item => item.nama_kec.toUpperCase().trim() === kec).forEach(item => {
+        if(item.nama_desa && item.nama_desa !== "-") selDesa.innerHTML += `<option value="${item.nama_desa.toUpperCase()}">${item.nama_desa.toUpperCase()}</option>`;
+      });
+      loadSettings(); 
+      loadKaderDropdown();
+    }
 
-    function loadKaderDropdown() {
-      const kec = document.getElementById("f-kecamatan").value;
-      const desa = document.getElementById("f-desa").value;
-      const selKader = document.getElementById("f-kader");
-      selKader.innerHTML = '<option value="">⏳ Memuat Kader...</option>';
-      fetch(`${API_URL}?action=get_kader_list&kec=${kec}&desa=${desa}`).then(res => res.json()).then(data => {
-          selKader.innerHTML = '<option value="">-- PILIH KADER (WAJIB) --</option>';
-          data.forEach(kader => { selKader.innerHTML += `<option value="${kader.nama}">${kader.nama}</option>`; });
-      });
-    }
+    function loadKaderDropdown() {
+      const kec = document.getElementById("f-kecamatan").value;
+      const desa = document.getElementById("f-desa").value;
+      const selKader = document.getElementById("f-kader");
+      selKader.innerHTML = '<option value="">⏳ Memuat Kader...</option>';
+      fetch(`${API_URL}?action=get_kader_list&kec=${kec}&desa=${desa}`).then(res => res.json()).then(data => {
+          selKader.innerHTML = '<option value="">-- PILIH KADER (WAJIB) --</option>';
+          data.forEach(kader => { selKader.innerHTML += `<option value="${kader.nama}">${kader.nama}</option>`; });
+      });
+    }
 
-    function toggleBulan() {
-      document.getElementById("bulan-cetak").style.display = document.getElementById("jenis-cetak").value === "RENJA" ? "none" : "block";
-    }
+    function toggleBulan() {
+      document.getElementById("bulan-cetak").style.display = document.getElementById("jenis-cetak").value === "RENJA" ? "none" : "block";
+    }
 
-    // ==========================================
-    // 4. SIMPAN SETTINGS & TARIK PREVIEW PDF
-    // ==========================================
-    function simpanPengaturan() {
-      const kecSasaran = document.getElementById("f-kecamatan").value;
-      if (!kecSasaran) return alert("Sistem terkunci. Kecamatan tidak valid.");
-      const btn = document.getElementById("btn-simpan-setting");
-      btn.innerText = "⏳..."; btn.disabled = true;
+    // ==========================================
+    // 4. SIMPAN SETTINGS & TARIK PREVIEW PDF
+    // ==========================================
+    function simpanPengaturan() {
+      const kecSasaran = document.getElementById("f-kecamatan").value;
+      if (!kecSasaran) return alert("Sistem terkunci. Kecamatan tidak valid.");
+      const btn = document.getElementById("btn-simpan-setting");
+      btn.innerText = "⏳..."; btn.disabled = true;
 
-      const payload = {
-        action: "save_settings_cetak",
-        kecamatan: kecSasaran,
-        settings: JSON.stringify({
-          kop_uptd: document.getElementById("set-kop-uptd").value,
-          kop_kec: document.getElementById("set-kop-kec").value,
-          kop_alamat: document.getElementById("set-kop-alamat").value,
-          ttd_jabatan: document.getElementById("set-ttd-jabatan").value,
-          ttd_wilayah: document.getElementById("set-ttd-wilayah").value,
-          ttd_nama: document.getElementById("set-ttd-nama").value,
-          ttd_nip: document.getElementById("set-ttd-nip").value
-        })
-      };
-      fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) }).then(() => {
-          alert(`Pengaturan Kop & TTD untuk wilayah ${kecSasaran} tersimpan permanen!`);
-          btn.innerText = "SIMPAN PERMANEN"; btn.disabled = false;
-      });
-    }
+      const payload = {
+        action: "save_settings_cetak",
+        kecamatan: kecSasaran,
+        settings: JSON.stringify({
+          kop_uptd: document.getElementById("set-kop-uptd").value,
+          kop_kec: document.getElementById("set-kop-kec").value,
+          kop_alamat: document.getElementById("set-kop-alamat").value,
+          ttd_jabatan: document.getElementById("set-ttd-jabatan").value,
+          ttd_wilayah: document.getElementById("set-ttd-wilayah").value,
+          ttd_nama: document.getElementById("set-ttd-nama").value,
+          ttd_nip: document.getElementById("set-ttd-nip").value
+        })
+      };
+      fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) }).then(() => {
+          alert(`Pengaturan Kop & TTD untuk wilayah ${kecSasaran} tersimpan permanen!`);
+          btn.innerText = "SIMPAN PERMANEN"; btn.disabled = false;
+      });
+    }
 
-    function previewCetak() {
-      // 1. Validasi: Wajib Pilih Kader
-      const namaKaderDipilih = document.getElementById("f-kader") ? document.getElementById("f-kader").value : "";
-      if (namaKaderDipilih === "") {
-        alert("Peringatan: Silakan pilih Nama Kader sasaran terlebih dahulu!");
-        return;
-      }
+    function previewCetak() {
+      // 1. Validasi: Wajib Pilih Kader
+      const namaKaderDipilih = document.getElementById("f-kader") ? document.getElementById("f-kader").value : "";
+      if (namaKaderDipilih === "") {
+        alert("Peringatan: Silakan pilih Nama Kader sasaran terlebih dahulu!");
+        return;
+      }
 
-      const jenis = document.getElementById("jenis-cetak").value;
-      const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
-      const blnValue = document.getElementById("bulan-cetak").value;
-      const thn = document.getElementById("tahun-cetak").value;
-      const btn = document.getElementById("btn-preview");
+      const jenis = document.getElementById("jenis-cetak").value;
+      const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
+      const blnValue = document.getElementById("bulan-cetak").value;
+      const thn = document.getElementById("tahun-cetak").value;
+      const btn = document.getElementById("btn-preview");
 
-      // 2. Konfirmasi jika Kop belum di-setting
-      const isKopKosong = !document.getElementById("set-kop-uptd").value;
-      if (isKopKosong) {
-         if(!confirm("Kop Surat dan Pejabat belum diatur. Tetap lanjutkan cetak dengan format kosong?")) return;
-      }
+      // 2. Konfirmasi jika Kop belum di-setting
+      const isKopKosong = !document.getElementById("set-kop-uptd").value;
+      if (isKopKosong) {
+         if(!confirm("Kop Surat dan Pejabat belum diatur. Tetap lanjutkan cetak dengan format kosong?")) return;
+      }
 
-      // 3. Update Visual Preview (Kop & Tanda Tangan)
-      document.getElementById("prev-kop-uptd").innerText = document.getElementById("set-kop-uptd").value || "UPTD PENGENDALIAN PENDUDUK WILAYAH...";
-      document.getElementById("prev-kop-kec").innerText = document.getElementById("set-kop-kec").value || "KECAMATAN...";
-      document.getElementById("prev-kop-alamat").innerText = document.getElementById("set-kop-alamat").value || "Alamat...";
-      
-      document.getElementById("prev-jabatan").innerText = document.getElementById("set-ttd-jabatan").value || "Kepala UPTD";
-      document.getElementById("prev-wilayah").innerText = document.getElementById("set-ttd-wilayah").value || "Wilayah";
-      document.getElementById("prev-nama").innerText = document.getElementById("set-ttd-nama").value || "_________________________";
-      document.getElementById("prev-nip").innerText = document.getElementById("set-ttd-nip").value || "_________________________";
-      
-      document.getElementById("prev-nama-kanan").innerText = `( ${namaKaderDipilih} )`;
-      document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} ${thn}`;
+      // 3. Update Visual Preview (Kop & Tanda Tangan)
+      document.getElementById("prev-kop-uptd").innerText = document.getElementById("set-kop-uptd").value || "UPTD PENGENDALIAN PENDUDUK WILAYAH...";
+      document.getElementById("prev-kop-kec").innerText = document.getElementById("set-kop-kec").value || "KECAMATAN...";
+      document.getElementById("prev-kop-alamat").innerText = document.getElementById("set-kop-alamat").value || "Alamat...";
+      
+      document.getElementById("prev-jabatan").innerText = document.getElementById("set-ttd-jabatan").value || "Kepala UPTD";
+      document.getElementById("prev-wilayah").innerText = document.getElementById("set-ttd-wilayah").value || "Wilayah";
+      document.getElementById("prev-nama").innerText = document.getElementById("set-ttd-nama").value || "_________________________";
+      document.getElementById("prev-nip").innerText = document.getElementById("set-ttd-nip").value || "_________________________";
+      
+      document.getElementById("prev-nama-kanan").innerText = `( ${namaKaderDipilih} )`;
+      document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} ${thn}`;
 
-      // Set Judul Dokumen
-      if (jenis === "RENJA") {
-        document.getElementById("judul-dokumen").innerText = `REKAPITULASI RENCANA KERJA KADER`;
-        document.getElementById("sub-judul-dokumen").innerText = `TAHUN ANGGARAN ${thn}`;
-      } else {
-        document.getElementById("judul-dokumen").innerText = `REKAPITULASI REALISASI KINERJA KADER`;
-        document.getElementById("sub-judul-dokumen").innerText = `PERIODE BULAN ${blnText.toUpperCase()} ${thn}`;
-      }
+      // Set Judul Dokumen
+      if (jenis === "RENJA") {
+        document.getElementById("judul-dokumen").innerText = `REKAPITULASI RENCANA KERJA KADER`;
+        document.getElementById("sub-judul-dokumen").innerText = `TAHUN ANGGARAN ${thn}`;
+      } else {
+        document.getElementById("judul-dokumen").innerText = `REKAPITULASI REALISASI KINERJA KADER`;
+        document.getElementById("sub-judul-dokumen").innerText = `PERIODE BULAN ${blnText.toUpperCase()} ${thn}`;
+      }
 
-      btn.innerText = "⏳ MENYUSUN DOKUMEN...";
+      btn.innerText = "⏳ MENYUSUN DOKUMEN...";
 
-      // 4. Fetch Data: Pakai role super_admin agar menarik semua data tervalidasi tanpa hambatan wilayah
-      fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${blnValue}&tahun=${thn}&role=super_admin`)
-        .then(res => res.json())
-        .then(data => {
-           // FILTER UTAMA: Membandingkan Nama Kader di Laporan (Index 3) dengan Pilihan di Dropdown
-           const dataKaderSaja = data.filter(row => row[3].trim().toUpperCase() === namaKaderDipilih.trim().toUpperCase());
+      // 4. Fetch Data: Pakai role super_admin agar menarik semua data tervalidasi tanpa hambatan wilayah
+      fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${blnValue}&tahun=${thn}&role=super_admin`)
+        .then(res => res.json())
+        .then(data => {
+           // FILTER UTAMA: Membandingkan Nama Kader di Laporan (Index 3) dengan Pilihan di Dropdown
+           const dataKaderSaja = data.filter(row => row[3].trim().toUpperCase() === namaKaderDipilih.trim().toUpperCase());
 
-           let tbody = document.getElementById("isi-rekap");
-           if(dataKaderSaja.length === 0) {
-             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA APPROVED UNTUK KADER ${namaKaderDipilih} PADA PERIODE INI</td></tr>`;
-             document.getElementById("digital-footprint").innerText = `* Tidak ada data ditemukan.`;
-           } else {
-             let rows = "";
-             dataKaderSaja.forEach((row, index) => {
-                let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
-                let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
-                let validator = row[11] ? row[11] : "Sistem";
+           let tbody = document.getElementById("isi-rekap");
+           if(dataKaderSaja.length === 0) {
+             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA APPROVED UNTUK KADER ${namaKaderDipilih} PADA PERIODE INI</td></tr>`;
+             document.getElementById("digital-footprint").innerText = `* Tidak ada data ditemukan.`;
+           } else {
+             let rows = "";
+             dataKaderSaja.forEach((row, index) => {
+                let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
+                let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
+                let validator = row[11] ? row[11] : "Sistem";
 
-                rows += `<tr>
-                          <td class="text-center">${index+1}</td>
-                          <td>
-                            <p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p>
-                            <p class="text-[8px] text-slate-600">📍 ${row[8]}</p>
-                            <p class="text-[8px] text-slate-600">📅 ${row[4]}</p>
-                          </td>
-                          <td>
-                            <p class="font-bold text-[10px] mb-1">${row[5]}</p>
-                            <p class="text-[9px] text-blue-800">Capaian: <span class="font-bold">${row[6]}</span></p>
-                          </td>
-                          <td class="text-center p-2">${thumbFoto}</td>
-                          <td class="text-center">
-                            <p class="text-[8px] text-slate-500 uppercase mb-1">Disetujui Oleh:</p>
-                            <p class="text-[9px] font-bold text-green-700 uppercase">${validator}</p>
-                          </td>
-                        </tr>`;
-             });
-             tbody.innerHTML = rows;
-             
-             const printDate = new Date();
-             document.getElementById("digital-footprint").innerText = `* Dicetak otomatis pada ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB. Status: APPROVED.`;
-           }
-           btn.innerText = "Tarik Data Dokumen";
-        });
-    }
+                rows += `<tr>
+                          <td class="text-center">${index+1}</td>
+                          <td>
+                            <p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p>
+                            <p class="text-[8px] text-slate-600">📍 ${row[8]}</p>
+                            <p class="text-[8px] text-slate-600">📅 ${row[4]}</p>
+                          </td>
+                          <td>
+                            <p class="font-bold text-[10px] mb-1">${row[5]}</p>
+                            <p class="text-[9px] text-blue-800">Capaian: <span class="font-bold">${row[6]}</span></p>
+                          </td>
+                          <td class="text-center p-2">${thumbFoto}</td>
+                          <td class="text-center">
+                            <p class="text-[8px] text-slate-500 uppercase mb-1">Disetujui Oleh:</p>
+                            <p class="text-[9px] font-bold text-green-700 uppercase">${validator}</p>
+                          </td>
+                        </tr>`;
+             });
+             tbody.innerHTML = rows;
+             
+             const printDate = new Date();
+             document.getElementById("digital-footprint").innerText = `* Dicetak otomatis pada ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB. Status: APPROVED.`;
+           }
+           btn.innerText = "Tarik Data Dokumen";
+        });
+    }
 
-    // ==========================================
-    // 5. EXPORT JADI PDF AMAN
-    // ==========================================
-    function downloadPDF() {
-      const paper = document.getElementById('print-area');
-      const wrapper = document.getElementById('print-wrapper');
-      
-      // Matikan zoom agar kualitas render PDF maksimal
-      paper.style.transform = 'none';
-      wrapper.style.height = 'auto';
+    // ==========================================
+    // 5. EXPORT JADI PDF AMAN
+    // ==========================================
+    function downloadPDF() {
+      const paper = document.getElementById('print-area');
+      const wrapper = document.getElementById('print-wrapper');
+      
+      // Matikan zoom agar kualitas render PDF maksimal
+      paper.style.transform = 'none';
+      wrapper.style.height = 'auto';
 
-      const jenis = document.getElementById("jenis-cetak").value;
-      const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
-      const thn = document.getElementById("tahun-cetak").value;
-      const namaKader = document.getElementById("f-kader").value.replace(/\s+/g, '_'); 
-      
-      let namaFile = jenis === "RENJA" ? `Renja_${namaKader}_${thn}.pdf` : `Laporan_${namaKader}_${blnText}_${thn}.pdf`;
+      const jenis = document.getElementById("jenis-cetak").value;
+      const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
+      const thn = document.getElementById("tahun-cetak").value;
+      const namaKader = document.getElementById("f-kader").value.replace(/\s+/g, '_'); 
+      
+      let namaFile = jenis === "RENJA" ? `Renja_${namaKader}_${thn}.pdf` : `Laporan_${namaKader}_${blnText}_${thn}.pdf`;
 
-      const opt = {
-        margin:       0, 
-        filename:     namaFile,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' } 
-      };
+      const opt = {
+        margin:       0, 
+        filename:     namaFile,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' } 
+      };
 
-      const btnPdf = document.querySelector("button[onclick='downloadPDF()']");
-      const oriIcon = btnPdf.innerHTML;
-      btnPdf.innerHTML = `<span class="text-xs font-black">⏳</span>`;
+      const btnPdf = document.querySelector("button[onclick='downloadPDF()']");
+      const oriIcon = btnPdf.innerHTML;
+      btnPdf.innerHTML = `<span class="text-xs font-black">⏳</span>`;
 
-      html2pdf().set(opt).from(paper).save().then(() => {
-        btnPdf.innerHTML = oriIcon; 
-        scalePrintArea(); // Nyalakan zoom kembali
-      });
-    }
-  </script>
+      html2pdf().set(opt).from(paper).save().then(() => {
+        btnPdf.innerHTML = oriIcon; 
+        scalePrintArea(); // Nyalakan zoom kembali
+      });
+    }
+  </script>
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
-  &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
-  Aplikasi Pelaporan Kinerja PPKBD
+  &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
+  Aplikasi Pelaporan Kinerja PPKBD
 </footer>
 </body>
 </html>
