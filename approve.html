@@ -12,6 +12,7 @@
     .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
     .card-laporan { transition: all 0.2s; }
     .card-laporan:active { transform: scale(0.98); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
   </style>
 </head>
 
@@ -30,18 +31,28 @@
         <p id="sub-title" class="text-[9px] text-blue-200 font-bold uppercase">Memuat Otoritas...</p>
       </div>
     </div>
-    
-    <div class="bg-yellow-400 text-blue-900 px-3 py-1 rounded-full font-black text-[10px] shadow-lg" id="count-pending">
-      0 ANTRIAN
-    </div>
+    <div class="bg-yellow-400 text-blue-900 px-3 py-1 rounded-full font-black text-[10px] shadow-lg" id="count-pending">0 ANTRIAN</div>
   </div>
 </header>
 
 <main class="px-5 pt-6 max-w-5xl mx-auto">
   
-  <div class="mb-6 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-    <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm flex-shrink-0">
-      <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5">Wilayah Tugas</p>
+  <div id="filter-area" class="mb-6 space-y-3">
+    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+      <p class="text-[8px] font-black text-slate-400 uppercase mb-2 ml-1">Saring Wilayah</p>
+      <div class="flex gap-2">
+        <select id="f-kecamatan" onchange="loadLaporanPending()" class="flex-1 text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">-- Semua Kecamatan --</option>
+          <option value="SETU">SETU</option>
+          </select>
+        <select id="f-desa" onchange="loadLaporanPending()" class="flex-1 text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">-- Semua Desa --</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="bg-blue-900/5 px-4 py-2 rounded-xl border border-blue-900/10 flex items-center gap-2">
+      <span class="text-[10px]">📍</span>
       <p id="wilayah-info" class="text-[10px] font-bold text-blue-900 uppercase tracking-tighter">Memuat...</p>
     </div>
   </div>
@@ -52,54 +63,56 @@
       <p class="text-xs font-bold uppercase tracking-widest">Mencari laporan pending...</p>
     </div>
   </div>
-
 </main>
 
 <script src="script.js"></script>
 <script>
-  // 1. CEK KEAMANAN & OTORITAS
   window.onload = function() {
     cekLogin();
     const role = localStorage.getItem("role");
     
-    // Tolak jika bukan salah satu admin
     if (!role.includes("admin")) {
       alert("Akses Khusus Admin!");
       window.location.href = "dashboard-kader.html";
       return;
     }
 
-    // Tampilkan Info Otoritas di Subtitle
+    // Set Tampilan Otoritas
     const kec = localStorage.getItem("kecamatan");
     const desa = localStorage.getItem("desa");
     
     if (role === "super_admin") {
       document.getElementById("sub-title").innerText = "Otoritas: Kabupaten Bekasi";
-      document.getElementById("wilayah-info").innerText = "SELURUH WILAYAH";
+      document.getElementById("wilayah-info").innerText = "Seluruh Wilayah Kabupaten";
     } else if (role === "admin_kec") {
       document.getElementById("sub-title").innerText = "Otoritas: Kec. " + kec;
-      document.getElementById("wilayah-info").innerText = "KECAMATAN " + kec;
+      document.getElementById("wilayah-info").innerText = "Wilayah Kecamatan " + kec;
+      document.getElementById("f-kecamatan").value = kec;
+      document.getElementById("f-kecamatan").disabled = true;
     } else {
       document.getElementById("sub-title").innerText = "Otoritas: Desa " + desa;
-      document.getElementById("wilayah-info").innerText = "DESA " + desa;
+      document.getElementById("wilayah-info").innerText = "Wilayah Desa " + desa;
+      document.getElementById("filter-area").classList.add("hidden"); // Admin desa tidak perlu filter
     }
 
     loadLaporanPending();
   };
 
-  // 2. FUNGSI LOAD DATA PENDING
   function loadLaporanPending() {
     const list = document.getElementById("listLaporan");
     const role = localStorage.getItem("role");
-    const kec = localStorage.getItem("kecamatan");
-    const desa = localStorage.getItem("desa");
+    
+    // Ambil Nilai Filter
+    const selKec = document.getElementById("f-kecamatan").value;
+    const selDesa = document.getElementById("f-desa").value;
 
-    // Ambil data (Filter dilakukan di sisi Apps Script agar ringan)
-    fetch(`${API_URL}?action=get_pending_reports&role=${role}&kec=${kec}&desa=${desa}`)
+    list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase animate-pulse">⏳ Sinkronisasi Data...</div>`;
+
+    fetch(`${API_URL}?action=get_pending_reports&role=${role}&kec=${selKec}&desa=${selDesa}`)
       .then(res => res.json())
       .then(data => {
         if (data.length === 0) {
-          list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase italic">☕ Semua laporan sudah divalidasi</div>`;
+          list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase italic">☕ Tidak ada antrian laporan</div>`;
           document.getElementById("count-pending").innerText = "0 ANTRIAN";
           return;
         }
@@ -108,6 +121,11 @@
         list.innerHTML = "";
 
         data.forEach(item => {
+          // LOGIKA FOTO: Menggunakan thumbnail link Google Drive agar tidak pecah/error
+          const thumbFoto = item.file_id && item.file_id !== "-" 
+            ? `https://lh3.googleusercontent.com/d/${item.file_id}=s600` 
+            : "";
+
           list.innerHTML += `
             <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden card-laporan">
               <div class="p-5">
@@ -121,7 +139,7 @@
                   </div>
                   <div class="bg-yellow-100 text-yellow-700 text-[8px] font-black px-2 py-1 rounded-lg uppercase">PENDING</div>
                 </div>
-        
+
                 <div class="bg-slate-50 p-4 rounded-2xl mb-4 space-y-2">
                   <div>
                     <p class="text-[8px] font-black text-slate-400 uppercase">Kegiatan:</p>
@@ -132,38 +150,34 @@
                     <p class="text-xs font-bold text-blue-900">${item.realisasi}</p>
                   </div>
                 </div>
-        
-                ${item.foto_url ? `
+
+                ${thumbFoto ? `
                   <div class="mb-4">
-                    <img src="${item.foto_url}" class="w-full h-48 object-cover rounded-2xl border-2 border-slate-50 shadow-inner" 
-                         onclick="window.open('${item.foto_url}', '_blank')">
+                    <img src="${thumbFoto}" class="w-full h-48 object-cover rounded-2xl border-2 border-slate-50 shadow-sm" 
+                         onerror="this.src='https://placehold.co/400x200?text=Foto+Gagal+Dimuat'"
+                         onclick="window.open('https://drive.google.com/uc?id=${item.file_id}', '_blank')">
                     <p class="text-[8px] text-center text-slate-400 mt-2 font-bold italic">Klik foto untuk memperbesar</p>
                   </div>
-                ` : `<div class="bg-slate-100 py-4 rounded-2xl text-center text-[10px] text-slate-400 mb-4 font-bold uppercase tracking-widest">Tidak ada foto bukti</div>`}
-        
+                ` : `<div class="bg-slate-100 py-4 rounded-2xl text-center text-[10px] text-slate-400 mb-4 font-bold">TIDAK ADA BUKTI FOTO</div>`}
+
                 <div class="grid grid-cols-2 gap-3">
-                  <button onclick="prosesApprove('${item.id}', 'REJECT')" class="bg-red-50 text-red-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest border border-red-100 active:scale-95 transition">
-                    Tolak
-                  </button>
-                  <button onclick="prosesApprove('${item.id}', 'APPROVED')" class="bg-blue-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-blue-900/20 active:scale-95 transition">
-                    Terima
-                  </button>
+                  <button onclick="prosesApprove('${item.id}', 'REJECT')" class="bg-red-50 text-red-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest border border-red-100 active:scale-95 transition">Tolak</button>
+                  <button onclick="prosesApprove('${item.id}', 'APPROVED')" class="bg-blue-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-blue-900/20 active:scale-95 transition">Terima</button>
                 </div>
               </div>
-            </div>
-          `;
+            </div>`;
         });
+      }) // Penutup Then
       .catch(err => {
+        console.error(err);
         list.innerHTML = `<div class="text-center py-20 text-red-400 font-bold text-xs uppercase">Gagal memuat data!</div>`;
       });
   }
 
-  // 3. FUNGSI APPROVE / REJECT
   function prosesApprove(id, status) {
-    const confirmText = status === 'APPROVE' ? "Terima laporan ini?" : "Tolak laporan ini?";
+    const confirmText = status === 'APPROVED' ? "Terima laporan ini?" : "Tolak laporan ini?";
     if (!confirm(confirmText)) return;
 
-    // Tambahkan loading sederhana
     document.getElementById("listLaporan").innerHTML = `<div class="text-center py-20 animate-pulse text-blue-900 font-black uppercase text-[10px]">Memproses Validasi...</div>`;
 
     fetch(API_URL, {
@@ -186,6 +200,5 @@
     });
   }
 </script>
-
 </body>
 </html>
