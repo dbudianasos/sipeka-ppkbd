@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Monitoring Wilayah | siPeKa</title>
+  <link rel="icon" type="image/png" href="logo-sipeka.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
+    .accordion-content { transition: max-height 0.3s ease-out; max-height: 0; overflow: hidden; }
+    .accordion-open { max-height: 1000px; } /* Angka besar agar muat banyak laporan */
+    .rotate-180 { transform: rotate(180deg); transition: 0.3s; }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen pb-20">
+
+<header class="sticky top-0 z-50 nav-gradient py-3 px-5 rounded-b-[1.5rem] shadow-lg shadow-blue-900/20">
+  <div class="flex items-center gap-3 max-w-5xl mx-auto text-white">
+    <button onclick="window.location.href='dashboard-admin.html'" class="bg-white/10 p-2 rounded-xl border border-white/10 active:scale-95">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+    </button>
+    <div>
+      <h1 class="font-black text-sm uppercase tracking-widest">Monitoring</h1>
+      <p id="sub-title" class="text-[9px] text-blue-200 font-bold uppercase">Memuat Otoritas...</p>
+    </div>
+  </div>
+</header>
+
+<main class="px-5 pt-6 max-w-5xl mx-auto">
+  
+  <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200 mb-6 space-y-3">
+    <div class="relative">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">🔍</span>
+      <input type="text" id="search-nama" onkeyup="renderList()" placeholder="Cari Nama Kader..." 
+             class="w-full pl-10 pr-4 py-3 text-xs bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 font-bold uppercase">
+    </div>
+    
+    <div class="grid grid-cols-2 gap-2">
+      <select id="f-bulan" onchange="loadDataMonitoring()" class="p-3 text-[10px] font-bold bg-slate-50 border border-slate-100 rounded-xl outline-none text-blue-900 uppercase">
+        <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+        <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+        <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+        <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+      </select>
+      <select id="f-tahun" onchange="loadDataMonitoring()" class="p-3 text-[10px] font-bold bg-slate-50 border border-slate-100 rounded-xl outline-none text-blue-900 uppercase"></select>
+    </div>
+
+    <div id="filter-wilayah-area" class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 hidden">
+      <select id="f-kecamatan" onchange="updateDesaFilter()" class="p-3 text-[10px] font-bold bg-slate-50 border border-slate-100 rounded-xl outline-none text-blue-900 uppercase">
+        <option value="">Semua Kecamatan</option>
+      </select>
+      <select id="f-desa" onchange="renderList()" class="p-3 text-[10px] font-bold bg-slate-50 border border-slate-100 rounded-xl outline-none text-blue-900 uppercase">
+        <option value="">Semua Desa</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="listMonitoring" class="space-y-3">
+    <div class="text-center py-20 text-slate-300">
+      <div class="text-5xl mb-4 animate-bounce">📊</div>
+      <p class="text-xs font-bold uppercase tracking-widest">Sinkronisasi Data...</p>
+    </div>
+  </div>
+
+</main>
+
+<script src="script.js"></script>
+<script>
+  let DATA_MONITORING = [];
+  let MASTER_WILAYAH = [];
+  let currentOpenNik = null; // Menyimpan kader mana yang laporannya sedang terbuka
+
+  window.onload = function() {
+    cekLogin();
+    const role = localStorage.getItem("role");
+    const kec = localStorage.getItem("kecamatan");
+    const desa = localStorage.getItem("desa");
+    
+    if (role === "super_admin") document.getElementById("sub-title").innerText = "Otoritas: Kabupaten Bekasi";
+    else if (role === "admin_kec") document.getElementById("sub-title").innerText = "Otoritas: Kec. " + kec;
+    else document.getElementById("sub-title").innerText = "Otoritas: Desa " + desa;
+
+    // Set Default Bulan & Tahun
+    const now = new Date();
+    document.getElementById("f-bulan").value = now.getMonth() + 1;
+    const fTahun = document.getElementById("f-tahun");
+    for(let i = now.getFullYear(); i >= 2024; i--) {
+      fTahun.innerHTML += `<option value="${i}">${i}</option>`;
+    }
+
+    if(role !== "admin_desa") {
+      document.getElementById("filter-wilayah-area").classList.remove("hidden");
+      loadFilterWilayah();
+    } else {
+      loadDataMonitoring();
+    }
+  };
+
+  function loadFilterWilayah() {
+    fetch(`${API_URL}?action=get_wilayah_lengkap`).then(res => res.json()).then(data => {
+      MASTER_WILAYAH = data;
+      const selKec = document.getElementById("f-kecamatan");
+      const uniqueKec = [...new Set(data.map(item => item.nama_kec))].filter(k => k && k !== "-").sort();
+      
+      uniqueKec.forEach(k => selKec.innerHTML += `<option value="${k}">${k}</option>`);
+      
+      const role = localStorage.getItem("role");
+      if(role === "admin_kec") {
+        selKec.value = localStorage.getItem("kecamatan").toUpperCase();
+        selKec.disabled = true;
+        updateDesaFilter();
+      } else {
+        loadDataMonitoring();
+      }
+    });
+  }
+
+  function updateDesaFilter() {
+    const kec = document.getElementById("f-kecamatan").value;
+    const selDesa = document.getElementById("f-desa");
+    selDesa.innerHTML = '<option value="">Semua Desa</option>';
+    MASTER_WILAYAH.filter(item => item.nama_kec === kec).forEach(item => {
+      if(item.nama_desa && item.nama_desa !== "-") selDesa.innerHTML += `<option value="${item.nama_desa}">${item.nama_desa}</option>`;
+    });
+    renderList();
+  }
+
+  // TARIK DATA DARI SERVER
+  function loadDataMonitoring() {
+    const list = document.getElementById("listMonitoring");
+    const role = localStorage.getItem("role");
+    const kec = (localStorage.getItem("kecamatan") || "").trim();
+    const desa = (localStorage.getItem("desa") || "").trim();
+    const bln = document.getElementById("f-bulan").value;
+    const thn = document.getElementById("f-tahun").value;
+
+    list.innerHTML = `<div class="text-center py-20 text-blue-900 font-bold text-xs uppercase animate-pulse">⏳ Mengambil Data Kader...</div>`;
+    currentOpenNik = null; // Reset accordion
+
+    const params = new URLSearchParams({ action: "get_monitoring", role: role, kec: kec, desa: desa, bulan: bln, tahun: thn });
+
+    fetch(`${API_URL}?${params.toString()}`)
+      .then(res => res.json())
+      .then(data => {
+        DATA_MONITORING = data;
+        renderList();
+      });
+  }
+
+  // RENDER KE LAYAR (SAPU JAGAT)
+  function renderList() {
+    const list = document.getElementById("listMonitoring");
+    const search = document.getElementById("search-nama").value.toUpperCase();
+    const selKec = document.getElementById("f-kecamatan") ? document.getElementById("f-kecamatan").value.toUpperCase() : "";
+    const selDesa = document.getElementById("f-desa") ? document.getElementById("f-desa").value.toUpperCase() : "";
+
+    const filtered = DATA_MONITORING.filter(item => {
+      let pass = true;
+      if (search !== "" && !item.nama.toUpperCase().includes(search)) pass = false;
+      if (selKec !== "" && item.kecamatan !== selKec) pass = false;
+      if (selDesa !== "" && item.desa !== selDesa) pass = false;
+      return pass;
+    });
+
+    if (filtered.length === 0) {
+      list.innerHTML = `<div class="text-center py-10 text-slate-400 font-bold text-[10px] uppercase italic">Tidak ada kader ditemukan</div>`;
+      return;
+    }
+
+    list.innerHTML = "";
+    filtered.forEach(kader => {
+      // Logic Status
+      const isLapor = kader.status === "SUDAH LAPOR";
+      const statusClass = isLapor ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600";
+      const pillText = isLapor ? `${kader.laporan.length} Laporan (${kader.total_approved} Diterima)` : "Belum Lapor";
+
+      // Bikin List Laporan (Format Mini)
+      let listLaporanHTML = "";
+      if (kader.laporan.length > 0) {
+        kader.laporan.forEach(lap => {
+          let badgeStatus = lap.status === "APPROVED" ? "bg-green-500" : (lap.status === "REJECT" ? "bg-red-500" : "bg-yellow-400");
+          listLaporanHTML += `
+            <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm mb-2 flex justify-between items-center">
+              <div>
+                <p class="text-[10px] font-black text-slate-700 uppercase">${lap.kegiatan}</p>
+                <p class="text-[9px] text-slate-500 font-bold">${lap.tanggal} | 📍 ${lap.lokasi}</p>
+              </div>
+              <div class="text-[8px] text-white font-black px-2 py-1 rounded-md uppercase ${badgeStatus}">${lap.status}</div>
+            </div>`;
+        });
+      } else {
+        listLaporanHTML = `<p class="text-[10px] text-center text-slate-400 font-bold italic py-4">Bulan ini belum ada pergerakan.</p>`;
+      }
+
+      // Gabung Card & Accordion
+      list.innerHTML += `
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-3">
+          <div onclick="toggleKader('${kader.nik}')" class="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 active:bg-slate-100 transition">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 ${isLapor ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'} rounded-2xl flex items-center justify-center text-xl shadow-inner">
+                ${isLapor ? '✅' : '❌'}
+              </div>
+              <div>
+                <p class="text-xs font-black text-slate-800 uppercase tracking-tight">${kader.nama}</p>
+                <div class="flex gap-2 items-center mt-1">
+                  <span class="text-[8px] font-black ${statusClass} px-2 py-0.5 rounded-lg uppercase tracking-widest">${pillText}</span>
+                  <span class="text-[8px] font-bold text-slate-400 uppercase">${kader.desa}</span>
+                </div>
+              </div>
+            </div>
+            <div id="icon-${kader.nik}" class="text-slate-300 transition-transform duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </div>
+          </div>
+
+          <div id="detail-${kader.nik}" class="accordion-content bg-slate-50/50">
+            <div class="p-4 border-t border-slate-100">
+              <h5 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">Riwayat Laporan (${document.getElementById("f-bulan").options[document.getElementById("f-bulan").selectedIndex].text} ${document.getElementById("f-tahun").value})</h5>
+              ${listLaporanHTML}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // FUNGSI ACCORDION (IDE BAPAK)
+  function toggleKader(nik) {
+    const detailBox = document.getElementById(`detail-${nik}`);
+    const iconBox = document.getElementById(`icon-${nik}`);
+    
+    // 1. Tutup yang sedang terbuka (kalau ada dan bukan yang diklik)
+    if (currentOpenNik && currentOpenNik !== nik) {
+      document.getElementById(`detail-${currentOpenNik}`).classList.remove('accordion-open');
+      document.getElementById(`icon-${currentOpenNik}`).classList.remove('rotate-180');
+    }
+
+    // 2. Buka / Tutup yang diklik
+    if (!detailBox.classList.contains('accordion-open')) {
+      detailBox.classList.add('accordion-open');
+      iconBox.classList.add('rotate-180');
+      currentOpenNik = nik;
+    } else {
+      detailBox.classList.remove('accordion-open');
+      iconBox.classList.remove('rotate-180');
+      currentOpenNik = null;
+    }
+  }
+</script>
+</body>
+</html>
