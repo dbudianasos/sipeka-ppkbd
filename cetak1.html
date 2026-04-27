@@ -154,11 +154,22 @@
 
   <script src="script.js"></script>
   <script>
+    // 1. Inisialisasi Halaman (Ditambah Fitur Ingat TTD)
     window.onload = function() {
       cekLogin();
       document.getElementById("bulan-cetak").value = new Date().getMonth() + 1;
+      
+      // Load Kop Surat
       const savedKop = localStorage.getItem("kop_surat_base64");
       if(savedKop) document.getElementById("container-kop").innerHTML = `<img src="${savedKop}" style="max-height: 90px; width: auto; object-fit: contain;">`;
+
+      // Load Pengaturan TTD sebelumnya (Jika ada)
+      if(localStorage.getItem("ttd_jabatan")) document.getElementById("ttd-jabatan").value = localStorage.getItem("ttd_jabatan");
+      if(localStorage.getItem("ttd_wilayah")) document.getElementById("ttd-wilayah").value = localStorage.getItem("ttd_wilayah");
+      if(localStorage.getItem("ttd_nama")) document.getElementById("ttd-nama").value = localStorage.getItem("ttd_nama");
+      if(localStorage.getItem("ttd_nip")) document.getElementById("ttd-nip").value = localStorage.getItem("ttd_nip");
+      if(localStorage.getItem("ttd_jabatan_kanan")) document.getElementById("ttd-jabatan-kanan").value = localStorage.getItem("ttd_jabatan_kanan");
+      if(localStorage.getItem("ttd_nama_kanan")) document.getElementById("ttd-nama-kanan").value = localStorage.getItem("ttd_nama_kanan");
     }
 
     function uploadKop() {
@@ -182,6 +193,7 @@
       reader.readAsDataURL(file); 
     }
 
+    // 3. Tarik Data & Simpan Pengaturan TTD
     function previewCetak() {
       const jenis = document.getElementById("jenis-cetak").value;
       const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
@@ -189,6 +201,15 @@
       const thn = document.getElementById("tahun-cetak").value;
       const btn = document.getElementById("btn-preview");
 
+      // SIMPAN PENGATURAN TTD KE MEMORI HP/LAPTOP ADMIN
+      localStorage.setItem("ttd_jabatan", document.getElementById("ttd-jabatan").value);
+      localStorage.setItem("ttd_wilayah", document.getElementById("ttd-wilayah").value);
+      localStorage.setItem("ttd_nama", document.getElementById("ttd-nama").value);
+      localStorage.setItem("ttd_nip", document.getElementById("ttd-nip").value);
+      localStorage.setItem("ttd_jabatan_kanan", document.getElementById("ttd-jabatan-kanan").value);
+      localStorage.setItem("ttd_nama_kanan", document.getElementById("ttd-nama-kanan").value);
+
+      // Set Tanda Tangan Dinamis ke Kertas
       document.getElementById("prev-jabatan").innerText = document.getElementById("ttd-jabatan").value;
       document.getElementById("prev-wilayah").innerText = document.getElementById("ttd-wilayah").value;
       document.getElementById("prev-nama").innerText = document.getElementById("ttd-nama").value || "_________________________";
@@ -197,6 +218,7 @@
       document.getElementById("prev-nama-kanan").innerText = document.getElementById("ttd-nama-kanan").value ? `( ${document.getElementById("ttd-nama-kanan").value} )` : "( ........................................ )";
       document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} ${thn}`;
 
+      // Set Judul
       if (jenis === "RENJA") {
         document.getElementById("judul-dokumen").innerText = `REKAPITULASI RENCANA KERJA KADER`;
         document.getElementById("sub-judul-dokumen").innerText = `TAHUN ANGGARAN ${thn}`;
@@ -207,6 +229,7 @@
 
       btn.innerText = "⏳ MENYUSUN...";
 
+      // Tarik Data dari Server
       fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${bln}&tahun=${thn}&role=${localStorage.getItem("role")}&kec=${localStorage.getItem("kecamatan")}&desa=${localStorage.getItem("desa")}`)
         .then(res => res.json())
         .then(data => {
@@ -217,7 +240,6 @@
            } else {
              let rows = "";
              data.forEach((row, index) => {
-                // Konfigurasi File ID Foto (Kolom N/13) & Validator (Kolom L/11)
                 let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
                 let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
                 let validator = row[11] ? row[11] : "Admin";
