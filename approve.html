@@ -66,7 +66,7 @@
 <script src="script.js"></script>
 <script>
   let MASTER_WILAYAH = [];
-  let DATA_LAPORAN_ALL = []; // Penampung data agar tidak perlu berkali-kali fetch
+  let DATA_LAPORAN_ALL = []; 
 
   window.onload = function() {
     cekLogin();
@@ -90,6 +90,7 @@
       document.getElementById("filter-area").classList.add("hidden"); 
     }
 
+    // Load wilayah dulu sebagai referensi
     loadFilterWilayah();
   };
 
@@ -107,12 +108,22 @@
 
         const role = localStorage.getItem("role");
         if(role === "admin_kec") {
-          selKec.value = localStorage.getItem("kecamatan");
+          const kecLogin = localStorage.getItem("kecamatan");
+          selKec.value = kecLogin;
           selKec.disabled = true;
-          updateDesaFilter(); 
-        } else {
-          loadLaporanDatabase(); 
+          
+          // Isi dropdown desa secara manual tanpa memicu filter dulu
+          const selDesa = document.getElementById("f-desa");
+          selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
+          MASTER_WILAYAH.filter(w => w.nama_kec === kecLogin).forEach(w => {
+            if(w.nama_desa && w.nama_desa !== "-") {
+              selDesa.innerHTML += `<option value="${w.nama_desa}">${w.nama_desa}</option>`;
+            }
+          });
         }
+        
+        // PENTING: Sekarang SEMUA role (Super Admin & Admin Kec) akan memanggil ini
+        loadLaporanDatabase();
       })
       .catch(err => {
         console.error("Gagal load wilayah", err);
@@ -120,7 +131,7 @@
       });
   }
 
-  // 2. FUNGSI UPDATE DROPDOWN DESA
+  // 2. FUNGSI UPDATE DROPDOWN DESA (Dipakai saat Super Admin ganti Kecamatan)
   function updateDesaFilter() {
     const kec = document.getElementById("f-kecamatan").value;
     const selDesa = document.getElementById("f-desa");
@@ -134,31 +145,31 @@
       }
     });
 
-    applyFiltersLaporan(); 
+    // Jalankan filter jika data sudah siap
+    if(DATA_LAPORAN_ALL.length > 0) applyFiltersLaporan(); 
   }
 
-  // 3. FUNGSI TARIK DATA LAPORAN 
+  // 3. FUNGSI TARIK DATA LAPORAN DARI SERVER
   function loadLaporanDatabase() {
     const list = document.getElementById("listLaporan");
     const role = localStorage.getItem("role");
-    const kec = (localStorage.getItem("kecamatan") || "").trim(); // Tambahkan trim
+    const kec = (localStorage.getItem("kecamatan") || "").trim();
     const desa = (localStorage.getItem("desa") || "").trim();
-  
+
     list.innerHTML = `<div class="text-center py-20 text-blue-900 font-bold text-xs uppercase animate-pulse">⏳ Menarik Antrian...</div>`;
-  
-    // Gunakan URLSearchParams agar karakter spasi atau simbol di nama kecamatan aman
+
     const params = new URLSearchParams({
       action: "get_pending_reports",
       role: role,
       kec: kec,
       desa: desa
     });
-  
+
     fetch(`${API_URL}?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
         DATA_LAPORAN_ALL = data;
-        applyFiltersLaporan(); 
+        applyFiltersLaporan(); // Baru saring di sini setelah data ADA
       })
       .catch(err => {
         console.error(err);
@@ -166,44 +177,37 @@
       });
   }
 
-  // 4. FUNGSI FILTER "SAPU JAGAT" (Versi Akurat NIK)
+  // 4. FUNGSI PENYARINGAN (SAPU JAGAT)
   function applyFiltersLaporan() {
     const list = document.getElementById("listLaporan");
-    
-    // Ambil nilai dropdown dan bersihkan
     const selKec = document.getElementById("f-kecamatan").value.toUpperCase().trim();
     const selDesa = document.getElementById("f-desa").value.toUpperCase().trim();
-  
+
     const filteredData = DATA_LAPORAN_ALL.filter(item => {
       let passFilter = true;
-  
-      // Filter Kecamatan: Cocokkan item.kecamatan_kader dengan pilihan dropdown
+
       if (selKec !== "" && (item.kecamatan_kader || "").toUpperCase().trim() !== selKec) {
         passFilter = false;
       }
-      
-      // Filter Desa: Cocokkan item.desa_kader dengan pilihan dropdown
       if (selDesa !== "" && (item.desa_kader || "").toUpperCase().trim() !== selDesa) {
         passFilter = false;
       }
-  
+
       return passFilter;
     });
-  
-    // --- RENDER KE LAYAR ---
+
     document.getElementById("count-pending").innerText = filteredData.length + " ANTRIAN";
     
     if (filteredData.length === 0) {
       list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase italic">☕ Tidak ada antrian untuk wilayah ini</div>`;
       return;
     }
-  
+
     list.innerHTML = "";
     filteredData.forEach(item => {
-      // Gunakan logika render kartu yang sudah Bapak buat (sudah oke kodenya)
       const thumbFoto = item.file_id && item.file_id !== "-" ? `https://drive.google.com/thumbnail?id=${item.file_id}&sz=w800` : "";
       const linkAsli = item.file_id && item.file_id !== "-" ? `https://drive.google.com/uc?id=${item.file_id}` : "#";
-  
+
       list.innerHTML += `
         <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden card-laporan mb-4">
           <div class="p-5">
@@ -241,13 +245,10 @@
     });
   }
 
-  // 5. FUNGSI TERIMA / TOLAK
   function prosesApprove(id, status) {
     const confirmText = status === 'APPROVED' ? "Terima laporan ini?" : "Tolak laporan ini?";
     if (!confirm(confirmText)) return;
-
     document.getElementById("listLaporan").innerHTML = `<div class="text-center py-20 animate-pulse text-blue-900 font-black uppercase text-[10px]">Memproses Validasi...</div>`;
-
     fetch(API_URL, {
       method: "POST",
       body: new URLSearchParams({
@@ -260,7 +261,7 @@
     .then(res => res.text())
     .then(res => {
       if (res === "success") {
-        loadLaporanDatabase(); // Tarik data baru setelah diubah
+        loadLaporanDatabase();
       } else {
         alert("Gagal: " + res);
         loadLaporanDatabase();
@@ -268,5 +269,9 @@
     });
   }
 </script>
+<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 italic px-10 leading-relaxed">
+  &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
+  Sistem Informasi Pelaporan Kinerja Kabupaten Bekasi
+</footer>
 </body>
 </html>
