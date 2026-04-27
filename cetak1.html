@@ -78,24 +78,40 @@
 
       <hr class="border-slate-100">
 
-      <div class="grid grid-cols-3 gap-2">
-        <select id="jenis-cetak" class="p-3 bg-blue-50 rounded-xl border border-blue-100 text-[10px] font-black uppercase text-blue-900">
-          <option value="LAPORAN">Laporan Realisasi</option>
-          <option value="RENJA">Rencana Kerja</option>
-        </select>
-        <select id="bulan-cetak" class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-[10px] font-bold uppercase text-slate-700">
-          <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
-          <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
-          <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
-          <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
-        </select>
-        <input type="number" id="tahun-cetak" value="2026" class="p-3 bg-slate-50 rounded-xl border border-slate-100 text-[10px] font-bold text-center">
-      </div>
+      <div class="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+        <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2">1. Pilih Kader Sasaran</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+          <select id="f-kecamatan" onchange="updateDesaFilter()" class="p-3 text-[10px] font-bold bg-white border border-slate-200 rounded-xl outline-none text-blue-900 uppercase">
+            <option value="">-- Semua Kecamatan --</option>
+          </select>
+          <select id="f-desa" onchange="loadKaderDropdown()" class="p-3 text-[10px] font-bold bg-white border border-slate-200 rounded-xl outline-none text-blue-900 uppercase">
+            <option value="">-- Semua Desa --</option>
+          </select>
+          <select id="f-kader" onchange="updateNamaKanan()" class="p-3 text-[10px] font-black bg-blue-100 border border-blue-200 rounded-xl outline-none text-blue-900 uppercase">
+            <option value="">-- PILIH KADER (WAJIB) --</option>
+          </select>
+        </div>
 
-      <button onclick="previewCetak()" id="btn-preview" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition">Tarik Data Dokumen</button>
+        <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest border-b pb-2 pt-2">2. Pilih Dokumen</p>
+        <div class="grid grid-cols-3 gap-2">
+          <select id="jenis-cetak" onchange="toggleBulan()" class="p-3 bg-white rounded-xl border border-slate-200 text-[10px] font-black uppercase text-slate-700">
+            <option value="LAPORAN">Laporan Realisasi</option>
+            <option value="RENJA">Rencana Kerja</option>
+          </select>
+          <select id="bulan-cetak" class="p-3 bg-white rounded-xl border border-slate-200 text-[10px] font-bold uppercase text-slate-700">
+            <option value="1">Januari</option><option value="2">Februari</option><option value="3">Maret</option>
+            <option value="4">April</option><option value="5">Mei</option><option value="6">Juni</option>
+            <option value="7">Juli</option><option value="8">Agustus</option><option value="9">September</option>
+            <option value="10">Oktober</option><option value="11">November</option><option value="12">Desember</option>
+          </select>
+          <input type="number" id="tahun-cetak" value="2026" class="p-3 bg-white rounded-xl border border-slate-200 text-[10px] font-bold text-center">
+        </div>
+        
+        <button onclick="previewCetak()" id="btn-preview" class="w-full bg-slate-800 text-white py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg active:scale-95 transition">Tarik Data Dokumen</button>
 
     </div>
 
+      
     <div class="overflow-x-auto pb-10">
       <div id="print-area" class="f4-preview">
          
@@ -154,7 +170,36 @@
 
   <script src="script.js"></script>
   <script>
-    // 1. Inisialisasi Halaman (Ditambah Fitur Ingat TTD)
+    let MASTER_WILAYAH = [];
+
+    // ==========================================
+    // 1. INISIALISASI HALAMAN & TARIK WILAYAH
+    // ==========================================
+    function loadInitialData() {
+      toggleBulan(); // Sembunyikan bulan jika defaultnya RENJA
+      
+      // Tarik Master Wilayah
+      fetch(`${API_URL}?action=get_wilayah_lengkap`)
+        .then(res => res.json())
+        .then(data => {
+          MASTER_WILAYAH = data;
+          const selKec = document.getElementById("f-kecamatan");
+          const uniqueKec = [...new Set(data.map(item => item.nama_kec.toUpperCase().trim()))].sort();
+          
+          uniqueKec.forEach(k => {
+            if(k && k !== "-") selKec.innerHTML += `<option value="${k}">${k}</option>`;
+          });
+          
+          // Kunci jika Admin Kecamatan
+          const role = localStorage.getItem("role");
+          if(role === "admin_kec") {
+            selKec.value = localStorage.getItem("kecamatan").toUpperCase();
+            selKec.disabled = true;
+            updateDesaFilter();
+          }
+        });
+    }
+
     window.onload = function() {
       cekLogin();
       document.getElementById("bulan-cetak").value = new Date().getMonth() + 1;
@@ -170,8 +215,64 @@
       if(localStorage.getItem("ttd_nip")) document.getElementById("ttd-nip").value = localStorage.getItem("ttd_nip");
       if(localStorage.getItem("ttd_jabatan_kanan")) document.getElementById("ttd-jabatan-kanan").value = localStorage.getItem("ttd_jabatan_kanan");
       if(localStorage.getItem("ttd_nama_kanan")) document.getElementById("ttd-nama-kanan").value = localStorage.getItem("ttd_nama_kanan");
+
+      // Panggil fungsi tarik wilayah
+      loadInitialData();
     }
 
+    // ==========================================
+    // 2. LOGIKA FILTER BERJENJANG (KEC -> DESA -> KADER)
+    // ==========================================
+    function updateDesaFilter() {
+      const kec = document.getElementById("f-kecamatan").value;
+      const selDesa = document.getElementById("f-desa");
+      selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
+      
+      MASTER_WILAYAH.filter(item => item.nama_kec.toUpperCase().trim() === kec).forEach(item => {
+        if(item.nama_desa && item.nama_desa !== "-") {
+          selDesa.innerHTML += `<option value="${item.nama_desa.toUpperCase()}">${item.nama_desa.toUpperCase()}</option>`;
+        }
+      });
+      loadKaderDropdown(); // Otomatis refresh list kader
+    }
+
+    function loadKaderDropdown() {
+      const kec = document.getElementById("f-kecamatan").value;
+      const desa = document.getElementById("f-desa").value;
+      const selKader = document.getElementById("f-kader");
+      
+      selKader.innerHTML = '<option value="">⏳ Memuat Kader...</option>';
+      
+      fetch(`${API_URL}?action=get_kader_list&kec=${kec}&desa=${desa}`)
+        .then(res => res.json())
+        .then(data => {
+          selKader.innerHTML = '<option value="">-- PILIH KADER (WAJIB) --</option>';
+          data.forEach(kader => {
+            selKader.innerHTML += `<option value="${kader.nama}">${kader.nama}</option>`;
+          });
+        });
+    }
+
+    function updateNamaKanan() {
+      // Auto isi nama kader ke form Tanda Tangan Kanan saat dipilih
+      const namaKader = document.getElementById("f-kader").value;
+      document.getElementById("ttd-nama-kanan").value = namaKader;
+    }
+
+    function toggleBulan() {
+      // Hilangkan bulan-cetak jika jenis dokumen adalah RENJA
+      const jenis = document.getElementById("jenis-cetak").value;
+      const selectBulan = document.getElementById("bulan-cetak");
+      if (jenis === "RENJA") {
+        selectBulan.style.display = "none";
+      } else {
+        selectBulan.style.display = "block";
+      }
+    }
+
+    // ==========================================
+    // 3. FUNGSI UPLOAD KOP SURAT
+    // ==========================================
     function uploadKop() {
       const file = document.getElementById('input-kop').files[0];
       const btn = document.getElementById('btn-kop');
@@ -193,8 +294,17 @@
       reader.readAsDataURL(file); 
     }
 
-    // 3. Tarik Data & Simpan Pengaturan TTD
+    // ==========================================
+    // 4. TARIK DATA & RENDER PREVIEW (DIKUNCI WAJIB PILIH KADER)
+    // ==========================================
     function previewCetak() {
+      // WAJIB PILIH KADER
+      const namaKaderDipilih = document.getElementById("f-kader") ? document.getElementById("f-kader").value : "";
+      if (namaKaderDipilih === "") {
+        alert("Peringatan: Silakan pilih Nama Kader sasaran terlebih dahulu!");
+        return;
+      }
+
       const jenis = document.getElementById("jenis-cetak").value;
       const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
       const bln = document.getElementById("bulan-cetak").value;
@@ -227,19 +337,22 @@
         document.getElementById("sub-judul-dokumen").innerText = `PERIODE BULAN ${blnText.toUpperCase()} ${thn}`;
       }
 
-      btn.innerText = "⏳ MENYUSUN...";
+      btn.innerText = "⏳ MENYUSUN DOKUMEN...";
 
       // Tarik Data dari Server
       fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${bln}&tahun=${thn}&role=${localStorage.getItem("role")}&kec=${localStorage.getItem("kecamatan")}&desa=${localStorage.getItem("desa")}`)
         .then(res => res.json())
         .then(data => {
+           // FILTER KHUSUS: Hanya tampilkan data milik Kader yang dipilih (Index 3 = Nama Kader)
+           const dataKaderSaja = data.filter(row => row[3] === namaKaderDipilih);
+
            let tbody = document.getElementById("isi-rekap");
-           if(data.length === 0) {
-             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA DITEMUKAN PADA PERIODE INI</td></tr>`;
+           if(dataKaderSaja.length === 0) {
+             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA DITEMUKAN UNTUK KADER INI</td></tr>`;
              document.getElementById("digital-footprint").innerText = `* Tidak ada data tervalidasi.`;
            } else {
              let rows = "";
-             data.forEach((row, index) => {
+             dataKaderSaja.forEach((row, index) => {
                 let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
                 let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
                 let validator = row[11] ? row[11] : "Admin";
@@ -271,6 +384,9 @@
         });
     }
 
+    // ==========================================
+    // 5. EXPORT JADI PDF (KERTAS F4)
+    // ==========================================
     function downloadPDF() {
       const element = document.getElementById('print-area');
       const jenis = document.getElementById("jenis-cetak").value;
