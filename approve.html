@@ -137,60 +137,50 @@
     applyFiltersLaporan(); 
   }
 
-  // 3. FUNGSI TARIK DATA LAPORAN (Hanya narik 1x dari Apps Script)
+  // 3. FUNGSI TARIK DATA LAPORAN 
   function loadLaporanDatabase() {
     const list = document.getElementById("listLaporan");
     const role = localStorage.getItem("role");
+    const kec = localStorage.getItem("kecamatan"); // <--- Kemarin ini terlewat, makanya Admin Kec dapet 0
     const desa = localStorage.getItem("desa");
 
     list.innerHTML = `<div class="text-center py-20 text-blue-900 font-bold text-xs uppercase animate-pulse">⏳ Menarik Antrian...</div>`;
 
-    fetch(`${API_URL}?action=get_pending_reports&role=${role}&desa=${desa}`)
+    // Pastikan &kec=${kec} masuk ke URL agar server tahu admin ini dari kecamatan mana
+    fetch(`${API_URL}?action=get_pending_reports&role=${role}&kec=${kec}&desa=${desa}`)
       .then(res => res.json())
       .then(data => {
         DATA_LAPORAN_ALL = data;
-        applyFiltersLaporan(); // Arahkan ke penyaring
+        applyFiltersLaporan(); 
       })
       .catch(err => {
         list.innerHTML = `<div class="text-center py-20 text-red-400 font-bold text-xs uppercase">Gagal memuat data!</div>`;
       });
   }
 
-  // 4. FUNGSI FILTER "SAPU JAGAT"
+  // 4. FUNGSI FILTER "SAPU JAGAT" (Versi Akurat NIK)
   function applyFiltersLaporan() {
     const list = document.getElementById("listLaporan");
-    const role = localStorage.getItem("role");
-    const kecLogin = localStorage.getItem("kecamatan");
-
-    const selKec = document.getElementById("f-kecamatan").value;
-    const selDesa = document.getElementById("f-desa").value;
+    
+    // Ambil nilai yang dipilih di dropdown
+    const selKec = document.getElementById("f-kecamatan").value.toUpperCase();
+    const selDesa = document.getElementById("f-desa").value.toUpperCase();
 
     const filteredData = DATA_LAPORAN_ALL.filter(item => {
-      const lokasiLaporan = (item.lokasi || "").toUpperCase();
-      
-      // Cari tahu desa ini masuk kecamatan mana
-      const dataWilayah = MASTER_WILAYAH.find(w => w.nama_desa.toUpperCase() === lokasiLaporan);
-      const kecamatanLaporan = dataWilayah ? dataWilayah.nama_kec.toUpperCase() : "";
+      let passFilter = true;
 
-      // A. Otoritas Admin Kec
-      if (role === "admin_kec" && kecamatanLaporan !== kecLogin.toUpperCase()) {
-        return false;
+      // Cek dengan data kecamatan_kader dan desa_kader yang ditarik server tadi
+      if (selKec !== "" && item.kecamatan_kader !== selKec) {
+        passFilter = false;
+      }
+      if (selDesa !== "" && item.desa_kader !== selDesa) {
+        passFilter = false;
       }
 
-      // B. Filter Dropdown Kecamatan
-      if (selKec !== "" && kecamatanLaporan !== selKec.toUpperCase()) {
-        return false;
-      }
-
-      // C. Filter Dropdown Desa
-      if (selDesa !== "" && lokasiLaporan !== selDesa.toUpperCase()) {
-        return false;
-      }
-
-      return true;
+      return passFilter;
     });
 
-    // --- RENDER DOM ---
+    // --- RENDER DOM (Sama seperti sebelumnya) ---
     document.getElementById("count-pending").innerText = filteredData.length + " ANTRIAN";
     
     if (filteredData.length === 0) {
@@ -200,7 +190,6 @@
 
     list.innerHTML = "";
     filteredData.forEach(item => {
-      // LINK AJAIB: Konversi File ID jadi Thumbnail Google Drive
       const thumbFoto = item.file_id && item.file_id !== "-" ? `https://drive.google.com/thumbnail?id=${item.file_id}&sz=w800` : "";
       const linkAsli = item.file_id && item.file_id !== "-" ? `https://drive.google.com/uc?id=${item.file_id}` : "#";
 
@@ -212,7 +201,7 @@
                 <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-xl shadow-inner">👤</div>
                 <div>
                   <h4 class="font-black text-slate-800 text-xs uppercase tracking-tight">${item.nama_kader}</h4>
-                  <p class="text-[9px] font-bold text-slate-400 uppercase">${item.lokasi} | ${item.tanggal}</p>
+                  <p class="text-[9px] font-bold text-slate-400 uppercase">📍 ${item.lokasi} | ${item.tanggal}</p>
                 </div>
               </div>
               <div class="bg-yellow-100 text-yellow-700 text-[8px] font-black px-2 py-1 rounded-lg uppercase">PENDING</div>
