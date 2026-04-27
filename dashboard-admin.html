@@ -164,6 +164,7 @@
   <script>
     // FUNGSI INISIALISASI (Taruh di sini saja agar rapi)
     function initAdminDashboard() {
+      initDashboard();
       const role = localStorage.getItem("role");
       const nama = localStorage.getItem("nama");
       const kec = localStorage.getItem("kecamatan");
@@ -187,6 +188,7 @@
         wilayahText = "Desa " + desa + " (" + kec + ")";
         const selKec = document.getElementById("filter-kecamatan");
         const selDesa = document.getElementById("filter-desa");
+        const role = localStorage.getItem("role");
         if(selKec) { selKec.value = kec; selKec.disabled = true; }
         if(selDesa) {
           selDesa.innerHTML = `<option value="${desa}">${desa}</option>`;
