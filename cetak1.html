@@ -389,19 +389,26 @@
     }
 
     function previewCetak() {
-      const namaKaderDipilih = document.getElementById("f-kader").value;
-      if (!namaKaderDipilih) return alert("Peringatan: Silakan pilih Nama Kader sasaran!");
+      // 1. Validasi: Wajib Pilih Kader
+      const namaKaderDipilih = document.getElementById("f-kader") ? document.getElementById("f-kader").value : "";
+      if (namaKaderDipilih === "") {
+        alert("Peringatan: Silakan pilih Nama Kader sasaran terlebih dahulu!");
+        return;
+      }
 
       const jenis = document.getElementById("jenis-cetak").value;
       const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
+      const blnValue = document.getElementById("bulan-cetak").value;
       const thn = document.getElementById("tahun-cetak").value;
       const btn = document.getElementById("btn-preview");
 
+      // 2. Konfirmasi jika Kop belum di-setting
       const isKopKosong = !document.getElementById("set-kop-uptd").value;
       if (isKopKosong) {
          if(!confirm("Kop Surat dan Pejabat belum diatur. Tetap lanjutkan cetak dengan format kosong?")) return;
       }
 
+      // 3. Update Visual Preview (Kop & Tanda Tangan)
       document.getElementById("prev-kop-uptd").innerText = document.getElementById("set-kop-uptd").value || "UPTD PENGENDALIAN PENDUDUK WILAYAH...";
       document.getElementById("prev-kop-kec").innerText = document.getElementById("set-kop-kec").value || "KECAMATAN...";
       document.getElementById("prev-kop-alamat").innerText = document.getElementById("set-kop-alamat").value || "Alamat...";
@@ -410,9 +417,11 @@
       document.getElementById("prev-wilayah").innerText = document.getElementById("set-ttd-wilayah").value || "Wilayah";
       document.getElementById("prev-nama").innerText = document.getElementById("set-ttd-nama").value || "_________________________";
       document.getElementById("prev-nip").innerText = document.getElementById("set-ttd-nip").value || "_________________________";
+      
       document.getElementById("prev-nama-kanan").innerText = `( ${namaKaderDipilih} )`;
       document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} ${thn}`;
 
+      // Set Judul Dokumen
       if (jenis === "RENJA") {
         document.getElementById("judul-dokumen").innerText = `REKAPITULASI RENCANA KERJA KADER`;
         document.getElementById("sub-judul-dokumen").innerText = `TAHUN ANGGARAN ${thn}`;
@@ -423,14 +432,17 @@
 
       btn.innerText = "⏳ MENYUSUN DOKUMEN...";
 
-      fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${document.getElementById("bulan-cetak").value}&tahun=${thn}&role=${localStorage.getItem("role")}&kec=${localStorage.getItem("kecamatan")}&desa=${localStorage.getItem("desa")}`)
+      // 4. Fetch Data: Pakai role super_admin agar menarik semua data tervalidasi tanpa hambatan wilayah
+      fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${blnValue}&tahun=${thn}&role=super_admin`)
         .then(res => res.json())
         .then(data => {
-           const dataKaderSaja = data.filter(row => row[3] === namaKaderDipilih);
+           // FILTER UTAMA: Membandingkan Nama Kader di Laporan (Index 3) dengan Pilihan di Dropdown
+           const dataKaderSaja = data.filter(row => row[3].trim().toUpperCase() === namaKaderDipilih.trim().toUpperCase());
+
            let tbody = document.getElementById("isi-rekap");
            if(dataKaderSaja.length === 0) {
-             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA DITEMUKAN UNTUK KADER INI PADA PERIODE TERSEBUT</td></tr>`;
-             document.getElementById("digital-footprint").innerText = `* Tidak ada data tervalidasi.`;
+             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA APPROVED UNTUK KADER ${namaKaderDipilih} PADA PERIODE INI</td></tr>`;
+             document.getElementById("digital-footprint").innerText = `* Tidak ada data ditemukan.`;
            } else {
              let rows = "";
              dataKaderSaja.forEach((row, index) => {
@@ -440,13 +452,24 @@
 
                 rows += `<tr>
                           <td class="text-center">${index+1}</td>
-                          <td><p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p><p class="text-[8px] text-slate-600">📍 ${row[8]}</p><p class="text-[8px] text-slate-600">📅 ${row[4]}</p></td>
-                          <td><p class="font-bold text-[10px] mb-1">${row[5]}</p><p class="text-[9px] text-blue-800">Capaian: <span class="font-bold">${row[6]}</span></p></td>
+                          <td>
+                            <p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p>
+                            <p class="text-[8px] text-slate-600">📍 ${row[8]}</p>
+                            <p class="text-[8px] text-slate-600">📅 ${row[4]}</p>
+                          </td>
+                          <td>
+                            <p class="font-bold text-[10px] mb-1">${row[5]}</p>
+                            <p class="text-[9px] text-blue-800">Capaian: <span class="font-bold">${row[6]}</span></p>
+                          </td>
                           <td class="text-center p-2">${thumbFoto}</td>
-                          <td class="text-center"><p class="text-[8px] text-slate-500 uppercase mb-1">Disetujui Oleh:</p><p class="text-[9px] font-bold text-green-700 uppercase">${validator}</p></td>
+                          <td class="text-center">
+                            <p class="text-[8px] text-slate-500 uppercase mb-1">Disetujui Oleh:</p>
+                            <p class="text-[9px] font-bold text-green-700 uppercase">${validator}</p>
+                          </td>
                         </tr>`;
              });
              tbody.innerHTML = rows;
+             
              const printDate = new Date();
              document.getElementById("digital-footprint").innerText = `* Dicetak otomatis pada ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB. Status: APPROVED.`;
            }
