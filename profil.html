@@ -121,8 +121,12 @@
             document.getElementById("p-alamat").value = data.alamat || "";
             document.getElementById("p-kecamatan").value = data.kecamatan || "";
             document.getElementById("p-desa").value = data.desa || "";
-            if (data.foto) {
+            // JIKA ADA FOTO DI DATABASE, TAMPILKAN. JIKA TIDAK, BIARKAN def-profil.png
+            if (data.foto && data.foto !== "" && data.foto !== "-") {
               document.getElementById("img-preview").src = "data:image/jpeg;base64," + data.foto;
+              localStorage.setItem("foto", data.foto); // Sinkronkan memori
+            } else {
+              document.getElementById("img-preview").src = "def-profil.png";
             }
           }
         });
