@@ -180,29 +180,35 @@
   // 4. FUNGSI PENYARINGAN (SAPU JAGAT)
   function applyFiltersLaporan() {
     const list = document.getElementById("listLaporan");
+    
+    // Ambil nilai dropdown dan bersihkan dari spasi/huruf kecil
     const selKec = document.getElementById("f-kecamatan").value.toUpperCase().trim();
     const selDesa = document.getElementById("f-desa").value.toUpperCase().trim();
-
+  
     const filteredData = DATA_LAPORAN_ALL.filter(item => {
       let passFilter = true;
-
+  
+      // Filter Kecamatan
       if (selKec !== "" && (item.kecamatan_kader || "").toUpperCase().trim() !== selKec) {
         passFilter = false;
       }
+      
+      // Filter Desa
       if (selDesa !== "" && (item.desa_kader || "").toUpperCase().trim() !== selDesa) {
         passFilter = false;
       }
-
+  
       return passFilter;
     });
-
+  
+    // Render hasil ke layar...
     document.getElementById("count-pending").innerText = filteredData.length + " ANTRIAN";
     
     if (filteredData.length === 0) {
       list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase italic">☕ Tidak ada antrian untuk wilayah ini</div>`;
       return;
     }
-
+  
     list.innerHTML = "";
     filteredData.forEach(item => {
       const thumbFoto = item.file_id && item.file_id !== "-" ? `https://drive.google.com/thumbnail?id=${item.file_id}&sz=w800` : "";
