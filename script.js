@@ -250,7 +250,7 @@ function initDashboard() {
   const role = localStorage.getItem("role");
   const kec = localStorage.getItem("kecamatan");
   const desa = localStorage.getItem("desa");
-  const foto = localStorage.getItem("foto"); // Ambil data foto dari storage
+  const fotoBase64 = localStorage.getItem("foto"); // Ambil dari memori
 
   const elNama = document.getElementById("namaUser");
   const elRole = document.getElementById("labelRole");
@@ -262,15 +262,14 @@ function initDashboard() {
 
   // --- LOGIKA FOTO PROFIL (BARU) ---
   if (elFotoHeader) {
-    if (foto && foto !== "" && foto !== "-") {
-      // Jika ada foto, tampilkan foto Base64
-      elFotoHeader.src = "data:image/jpeg;base64," + foto;
+    if (fotoBase64 && fotoBase64 !== "" && fotoBase64 !== "-") {
+      // Pasang langsung ke elemen img
+      document.getElementById("fotoProfilHeader").src = "data:image/jpeg;base64," + fotoBase64;
     } else {
-      // Jika kosong, tampilkan ikon orang standar
-      elFotoHeader.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+      // Jika belum ada foto, pakai ikon default
+      document.getElementById("fotoProfilHeader").src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
     }
   }
-
   let roleText = "";
   let wilayahText = "";
   let iconEmoji = "👤"; 
