@@ -141,19 +141,27 @@
   function loadLaporanDatabase() {
     const list = document.getElementById("listLaporan");
     const role = localStorage.getItem("role");
-    const kec = localStorage.getItem("kecamatan"); // <--- Kemarin ini terlewat, makanya Admin Kec dapet 0
-    const desa = localStorage.getItem("desa");
-
+    const kec = (localStorage.getItem("kecamatan") || "").trim(); // Tambahkan trim
+    const desa = (localStorage.getItem("desa") || "").trim();
+  
     list.innerHTML = `<div class="text-center py-20 text-blue-900 font-bold text-xs uppercase animate-pulse">⏳ Menarik Antrian...</div>`;
-
-    // Pastikan &kec=${kec} masuk ke URL agar server tahu admin ini dari kecamatan mana
-    fetch(`${API_URL}?action=get_pending_reports&role=${role}&kec=${kec}&desa=${desa}`)
+  
+    // Gunakan URLSearchParams agar karakter spasi atau simbol di nama kecamatan aman
+    const params = new URLSearchParams({
+      action: "get_pending_reports",
+      role: role,
+      kec: kec,
+      desa: desa
+    });
+  
+    fetch(`${API_URL}?${params.toString()}`)
       .then(res => res.json())
       .then(data => {
         DATA_LAPORAN_ALL = data;
         applyFiltersLaporan(); 
       })
       .catch(err => {
+        console.error(err);
         list.innerHTML = `<div class="text-center py-20 text-red-400 font-bold text-xs uppercase">Gagal memuat data!</div>`;
       });
   }
@@ -162,37 +170,40 @@
   function applyFiltersLaporan() {
     const list = document.getElementById("listLaporan");
     
-    // Ambil nilai yang dipilih di dropdown
-    const selKec = document.getElementById("f-kecamatan").value.toUpperCase();
-    const selDesa = document.getElementById("f-desa").value.toUpperCase();
-
+    // Ambil nilai dropdown dan bersihkan
+    const selKec = document.getElementById("f-kecamatan").value.toUpperCase().trim();
+    const selDesa = document.getElementById("f-desa").value.toUpperCase().trim();
+  
     const filteredData = DATA_LAPORAN_ALL.filter(item => {
       let passFilter = true;
-
-      // Cek dengan data kecamatan_kader dan desa_kader yang ditarik server tadi
-      if (selKec !== "" && item.kecamatan_kader !== selKec) {
+  
+      // Filter Kecamatan: Cocokkan item.kecamatan_kader dengan pilihan dropdown
+      if (selKec !== "" && (item.kecamatan_kader || "").toUpperCase().trim() !== selKec) {
         passFilter = false;
       }
-      if (selDesa !== "" && item.desa_kader !== selDesa) {
+      
+      // Filter Desa: Cocokkan item.desa_kader dengan pilihan dropdown
+      if (selDesa !== "" && (item.desa_kader || "").toUpperCase().trim() !== selDesa) {
         passFilter = false;
       }
-
+  
       return passFilter;
     });
-
-    // --- RENDER DOM (Sama seperti sebelumnya) ---
+  
+    // --- RENDER KE LAYAR ---
     document.getElementById("count-pending").innerText = filteredData.length + " ANTRIAN";
     
     if (filteredData.length === 0) {
       list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase italic">☕ Tidak ada antrian untuk wilayah ini</div>`;
       return;
     }
-
+  
     list.innerHTML = "";
     filteredData.forEach(item => {
+      // Gunakan logika render kartu yang sudah Bapak buat (sudah oke kodenya)
       const thumbFoto = item.file_id && item.file_id !== "-" ? `https://drive.google.com/thumbnail?id=${item.file_id}&sz=w800` : "";
       const linkAsli = item.file_id && item.file_id !== "-" ? `https://drive.google.com/uc?id=${item.file_id}` : "#";
-
+  
       list.innerHTML += `
         <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden card-laporan mb-4">
           <div class="p-5">
@@ -206,7 +217,6 @@
               </div>
               <div class="bg-yellow-100 text-yellow-700 text-[8px] font-black px-2 py-1 rounded-lg uppercase">PENDING</div>
             </div>
-
             <div class="bg-slate-50 p-4 rounded-2xl mb-4 space-y-2">
               <div>
                 <p class="text-[8px] font-black text-slate-400 uppercase">Kegiatan:</p>
@@ -217,19 +227,14 @@
                 <p class="text-xs font-black text-blue-900">${item.realisasi}</p>
               </div>
             </div>
-
             ${thumbFoto ? `
               <div class="mb-4">
-                <img src="${thumbFoto}" class="w-full h-48 object-cover rounded-2xl border-2 border-slate-50 shadow-sm" 
-                     onerror="this.src='https://placehold.co/400x200?text=Memuat+Gambar...'"
-                     onclick="window.open('${linkAsli}', '_blank')">
-                <p class="text-[8px] text-center text-slate-400 mt-2 font-bold italic">Klik foto untuk melihat ukuran penuh</p>
+                <img src="${thumbFoto}" class="w-full h-48 object-cover rounded-2xl border-2 border-slate-50 shadow-sm" onerror="this.src='https://placehold.co/400x200?text=Memuat+Gambar...'" onclick="window.open('${linkAsli}', '_blank')">
               </div>
-            ` : `<div class="bg-slate-100 py-4 rounded-2xl text-center text-[10px] text-slate-400 mb-4 font-bold">TIDAK ADA BUKTI FOTO</div>`}
-
+            ` : '<div class="bg-slate-100 py-4 rounded-2xl text-center text-[10px] text-slate-400 mb-4 font-bold">TIDAK ADA FOTO</div>'}
             <div class="grid grid-cols-2 gap-3">
-              <button onclick="prosesApprove('${item.id}', 'REJECT')" class="bg-red-50 text-red-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest border border-red-100 active:scale-95 transition">Tolak</button>
-              <button onclick="prosesApprove('${item.id}', 'APPROVED')" class="bg-blue-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-blue-900/20 active:scale-95 transition">Terima</button>
+              <button onclick="prosesApprove('${item.id}', 'REJECT')" class="bg-red-50 text-red-600 font-black py-4 rounded-2xl text-[10px] uppercase border active:scale-95 transition">Tolak</button>
+              <button onclick="prosesApprove('${item.id}', 'APPROVED')" class="bg-blue-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase active:scale-95 transition">Terima</button>
             </div>
           </div>
         </div>`;
