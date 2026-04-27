@@ -251,7 +251,8 @@ function initDashboard() {
   const kec = localStorage.getItem("kecamatan");
   const desa = localStorage.getItem("desa");
   const fotoBase64 = localStorage.getItem("foto"); // Ambil dari memori
-
+  const elFotoHeader = document.getElementById("fotoProfilHeader");
+  
   const elNama = document.getElementById("namaUser");
   const elRole = document.getElementById("labelRole");
   const elWilayah = document.getElementById("wilayahOtoritas");
@@ -264,10 +265,10 @@ function initDashboard() {
   if (elFotoHeader) {
     if (fotoBase64 && fotoBase64 !== "" && fotoBase64 !== "-") {
       // Pasang langsung ke elemen img
-      document.getElementById("fotoProfilHeader").src = "data:image/jpeg;base64," + fotoBase64;
+      elFotoHeader.src = "data:image/jpeg;base64," + fotoBase64;
     } else {
       // Jika belum ada foto, pakai ikon default
-      document.getElementById("fotoProfilHeader").src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+      elFotoHeader.src = "def-profil.png";
     }
   }
   let roleText = "";
