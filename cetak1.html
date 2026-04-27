@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Cetak Laporan Admin | siPeKa</title>
+  <title>Cetak Laporan & Renja | siPeKa</title>
   <link rel="icon" type="image/png" href="logo-sipeka.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -29,15 +29,43 @@
     
     .table-dinas { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
     .table-dinas th, .table-dinas td { border: 1.5px solid #000; padding: 6px; font-size: 11px; }
-    .table-dinas th { background-color: #e2e8f0; font-weight: bold; text-align: center; text-transform: uppercase; }
+    .table-dinas th { background-color: #e2e8f0 !important; font-weight: bold; text-align: center; text-transform: uppercase; }
     .table-dinas td { vertical-align: middle; }
     
     .system-footer { position: absolute; bottom: 15mm; left: 15mm; font-size: 9px; color: #64748b; font-style: italic; }
+
+    /* ============================================================
+       CSS KHUSUS CETAK (VEKTOR) - Agar PDF Jernih & Teks Bisa Di-copy
+       ============================================================ */
+    @media print {
+      /* Sembunyikan semua elemen navigasi dan tombol */
+      header, .no-print, button, footer, .bg-white.p-5 { display: none !important; }
+      
+      body { background: white !important; margin: 0; padding: 0; }
+      
+      /* Hilangkan pembungkus abu-abu dan radius */
+      .print-wrapper { background: none !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+      
+      /* Kembalikan ukuran f4-preview ke posisi normal (tanpa zoom) */
+      .f4-preview { 
+        transform: none !important; 
+        width: 100% !important; 
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 10mm 15mm !important; /* Margin cetak standar */
+      }
+
+      /* Pengaturan Kertas F4 untuk Browser */
+      @page {
+        size: 215mm 330mm; /* Standar F4 Bekasi */
+        margin: 0;
+      }
+    }
   </style>
 </head>
 <body class="pb-20">
 
-  <header class="sticky top-0 z-50 nav-gradient py-3 px-5 rounded-b-[1.5rem] shadow-lg mb-6">
+  <header class="sticky top-0 z-50 nav-gradient py-3 px-5 rounded-b-[1.5rem] shadow-lg mb-6 no-print">
     <div class="flex items-center gap-3 max-w-5xl mx-auto text-white">
       <button onclick="window.location.href='dashboard-admin.html'" class="bg-white/10 p-2 rounded-xl border border-white/10 active:scale-95">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -53,7 +81,7 @@
 
   <main class="max-w-5xl mx-auto px-4 space-y-6">
     
-    <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200 space-y-5">
+    <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200 space-y-5 no-print">
       
       <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-center border-b border-blue-200 pb-2">
@@ -185,7 +213,7 @@
       </div>
     </div>
 
-    <button onclick="downloadPDF()" class="fixed bottom-6 right-6 bg-red-600 text-white w-14 h-14 rounded-full shadow-[0_10px_20px_rgba(220,38,38,0.4)] flex items-center justify-center active:scale-90 transition z-50">
+    <button onclick="downloadPDF()" class="fixed bottom-6 right-6 bg-red-600 text-white w-14 h-14 rounded-full shadow-[0_10px_20px_rgba(220,38,38,0.4)] flex items-center justify-center active:scale-90 transition z-50 no-print">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
     </button>
   </main>
@@ -252,7 +280,6 @@
           const selKec = document.getElementById("f-kecamatan");
           const selDesa = document.getElementById("f-desa");
           
-          // Isi Pilihan Kecamatan
           const uniqueKec = [...new Set(data.map(item => item.nama_kec.toUpperCase().trim()))].sort();
           uniqueKec.forEach(k => { if(k && k !== "-") selKec.innerHTML += `<option value="${k}">${k}</option>`; });
           
@@ -260,12 +287,10 @@
           const userKec = (localStorage.getItem("kecamatan") || "").toUpperCase();
           const userDesa = (localStorage.getItem("desa") || "").toUpperCase();
 
-          // PROSES PENGUNCIAN SINKRON
           if(role === "admin_kec" || role === "admin_desa") {
             selKec.value = userKec;
             selKec.disabled = true;
             
-            // Langsung isi Dropdown Desa
             selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
             MASTER_WILAYAH.filter(item => item.nama_kec.toUpperCase().trim() === userKec).forEach(item => {
               if(item.nama_desa && item.nama_desa !== "-") {
@@ -273,14 +298,11 @@
               }
             });
 
-            // JIKA ADMIN DESA, KUNCI DISINI (Tanpa Timer!)
             if(role === "admin_desa") {
               selDesa.value = userDesa;
               selDesa.disabled = true;
             }
           }
-          
-          // Setelah wilayah FIX terkunci, baru tarik data pendukung
           loadSettings(); 
           loadKaderDropdown(); 
       });
@@ -322,7 +344,7 @@
       });
     }
 
-    // --- 4. PREVIEW & PDF ---
+    // --- 4. PREVIEW & PDF (VEKTOR) ---
     function previewCetak() {
       const namaKader = document.getElementById("f-kader").value;
       if (!namaKader) return alert("Pilih Nama Kader!");
@@ -345,7 +367,7 @@
            else {
              filtered.forEach((row, index) => {
                 let img = row[13] && row[13] !== "-" ? `<img src="https://drive.google.com/thumbnail?id=${row[13]}&sz=w400" style="width: 80px;">` : 'No Photo';
-                rows += `<tr><td class="text-center">${index+1}</td><td>${row[3]}</td><td>${row[5]}</td><td class="text-center">${img}</td><td class="text-center">${row[11] || 'Sistem'}</td></tr>`;
+                rows += `<tr><td class="text-center">${index+1}</td><td><p class="font-bold">${row[3]}</p><p class="text-[8px]">📍 ${row[8]}</p></td><td><p class="font-bold">${row[5]}</p><p class="text-blue-800">Capaian: ${row[6]}</p></td><td class="text-center">${img}</td><td class="text-center font-bold text-green-700">${row[11] || 'Sistem'}</td></tr>`;
              });
            }
            document.getElementById("isi-rekap").innerHTML = rows;
@@ -353,19 +375,39 @@
         });
     }
 
+    // FUNGSI DOWNLOAD BARU: NATIVE PRINT (VECTOR)
     function downloadPDF() {
       const paper = document.getElementById('print-area');
       const wrapper = document.getElementById('print-wrapper');
-      paper.style.transform = 'none'; wrapper.style.height = 'auto';
-      const opt = { margin: 0, filename: 'Laporan.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: [215, 330], orientation: 'portrait' } };
-      setTimeout(() => { html2pdf().set(opt).from(paper).save().then(() => scalePrintArea()); }, 500);
+      
+      // Matikan zoom agar browser merender dengan ukuran asli
+      paper.style.transform = 'none';
+      wrapper.style.height = 'auto';
+
+      // Panggil perintah print native browser
+      window.print();
+
+      // Kembalikan ke tampilan mobile (zoom) setelah selesai
+      setTimeout(scalePrintArea, 500);
     }
     
     function toggleBulan() {
       document.getElementById("bulan-cetak").style.display = document.getElementById("jenis-cetak").value === "RENJA" ? "none" : "block";
     }
+
+    function simpanPengaturan() {
+      const kec = document.getElementById("f-kecamatan").value;
+      if(!kec) return alert("Pilih Kecamatan!");
+      const btn = document.getElementById("btn-simpan-setting");
+      btn.innerText = "⏳..."; btn.disabled = true;
+      const payload = { action: "save_settings_cetak", kecamatan: kec, settings: JSON.stringify({
+        kop_uptd: document.getElementById("set-kop-uptd").value, kop_kec: document.getElementById("set-kop-kec").value, kop_alamat: document.getElementById("set-kop-alamat").value,
+        ttd_jabatan: document.getElementById("set-ttd-jabatan").value, ttd_wilayah: document.getElementById("set-ttd-wilayah").value, ttd_nama: document.getElementById("set-ttd-nama").value, ttd_nip: document.getElementById("set-ttd-nip").value
+      })};
+      fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) }).then(() => { alert("Tersimpan!"); btn.innerText = "Simpan Permanen"; btn.disabled = false; });
+    }
   </script>
-<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
+<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 no-print">
   &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
   Aplikasi Pelaporan Kinerja PPKBD
 </footer>
