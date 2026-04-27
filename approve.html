@@ -12,7 +12,7 @@
     .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
     .card-laporan { transition: all 0.2s; }
     .card-laporan:active { transform: scale(0.98); }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
+    select:disabled { background-color: #f1f5f9; cursor: not-allowed; color: #94a3b8; }
   </style>
 </head>
 
@@ -31,7 +31,10 @@
         <p id="sub-title" class="text-[9px] text-blue-200 font-bold uppercase">Memuat Otoritas...</p>
       </div>
     </div>
-    <div class="bg-yellow-400 text-blue-900 px-3 py-1 rounded-full font-black text-[10px] shadow-lg" id="count-pending">0 ANTRIAN</div>
+    
+    <div class="bg-yellow-400 text-blue-900 px-3 py-1 rounded-full font-black text-[10px] shadow-lg" id="count-pending">
+      0 ANTRIAN
+    </div>
   </div>
 </header>
 
@@ -39,34 +42,31 @@
   
   <div id="filter-area" class="mb-6 space-y-3">
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-      <p class="text-[8px] font-black text-slate-400 uppercase mb-2 ml-1">Saring Wilayah</p>
+      <p class="text-[8px] font-black text-slate-400 uppercase mb-2 ml-1">Saring Antrian Berdasarkan Wilayah</p>
       <div class="flex gap-2">
-        <select id="f-kecamatan" onchange="loadLaporanPending()" class="flex-1 text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-500">
+        <select id="f-kecamatan" onchange="updateDesaFilter()" class="flex-1 text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">-- Semua Kecamatan --</option>
-          <option value="SETU">SETU</option>
-          </select>
+        </select>
         <select id="f-desa" onchange="loadLaporanPending()" class="flex-1 text-[10px] p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-blue-900 outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">-- Semua Desa --</option>
         </select>
       </div>
-    </div>
-    
-    <div class="bg-blue-900/5 px-4 py-2 rounded-xl border border-blue-900/10 flex items-center gap-2">
-      <span class="text-[10px]">📍</span>
-      <p id="wilayah-info" class="text-[10px] font-bold text-blue-900 uppercase tracking-tighter">Memuat...</p>
     </div>
   </div>
 
   <div id="listLaporan" class="space-y-4">
     <div class="flex flex-col items-center justify-center py-20 text-slate-300">
       <div class="text-5xl mb-4 animate-bounce">📁</div>
-      <p class="text-xs font-bold uppercase tracking-widest">Mencari laporan pending...</p>
+      <p class="text-xs font-bold uppercase tracking-widest">Memuat sistem...</p>
     </div>
   </div>
+
 </main>
 
 <script src="script.js"></script>
 <script>
+  let MASTER_WILAYAH = [];
+
   window.onload = function() {
     cekLogin();
     const role = localStorage.getItem("role");
@@ -77,36 +77,79 @@
       return;
     }
 
-    // Set Tampilan Otoritas
     const kec = localStorage.getItem("kecamatan");
     const desa = localStorage.getItem("desa");
     
+    // Setting Text Header
     if (role === "super_admin") {
       document.getElementById("sub-title").innerText = "Otoritas: Kabupaten Bekasi";
-      document.getElementById("wilayah-info").innerText = "Seluruh Wilayah Kabupaten";
     } else if (role === "admin_kec") {
       document.getElementById("sub-title").innerText = "Otoritas: Kec. " + kec;
-      document.getElementById("wilayah-info").innerText = "Wilayah Kecamatan " + kec;
-      document.getElementById("f-kecamatan").value = kec;
-      document.getElementById("f-kecamatan").disabled = true;
     } else {
       document.getElementById("sub-title").innerText = "Otoritas: Desa " + desa;
-      document.getElementById("wilayah-info").innerText = "Wilayah Desa " + desa;
-      document.getElementById("filter-area").classList.add("hidden"); // Admin desa tidak perlu filter
+      document.getElementById("filter-area").classList.add("hidden"); 
     }
 
-    loadLaporanPending();
+    // Load Dropdown Wilayah dulu, baru load Laporan
+    loadFilterWilayah();
   };
 
+  // 1. FUNGSI TARIK WILAYAH UNTUK FILTER
+  function loadFilterWilayah() {
+    fetch(`${API_URL}?action=get_wilayah_lengkap`)
+      .then(res => res.json())
+      .then(data => {
+        MASTER_WILAYAH = data;
+        const selKec = document.getElementById("f-kecamatan");
+        const uniqueKec = [...new Set(data.map(item => item.nama_kec))].filter(k => k && k !== "-").sort();
+        
+        selKec.innerHTML = '<option value="">-- Semua Kecamatan --</option>';
+        uniqueKec.forEach(k => selKec.innerHTML += `<option value="${k}">${k}</option>`);
+
+        // Kunci jika Admin Kecamatan
+        const role = localStorage.getItem("role");
+        if(role === "admin_kec") {
+          selKec.value = localStorage.getItem("kecamatan");
+          selKec.disabled = true;
+          updateDesaFilter(); // Langsung render pilihan desanya
+        } else {
+          loadLaporanPending(); // Super admin langsung load semua
+        }
+      })
+      .catch(err => {
+        console.error("Gagal load wilayah", err);
+        loadLaporanPending(); // Tetap load data meski filter gagal
+      });
+  }
+
+  // 2. FUNGSI UPDATE DROPDOWN DESA
+  function updateDesaFilter() {
+    const kec = document.getElementById("f-kecamatan").value;
+    const selDesa = document.getElementById("f-desa");
+    
+    selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
+    const filtered = MASTER_WILAYAH.filter(item => item.nama_kec === kec);
+    
+    filtered.forEach(item => {
+      if(item.nama_desa && item.nama_desa !== "-") {
+        selDesa.innerHTML += `<option value="${item.nama_desa}">${item.nama_desa}</option>`;
+      }
+    });
+
+    // Otomatis tarik data setelah dropdown berubah
+    loadLaporanPending(); 
+  }
+
+  // 3. FUNGSI TARIK DATA LAPORAN
   function loadLaporanPending() {
     const list = document.getElementById("listLaporan");
     const role = localStorage.getItem("role");
     
-    // Ambil Nilai Filter
-    const selKec = document.getElementById("f-kecamatan").value;
+    // Ambil Filter (Kecamatan diambil dari dropdown atau localStorage jika disabled)
+    const selKec = document.getElementById("f-kecamatan").value || (role === 'admin_kec' ? localStorage.getItem("kecamatan") : "");
     const selDesa = document.getElementById("f-desa").value;
 
-    list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase animate-pulse">⏳ Sinkronisasi Data...</div>`;
+    list.innerHTML = `<div class="text-center py-20 text-blue-900 font-bold text-xs uppercase animate-pulse">⏳ Mencari Antrian...</div>`;
 
     fetch(`${API_URL}?action=get_pending_reports&role=${role}&kec=${selKec}&desa=${selDesa}`)
       .then(res => res.json())
@@ -121,10 +164,11 @@
         list.innerHTML = "";
 
         data.forEach(item => {
-          // LOGIKA FOTO: Menggunakan thumbnail link Google Drive agar tidak pecah/error
+          // LOGIKA FOTO SAKTI: Menggunakan Thumbnail Google Drive (TIDAK AKAN PECAH)
           const thumbFoto = item.file_id && item.file_id !== "-" 
-            ? `https://lh3.googleusercontent.com/d/${item.file_id}=s600` 
+            ? `https://drive.google.com/thumbnail?id=${item.file_id}&sz=w800` 
             : "";
+          const linkAsli = item.file_id && item.file_id !== "-" ? `https://drive.google.com/uc?id=${item.file_id}` : "#";
 
           list.innerHTML += `
             <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden card-laporan">
@@ -147,18 +191,18 @@
                   </div>
                   <div>
                     <p class="text-[8px] font-black text-slate-400 uppercase">Realisasi:</p>
-                    <p class="text-xs font-bold text-blue-900">${item.realisasi}</p>
+                    <p class="text-xs font-black text-blue-900">${item.realisasi}</p>
                   </div>
                 </div>
 
                 ${thumbFoto ? `
                   <div class="mb-4">
                     <img src="${thumbFoto}" class="w-full h-48 object-cover rounded-2xl border-2 border-slate-50 shadow-sm" 
-                         onerror="this.src='https://placehold.co/400x200?text=Foto+Gagal+Dimuat'"
-                         onclick="window.open('https://drive.google.com/uc?id=${item.file_id}', '_blank')">
-                    <p class="text-[8px] text-center text-slate-400 mt-2 font-bold italic">Klik foto untuk memperbesar</p>
+                         onerror="this.src='https://placehold.co/400x200?text=Sedang+Memproses+Gambar...'"
+                         onclick="window.open('${linkAsli}', '_blank')">
+                    <p class="text-[8px] text-center text-slate-400 mt-2 font-bold italic">Klik foto untuk melihat ukuran penuh</p>
                   </div>
-                ` : `<div class="bg-slate-100 py-4 rounded-2xl text-center text-[10px] text-slate-400 mb-4 font-bold">TIDAK ADA BUKTI FOTO</div>`}
+                ` : `<div class="bg-slate-100 py-4 rounded-2xl text-center text-[10px] text-slate-400 mb-4 font-bold">TIDAK ADA FOTO TERLAMPIR</div>`}
 
                 <div class="grid grid-cols-2 gap-3">
                   <button onclick="prosesApprove('${item.id}', 'REJECT')" class="bg-red-50 text-red-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest border border-red-100 active:scale-95 transition">Tolak</button>
@@ -167,13 +211,14 @@
               </div>
             </div>`;
         });
-      }) // Penutup Then
+      })
       .catch(err => {
         console.error(err);
         list.innerHTML = `<div class="text-center py-20 text-red-400 font-bold text-xs uppercase">Gagal memuat data!</div>`;
       });
   }
 
+  // 4. FUNGSI TERIMA / TOLAK
   function prosesApprove(id, status) {
     const confirmText = status === 'APPROVED' ? "Terima laporan ini?" : "Tolak laporan ini?";
     if (!confirm(confirmText)) return;
@@ -192,7 +237,7 @@
     .then(res => res.text())
     .then(res => {
       if (res === "success") {
-        loadLaporanPending();
+        loadLaporanPending(); // Reload daftar
       } else {
         alert("Gagal: " + res);
         loadLaporanPending();
