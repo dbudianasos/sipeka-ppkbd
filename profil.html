@@ -73,13 +73,15 @@
 
   <script src="script.js"></script>
   <script>
-    cekLogin();
-    let FOTO_DATA = ""; // Penampung string foto profil
+    // Panggil fungsi satpam dari script.js
+    cekLogin(); 
 
+    let FOTO_DATA = ""; 
+
+    // FUNGSI PREVIEW & KOMPRES (Agar Simpan Cepat)
     function previewFoto() {
       const file = document.getElementById('input-foto').files[0];
       if (!file) return;
-    
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = function(event) {
@@ -87,30 +89,27 @@
         img.src = event.target.result;
         img.onload = function() {
           const canvas = document.createElement('canvas');
-          
-          // KUNCI KOMPRES: Kita set maksimal lebar 300px saja (cukup untuk foto profil)
           const MAX_WIDTH = 300; 
           const scaleSize = MAX_WIDTH / img.width;
           canvas.width = MAX_WIDTH;
           canvas.height = img.height * scaleSize;
-    
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    
-          // KUALITAS: Kita set 0.6 (60% kualitas) agar filenya sangat ringan
           const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-          
-          // Tampilkan ke preview
           document.getElementById('img-preview').src = dataUrl;
-          
-          // Simpan Base64-nya ke variabel global (tanpa header 'data:image/jpeg;base64,')
           FOTO_DATA = dataUrl.split(',')[1]; 
         }
       };
     }
 
+    // FUNGSI TARIK DATA (Hanya dijalankan sekali saat halaman buka)
     function loadProfil() {
       const nik = localStorage.getItem("nik");
+      if (!nik) return;
+
+      // Beri tanda sedang memuat di nama
+      document.getElementById("nama-tampil").innerText = "⌛ Menghubungkan...";
+
       fetch(`${API_URL}?action=get_profil&nik=${nik}`)
         .then(res => res.json())
         .then(data => {
@@ -121,17 +120,22 @@
             document.getElementById("p-alamat").value = data.alamat || "";
             document.getElementById("p-kecamatan").value = data.kecamatan || "";
             document.getElementById("p-desa").value = data.desa || "";
-            // JIKA ADA FOTO DI DATABASE, TAMPILKAN. JIKA TIDAK, BIARKAN def-profil.png
+            
             if (data.foto && data.foto !== "" && data.foto !== "-") {
               document.getElementById("img-preview").src = "data:image/jpeg;base64," + data.foto;
-              localStorage.setItem("foto", data.foto); // Sinkronkan memori
+              localStorage.setItem("foto", data.foto);
             } else {
               document.getElementById("img-preview").src = "def-profil.png";
             }
           }
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("nama-tampil").innerText = "❌ Gagal Memuat Data";
         });
     }
 
+    // FUNGSI SIMPAN
     function updateProfil() {
       const btn = document.getElementById("btn-save");
       const info = document.getElementById("info");
@@ -156,40 +160,25 @@
       .then(res => res.text())
       .then(res => {
         if (res === "success") {
-          // --- INI POIN PENTINGNYA ---
-          // Update memori HP (localStorage) agar Dashboard tahu ada foto baru
-          if (typeof FOTO_DATA !== 'undefined' && FOTO_DATA !== "") {
-            localStorage.setItem("foto", FOTO_DATA);
-          }
+          // Update localStorage agar dashboard langsung berubah fotonya
+          if (FOTO_DATA !== "") localStorage.setItem("foto", FOTO_DATA);
           
           info.innerText = "✅ DATA BERHASIL DIPERBARUI";
           info.className = "text-center text-[10px] font-bold text-green-600 mt-2";
-    
-          // Tunggu 1.5 detik lalu pindah ke dashboard
           setTimeout(() => { 
-            // Sesuaikan nama filenya, jika Bapak admin ke dashboard-admin.html
             const role = localStorage.getItem("role");
-            if (role.includes("admin")) {
-              window.location.href = 'dashboard-admin.html';
-            } else {
-              window.location.href = 'dashboard-kader.html';
-            }
+            window.location.href = role.includes("admin") ? 'dashboard-admin.html' : 'dashboard-kader.html';
           }, 1500);
-    
         } else {
-          alert("Gagal memperbarui profil. Cek koneksi atau Apps Script.");
+          alert("Gagal memperbarui");
           btn.disabled = false;
           btn.innerText = "Simpan Perubahan";
         }
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        btn.disabled = false;
-        btn.innerText = "Simpan Perubahan";
       });
     }
 
+    // JALANKAN LOAD SAAT HALAMAN SELESAI DIMUAT
     window.onload = loadProfil;
-  </script>
+</script>
 </body>
 </html>
