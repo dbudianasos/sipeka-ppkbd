@@ -189,7 +189,78 @@
     let MASTER_WILAYAH = [];
 
     // ==========================================
-    // 1. TARIK DATA AWAL (WILAYAH & SETTINGS)
+    // 0. FUNGSI GEMBOK HAK AKSES (BARU)
+    // ==========================================
+    function terapkanHakAkses() {
+      const role = localStorage.getItem("role");
+      
+      // Jika BUKAN Admin Kecamatan, gembok area pengaturan
+      if (role !== "admin_kec") {
+        document.getElementById("btn-simpan-setting").style.display = "none"; // Sembunyikan tombol simpan
+        
+        // Kunci semua form agar tidak bisa diketik
+        const inputIds = ["set-kop-uptd", "set-kop-kec", "set-kop-alamat", "set-ttd-jabatan", "set-ttd-wilayah", "set-ttd-nama", "set-ttd-nip"];
+        inputIds.forEach(id => {
+          const el = document.getElementById(id);
+          if(el) {
+            el.readOnly = true;
+            el.classList.add("bg-slate-100", "text-slate-500", "cursor-not-allowed");
+            el.classList.remove("bg-white");
+          }
+        });
+      }
+    }
+
+    // ==========================================
+    // 1. TARIK PENGATURAN BERDASARKAN DROPDOWN (DITAMBAH NOTIFIKASI)
+    // ==========================================
+    function loadSettings() {
+      const kec = document.getElementById("f-kecamatan").value;
+      const role = localStorage.getItem("role");
+      
+      if (kec === "") {
+        document.getElementById("set-kop-uptd").value = "";
+        document.getElementById("set-kop-kec").value = "";
+        document.getElementById("set-kop-alamat").value = "";
+        document.getElementById("set-ttd-jabatan").value = "";
+        document.getElementById("set-ttd-wilayah").value = "";
+        document.getElementById("set-ttd-nama").value = "";
+        document.getElementById("set-ttd-nip").value = "";
+        return;
+      }
+
+      fetch(`${API_URL}?action=get_settings_cetak&kecamatan=${kec}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Object.keys(data).length > 0 && data.kop_uptd) {
+            document.getElementById("set-kop-uptd").value = data.kop_uptd || "";
+            document.getElementById("set-kop-kec").value = data.kop_kec || "";
+            document.getElementById("set-kop-alamat").value = data.kop_alamat || "";
+            document.getElementById("set-ttd-jabatan").value = data.ttd_jabatan || "";
+            document.getElementById("set-ttd-wilayah").value = data.ttd_wilayah || "";
+            document.getElementById("set-ttd-nama").value = data.ttd_nama || "";
+            document.getElementById("set-ttd-nip").value = data.ttd_nip || "";
+          } else {
+            // Jika kosong, reset form
+            document.getElementById("set-kop-uptd").value = "";
+            document.getElementById("set-kop-kec").value = "";
+            document.getElementById("set-kop-alamat").value = "";
+            document.getElementById("set-ttd-jabatan").value = "";
+            document.getElementById("set-ttd-wilayah").value = "";
+            document.getElementById("set-ttd-nama").value = "";
+            document.getElementById("set-ttd-nip").value = "";
+
+            // Beri notifikasi jika yang buka bukan Admin Kecamatan
+            if (role !== "admin_kec") {
+              alert(`Pemberitahuan: Admin Kecamatan ${kec} belum melakukan pengaturan Kop Surat dan Tanda Tangan baku.`);
+            }
+          }
+        })
+        .catch(err => console.log("Gagal menarik settingan."));
+    }
+
+    // ==========================================
+    // 2. INISIALISASI HALAMAN & TARIK WILAYAH
     // ==========================================
     function loadInitialData() {
       toggleBulan(); 
@@ -210,66 +281,28 @@
             selKec.value = localStorage.getItem("kecamatan").toUpperCase();
             selKec.disabled = true;
             updateDesaFilter();
+          } else if (role === "admin_desa") {
+            selKec.value = localStorage.getItem("kecamatan").toUpperCase();
+            selKec.disabled = true;
+            updateDesaFilter();
+            
+            // Kunci juga dropdown desa untuk Admin Desa
+            setTimeout(() => {
+              const selDesa = document.getElementById("f-desa");
+              selDesa.value = localStorage.getItem("desa").toUpperCase();
+              selDesa.disabled = true;
+              loadKaderDropdown();
+            }, 500);
           }
         });
-    }
-
-    function loadSettings() {
-      const kec = localStorage.getItem("kecamatan");
-      fetch(`${API_URL}?action=get_settings_cetak&kecamatan=${kec}`)
-        .then(res => res.json())
-        .then(data => {
-          if (Object.keys(data).length > 0) {
-            document.getElementById("set-kop-uptd").value = data.kop_uptd || "";
-            document.getElementById("set-kop-kec").value = data.kop_kec || "";
-            document.getElementById("set-kop-alamat").value = data.kop_alamat || "";
-            document.getElementById("set-ttd-jabatan").value = data.ttd_jabatan || "";
-            document.getElementById("set-ttd-wilayah").value = data.ttd_wilayah || "";
-            document.getElementById("set-ttd-nama").value = data.ttd_nama || "";
-            document.getElementById("set-ttd-nip").value = data.ttd_nip || "";
-          }
-        })
-        .catch(err => console.log("Belum ada settingan tersimpan."));
     }
 
     window.onload = function() {
       cekLogin();
       document.getElementById("bulan-cetak").value = new Date().getMonth() + 1;
+      
+      terapkanHakAkses(); // Panggil fungsi gembok
       loadInitialData();
-      loadSettings();
-    }
-
-    // ==========================================
-    // 2. SIMPAN SETTINGS KE SPREADSHEET
-    // ==========================================
-    function simpanPengaturan() {
-      const btn = document.getElementById("btn-simpan-setting");
-      btn.innerText = "⏳ MENYIMPAN...";
-      btn.disabled = true;
-
-      const settingData = {
-        kop_uptd: document.getElementById("set-kop-uptd").value,
-        kop_kec: document.getElementById("set-kop-kec").value,
-        kop_alamat: document.getElementById("set-kop-alamat").value,
-        ttd_jabatan: document.getElementById("set-ttd-jabatan").value,
-        ttd_wilayah: document.getElementById("set-ttd-wilayah").value,
-        ttd_nama: document.getElementById("set-ttd-nama").value,
-        ttd_nip: document.getElementById("set-ttd-nip").value
-      };
-
-      const payload = {
-        action: "save_settings_cetak",
-        kecamatan: localStorage.getItem("kecamatan"),
-        settings: JSON.stringify(settingData)
-      };
-
-      fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
-        .then(res => res.text())
-        .then(res => {
-          alert("Pengaturan Kop & TTD berhasil disimpan permanen!");
-          btn.innerText = "SIMPAN PERMANEN";
-          btn.disabled = false;
-        });
     }
 
     // ==========================================
@@ -285,6 +318,8 @@
           selDesa.innerHTML += `<option value="${item.nama_desa.toUpperCase()}">${item.nama_desa.toUpperCase()}</option>`;
         }
       });
+      
+      loadSettings(); // Tarik settingan kop wilayah ini
       loadKaderDropdown();
     }
 
@@ -316,7 +351,46 @@
     }
 
     // ==========================================
-    // 4. TARIK DATA & RENDER PREVIEW PDF
+    // 4. SIMPAN SETTINGS KE SPREADSHEET (KHUSUS ADMIN KEC)
+    // ==========================================
+    function simpanPengaturan() {
+      const kecSasaran = document.getElementById("f-kecamatan").value;
+      if (kecSasaran === "") {
+        alert("Sistem terkunci. Kecamatan tidak valid.");
+        return;
+      }
+
+      const btn = document.getElementById("btn-simpan-setting");
+      btn.innerText = "⏳ MENYIMPAN...";
+      btn.disabled = true;
+
+      const settingData = {
+        kop_uptd: document.getElementById("set-kop-uptd").value,
+        kop_kec: document.getElementById("set-kop-kec").value,
+        kop_alamat: document.getElementById("set-kop-alamat").value,
+        ttd_jabatan: document.getElementById("set-ttd-jabatan").value,
+        ttd_wilayah: document.getElementById("set-ttd-wilayah").value,
+        ttd_nama: document.getElementById("set-ttd-nama").value,
+        ttd_nip: document.getElementById("set-ttd-nip").value
+      };
+
+      const payload = {
+        action: "save_settings_cetak",
+        kecamatan: kecSasaran,
+        settings: JSON.stringify(settingData)
+      };
+
+      fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
+        .then(res => res.text())
+        .then(res => {
+          alert(`Pengaturan Kop & TTD untuk wilayah ${kecSasaran} berhasil disimpan permanen!`);
+          btn.innerText = "SIMPAN PERMANEN";
+          btn.disabled = false;
+        });
+    }
+
+    // ==========================================
+    // 5. TARIK DATA & RENDER PREVIEW PDF
     // ==========================================
     function previewCetak() {
       const namaKaderDipilih = document.getElementById("f-kader") ? document.getElementById("f-kader").value : "";
@@ -330,6 +404,12 @@
       const bln = document.getElementById("bulan-cetak").value;
       const thn = document.getElementById("tahun-cetak").value;
       const btn = document.getElementById("btn-preview");
+
+      // Cek apakah Kop sudah diatur
+      const isKopKosong = !document.getElementById("set-kop-uptd").value;
+      if (isKopKosong) {
+         if(!confirm("Kop Surat dan Pejabat belum diatur. Tetap lanjutkan cetak dengan format kosong?")) return;
+      }
 
       // Pindahkan data Input ke Kertas Cetak
       document.getElementById("prev-kop-uptd").innerText = document.getElementById("set-kop-uptd").value || "UPTD PENGENDALIAN PENDUDUK WILAYAH...";
@@ -357,19 +437,18 @@
       fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${bln}&tahun=${thn}&role=${localStorage.getItem("role")}&kec=${localStorage.getItem("kecamatan")}&desa=${localStorage.getItem("desa")}`)
         .then(res => res.json())
         .then(data => {
-           // Filter Khusus untuk Kader Terpilih
            const dataKaderSaja = data.filter(row => row[3] === namaKaderDipilih);
 
            let tbody = document.getElementById("isi-rekap");
            if(dataKaderSaja.length === 0) {
-             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA DITEMUKAN UNTUK KADER INI</td></tr>`;
+             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA DITEMUKAN UNTUK KADER INI PADA PERIODE TERSEBUT</td></tr>`;
              document.getElementById("digital-footprint").innerText = `* Tidak ada data tervalidasi.`;
            } else {
              let rows = "";
              dataKaderSaja.forEach((row, index) => {
                 let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
                 let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
-                let validator = row[11] ? row[11] : "Admin";
+                let validator = row[11] ? row[11] : "Sistem";
 
                 rows += `<tr>
                           <td class="text-center">${index+1}</td>
@@ -399,15 +478,16 @@
     }
 
     // ==========================================
-    // 5. EXPORT JADI PDF (KERTAS F4)
+    // 6. EXPORT JADI PDF (KERTAS F4)
     // ==========================================
     function downloadPDF() {
       const element = document.getElementById('print-area');
       const jenis = document.getElementById("jenis-cetak").value;
       const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
       const thn = document.getElementById("tahun-cetak").value;
+      const namaKader = document.getElementById("f-kader").value.replace(/\s+/g, '_'); // Hilangkan spasi untuk nama file
       
-      let namaFile = jenis === "RENJA" ? `Rekap_Renja_${thn}.pdf` : `Rekap_Kinerja_${blnText}_${thn}.pdf`;
+      let namaFile = jenis === "RENJA" ? `Renja_${namaKader}_${thn}.pdf` : `Laporan_${namaKader}_${blnText}_${thn}.pdf`;
 
       const opt = {
         margin:       0, 
