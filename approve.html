@@ -2,70 +2,191 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Approve Laporan | siPeKa PPKBD</title>
+  <title>Validasi Laporan | siPeKa</title>
   <link rel="icon" type="image/png" href="logo-sipeka.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-  
   <script src="https://cdn.tailwindcss.com"></script>
-  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Poppins', sans-serif; }
-    /* Disamakan persis dengan warna dashboard */
-    .nav-gradient { background: linear-gradient(135deg, #004a99 0%, #002d5f 100%); }
+    .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
+    .card-laporan { transition: all 0.2s; }
+    .card-laporan:active { transform: scale(0.98); }
   </style>
 </head>
 
 <body class="bg-slate-50 min-h-screen pb-20">
 
-<header class="sticky top-0 z-50 nav-gradient py-2.5 px-5 rounded-b-[1.5rem] shadow-lg shadow-blue-900/20 transition-all duration-300">
-  <div class="flex items-center gap-3 max-w-5xl mx-auto text-white">
-    
-    <button onclick="window.location.href='dashboard.html'" 
-            class="bg-white/10 hover:bg-white/20 p-2 rounded-xl backdrop-blur-md border border-white/10 transition active:scale-95 shadow-sm flex items-center justify-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
-    </button>
-
-    <div class="leading-tight">
-      <h1 class="font-bold text-base md:text-lg tracking-wide">Approve Laporan</h1>
-      <p class="text-[9px] text-blue-200 uppercase tracking-widest font-bold mt-0.5">Verifikasi Kinerja Kader</p>
+<header class="sticky top-0 z-50 nav-gradient py-3 px-5 rounded-b-[1.5rem] shadow-lg shadow-blue-900/20">
+  <div class="flex items-center justify-between max-w-5xl mx-auto text-white">
+    <div class="flex items-center gap-3">
+      <button onclick="window.location.href='dashboard-admin.html'" class="bg-white/10 p-2 rounded-xl border border-white/10 active:scale-95">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
+      <div>
+        <h1 class="font-black text-sm uppercase tracking-widest">Validasi</h1>
+        <p id="sub-title" class="text-[9px] text-blue-200 font-bold uppercase">Memuat Otoritas...</p>
+      </div>
     </div>
-
+    
+    <div class="bg-yellow-400 text-blue-900 px-3 py-1 rounded-full font-black text-[10px] shadow-lg" id="count-pending">
+      0 ANTRIAN
+    </div>
   </div>
 </header>
 
-<main class="px-4 pt-6 max-w-5xl mx-auto">
+<main class="px-5 pt-6 max-w-5xl mx-auto">
   
-<div class="px-4">
-  <div id="listLaporan" class="space-y-4">
-    <p class="text-center text-gray-400 text-sm py-10 italic">Memuat data laporan...</p>
+  <div class="mb-6 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+    <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm flex-shrink-0">
+      <p class="text-[8px] font-black text-slate-400 uppercase mb-0.5">Wilayah Tugas</p>
+      <p id="wilayah-info" class="text-[10px] font-bold text-blue-900 uppercase tracking-tighter">Memuat...</p>
+    </div>
   </div>
-</div>
 
-<footer class="text-center text-[10px] text-gray-400 mt-10">
-  © Versi 0.1 - 2026 Dian UPTD PP Wil V
-</footer>
+  <div id="listLaporan" class="space-y-4">
+    <div class="flex flex-col items-center justify-center py-20 text-slate-300">
+      <div class="text-5xl mb-4 animate-bounce">📁</div>
+      <p class="text-xs font-bold uppercase tracking-widest">Mencari laporan pending...</p>
+    </div>
+  </div>
+
 </main>
+
 <script src="script.js"></script>
 <script>
-  // Keamanan Akses
-  cekLogin();
-  if (localStorage.getItem("role") !== "admin") {
-      alert("Akses Ditolak! Menu ini khusus Admin.");
-      window.location.href = "dashboard.html";
+  // 1. CEK KEAMANAN & OTORITAS
+  window.onload = function() {
+    cekLogin();
+    const role = localStorage.getItem("role");
+    
+    // Tolak jika bukan salah satu admin
+    if (!role.includes("admin")) {
+      alert("Akses Khusus Admin!");
+      window.location.href = "dashboard-kader.html";
+      return;
+    }
+
+    // Tampilkan Info Otoritas di Subtitle
+    const kec = localStorage.getItem("kecamatan");
+    const desa = localStorage.getItem("desa");
+    
+    if (role === "super_admin") {
+      document.getElementById("sub-title").innerText = "Otoritas: Kabupaten Bekasi";
+      document.getElementById("wilayah-info").innerText = "SELURUH WILAYAH";
+    } else if (role === "admin_kec") {
+      document.getElementById("sub-title").innerText = "Otoritas: Kec. " + kec;
+      document.getElementById("wilayah-info").innerText = "KECAMATAN " + kec;
+    } else {
+      document.getElementById("sub-title").innerText = "Otoritas: Desa " + desa;
+      document.getElementById("wilayah-info").innerText = "DESA " + desa;
+    }
+
+    loadLaporanPending();
+  };
+
+  // 2. FUNGSI LOAD DATA PENDING
+  function loadLaporanPending() {
+    const list = document.getElementById("listLaporan");
+    const role = localStorage.getItem("role");
+    const kec = localStorage.getItem("kecamatan");
+    const desa = localStorage.getItem("desa");
+
+    // Ambil data (Filter dilakukan di sisi Apps Script agar ringan)
+    fetch(`${API_URL}?action=get_pending_reports&role=${role}&kec=${kec}&desa=${desa}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.length === 0) {
+          list.innerHTML = `<div class="text-center py-20 text-slate-400 font-bold text-xs uppercase italic">☕ Semua laporan sudah divalidasi</div>`;
+          document.getElementById("count-pending").innerText = "0 ANTRIAN";
+          return;
+        }
+
+        document.getElementById("count-pending").innerText = data.length + " ANTRIAN";
+        list.innerHTML = "";
+
+        data.forEach(item => {
+          list.innerHTML += `
+            <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden card-laporan">
+              <div class="p-5">
+                <div class="flex justify-between items-start mb-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-xl shadow-inner">👤</div>
+                    <div>
+                      <h4 class="font-black text-slate-800 text-xs uppercase tracking-tight">${item.nama_kader}</h4>
+                      <p class="text-[9px] font-bold text-slate-400 uppercase">${item.lokasi} | ${item.tanggal}</p>
+                    </div>
+                  </div>
+                  <div class="bg-yellow-100 text-yellow-700 text-[8px] font-black px-2 py-1 rounded-lg uppercase">PENDING</div>
+                </div>
+        
+                <div class="bg-slate-50 p-4 rounded-2xl mb-4 space-y-2">
+                  <div>
+                    <p class="text-[8px] font-black text-slate-400 uppercase">Kegiatan:</p>
+                    <p class="text-xs font-bold text-slate-700">${item.kegiatan}</p>
+                  </div>
+                  <div>
+                    <p class="text-[8px] font-black text-slate-400 uppercase">Realisasi:</p>
+                    <p class="text-xs font-bold text-blue-900">${item.realisasi}</p>
+                  </div>
+                </div>
+        
+                ${item.foto_url ? `
+                  <div class="mb-4">
+                    <img src="${item.foto_url}" class="w-full h-48 object-cover rounded-2xl border-2 border-slate-50 shadow-inner" 
+                         onclick="window.open('${item.foto_url}', '_blank')">
+                    <p class="text-[8px] text-center text-slate-400 mt-2 font-bold italic">Klik foto untuk memperbesar</p>
+                  </div>
+                ` : `<div class="bg-slate-100 py-4 rounded-2xl text-center text-[10px] text-slate-400 mb-4 font-bold uppercase tracking-widest">Tidak ada foto bukti</div>`}
+        
+                <div class="grid grid-cols-2 gap-3">
+                  <button onclick="prosesApprove('${item.id}', 'REJECT')" class="bg-red-50 text-red-600 font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest border border-red-100 active:scale-95 transition">
+                    Tolak
+                  </button>
+                  <button onclick="prosesApprove('${item.id}', 'APPROVED')" class="bg-blue-900 text-white font-black py-4 rounded-2xl text-[10px] uppercase tracking-widest shadow-lg shadow-blue-900/20 active:scale-95 transition">
+                    Terima
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      })
+      .catch(err => {
+        list.innerHTML = `<div class="text-center py-20 text-red-400 font-bold text-xs uppercase">Gagal memuat data!</div>`;
+      });
   }
 
-  // Load Data
-  loadLaporan();
+  // 3. FUNGSI APPROVE / REJECT
+  function prosesApprove(id, status) {
+    const confirmText = status === 'APPROVE' ? "Terima laporan ini?" : "Tolak laporan ini?";
+    if (!confirm(confirmText)) return;
+
+    // Tambahkan loading sederhana
+    document.getElementById("listLaporan").innerHTML = `<div class="text-center py-20 animate-pulse text-blue-900 font-black uppercase text-[10px]">Memproses Validasi...</div>`;
+
+    fetch(API_URL, {
+      method: "POST",
+      body: new URLSearchParams({
+        action: "process_approval",
+        id_laporan: id,
+        status_baru: status,
+        admin_nama: localStorage.getItem("nama")
+      })
+    })
+    .then(res => res.text())
+    .then(res => {
+      if (res === "success") {
+        loadLaporanPending();
+      } else {
+        alert("Gagal: " + res);
+        loadLaporanPending();
+      }
+    });
+  }
 </script>
-<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
-  &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
-  Aplikasi Pelaporan Kinerja PPKBD
-</footer>
+
 </body>
 </html>
