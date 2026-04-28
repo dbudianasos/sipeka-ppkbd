@@ -1195,17 +1195,20 @@ async function simpanLaporan() {
 // ============================================================
 // 9. LOGIKA RIWAYAT LAPORAN MANDIRI (KADER)
 // ============================================================
-
+// --- A. LOAD RIWAYAT DENGAN FILTER & INTIP FOTO ---
 function loadRiwayatKader() {
   const container = document.getElementById("list-riwayat-kader");
   const nik = localStorage.getItem("nik");
+  const filterBulan = document.getElementById("filter-bulan-riwayat") ? document.getElementById("filter-bulan-riwayat").value : "ALL";
+  
   if (!container) return;
+
+  container.innerHTML = `<p class="text-center text-gray-400 text-[10px] py-10 italic animate-pulse">Menghubungkan ke arsip visum...</p>`;
 
   fetch(`${API_URL}?action=get_riwayat&nik=${nik}`)
     .then(res => res.json())
     .then(data => {
       container.innerHTML = "";
-      
       let countApproved = 0;
       let countPending = 0;
 
@@ -1214,18 +1217,26 @@ function loadRiwayatKader() {
         return;
       }
 
-      // Urutkan dari yang terbaru (berdasarkan ID/Timestamp)
+      // Balik data agar yang terbaru muncul paling atas
       data.reverse().forEach(item => {
+        // Logika Filter Bulan
+        const tglObj = new Date(item.tanggal);
+        const bulanIndex = tglObj.getMonth().toString(); // 0-11
+        if (filterBulan !== "ALL" && bulanIndex !== filterBulan) return;
+
         const isDraft = item.status.toLowerCase() === "draft";
         if (!isDraft) countApproved++; else countPending++;
 
         const statusColor = isDraft ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-700";
         
         container.innerHTML += `
-          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-3 relative">
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-3 relative overflow-hidden">
             <div class="flex justify-between items-start mb-3">
                <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase">${item.status}</span>
-               <p class="text-[9px] text-slate-400 font-bold tracking-tighter uppercase font-mono">${item.id}</p>
+               <div class="flex gap-2">
+                 <button onclick="intipFoto('${item.foto}')" class="bg-blue-50 text-blue-600 text-[9px] font-bold px-2 py-1 rounded-md border border-blue-100 active:scale-95 transition">🖼️ INTIP FOTO</button>
+                 <p class="text-[9px] text-slate-400 font-bold font-mono pt-1">${item.id}</p>
+               </div>
             </div>
             
             <h3 class="text-xs font-black text-blue-900 uppercase leading-tight mb-1">${item.kegiatan}</h3>
@@ -1234,19 +1245,49 @@ function loadRiwayatKader() {
             <div class="flex items-center justify-between border-t border-dashed border-slate-100 pt-3 mt-3">
                <p class="text-[9px] text-slate-400 font-bold">Verifikator: <span class="text-blue-700">${item.verifikator || '-'}</span></p>
                ${isDraft ? 
-                 `<button onclick="hapusLaporanKader('${item.id}')" class="bg-red-50 text-red-600 text-[10px] font-bold px-4 py-1.5 rounded-lg active:scale-95 transition">🗑️ HAPUS</button>` 
-                 : `<span class="text-[10px] text-green-500 font-black">Laporan Sah ✅</span>`
+                 `<button onclick="hapusLaporanKader('${item.id}')" class="text-red-500 text-[10px] font-bold px-2 py-1 transition active:text-red-700">🗑️ HAPUS</button>` 
+                 : `<span class="text-[10px] text-green-500 font-black">Disetujui ✅</span>`
                }
             </div>
           </div>`;
       });
 
-      // Update Mini Stats di atas
+      // Update angka statistik di atas
       if(document.getElementById("stat-approved")) document.getElementById("stat-approved").innerText = countApproved;
       if(document.getElementById("stat-pending")) document.getElementById("stat-pending").innerText = countPending;
+    })
+    .catch(err => {
+      console.error(err);
+      container.innerHTML = `<p class="text-center text-red-500 text-xs py-10">Gagal mengambil riwayat. Cek koneksi.</p>`;
     });
 }
 
+// --- B. LOGIKA MODAL PREVIEW FOTO ---
+function intipFoto(url) {
+  if (!url || url === "-" || url === "undefined") {
+    return alert("⚠️ Foto tidak ditemukan atau gagal diproses server.");
+  }
+  
+  const modal = document.getElementById("modal-foto");
+  const img = document.getElementById("img-intip");
+  
+  if (modal && img) {
+    img.src = url;
+    modal.classList.remove("hidden");
+    // Mencegah scroll body saat modal buka
+    document.body.style.overflow = "hidden";
+  }
+}
+
+function tutupIntip() {
+  const modal = document.getElementById("modal-foto");
+  if (modal) {
+    modal.classList.add("hidden");
+    document.body.style.overflow = "auto";
+  }
+}
+
+// --- C. LOGIKA HAPUS LAPORAN ---
 function hapusLaporanKader(id) {
   if (!confirm("Hapus laporan ini? Foto di server juga akan ikut dihapus permanen.")) return;
   
