@@ -1090,3 +1090,104 @@ function previewFoto(input) {
   }
   reader.readAsDataURL(file);
 }
+
+// --- J. SIMPAN LAPORAN VISUM KE SERVER ---
+async function simpanLaporan() {
+  const btn = document.getElementById("btn-simpan-laporan");
+  const info = document.getElementById("info-laporan");
+  
+  // 1. Ambil Identitas & Wilayah
+  const nik = localStorage.getItem("nik");
+  const nama = localStorage.getItem("nama");
+  const kecamatan = localStorage.getItem("kecamatan");
+
+  // 2. Ambil Data Form Dasar
+  const sumber = document.getElementById("sumber-kegiatan").value;
+  const tanggal = document.getElementById("lap-tgl").value;
+  const lokasi = document.getElementById("lap-lokasi").value.trim();
+  const realisasi = document.getElementById("lap-realisasi").value;
+
+  // 3. Tentukan Satuan Final
+  let satuanFinal = "";
+  if (sumber === "renja") {
+    const containerSatuan = document.getElementById("container-satuan-laporan");
+    satuanFinal = containerSatuan ? containerSatuan.innerText.replace("🔒", "").trim() : "Orang";
+  } else {
+    const selectSatuan = document.getElementById("lap-satuan-manual");
+    satuanFinal = selectSatuan ? selectSatuan.value : "Orang";
+  }
+
+  // 4. Logika Penentuan Nama Kegiatan & Renja ID
+  let renja_id = "";
+  let namaKegiatanFinal = "";
+
+  if (sumber === "renja") {
+    const dropdownRenja = document.getElementById("pilih-renja");
+    renja_id = dropdownRenja.value;
+    
+    if (!renja_id) return alert("⚠️ Pilih Rencana Kerja terlebih dahulu!");
+    
+    const optTerpilih = dropdownRenja.options[dropdownRenja.selectedIndex];
+    const teksRenja = optTerpilih.getAttribute("data-kegiatan");
+    const catatanRenja = document.getElementById("lap-catatan-renja").value.trim();
+
+    if (catatanRenja.length < 5) {
+      return alert("⚠️ Uraian detail kegiatan minimal 5 karakter!");
+    }
+    // Gabungkan Nama Renja dengan Catatan Detail
+    namaKegiatanFinal = `${teksRenja} | Detail: ${catatanRenja}`;
+
+  } else {
+    // Jalur Luar Renja (Insidental)
+    renja_id = "LUAR-RENJA";
+    const kegiatanManual = document.getElementById("lap-kegiatan-manual").value.trim();
+
+    if (kegiatanManual.length < 5) {
+      return alert("⚠️ Nama & Uraian kegiatan manual minimal 5 karakter!");
+    }
+    namaKegiatanFinal = `Insidental: ${kegiatanManual}`;
+  }
+
+  // 5. Validasi Akhir Sebelum Kirim
+  if (!base64Foto) return alert("⚠️ Foto Visum belum diambil atau gagal diproses!");
+  if (!tanggal || !lokasi || !realisasi) return alert("⚠️ Lengkapi Tanggal, Lokasi, dan Hasil!");
+
+  // 6. Eksekusi Pengiriman
+  btn.disabled = true; 
+  btn.innerText = "⏳ SEDANG MENGIRIM...";
+  info.innerText = "Mohon tunggu, sedang mengunggah data & foto ke server...";
+  info.className = "text-center text-xs mt-3 font-bold text-blue-600 animate-pulse";
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: new URLSearchParams({
+        action: "submit_laporan",
+        nik: nik,
+        nama: nama,
+        kecamatan: kecamatan,
+        renja_id: renja_id,
+        kegiatan: namaKegiatanFinal,
+        tanggal: tanggal,
+        realisasi: `${realisasi} ${satuanFinal}`, // Contoh: "15 Orang"
+        lokasi: lokasi,
+        foto_data: base64Foto // Format Base64 yang sudah ada Watermark
+      })
+    });
+
+    const resText = await response.text();
+    if (resText.trim() === "success") {
+      alert("✅ Laporan Berhasil Terkirim!\nSilakan cek status verifikasi di riwayat.");
+      window.location.href = "dashboard-kader.html";
+    } else {
+      alert("❌ Gagal mengirim! Respon server: " + resText);
+      btn.disabled = false;
+      btn.innerText = "KIRIM LAPORAN SEKARANG";
+    }
+  } catch (err) {
+    console.error("Fetch Error:", err);
+    alert("⚠️ Koneksi Error! Pastikan sinyal stabil saat mengunggah foto.");
+    btn.disabled = false;
+    btn.innerText = "KIRIM LAPORAN SEKARANG";
+  }
+}
