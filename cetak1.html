@@ -18,13 +18,13 @@
     /* Ukuran Baku Kertas F4 (816px x 1248px) - Resolusi Tinggi */
     .f4-preview { 
       width: 816px; 
-      min-height: auto !important; 
+      min-height: 1248px; 
       margin: 0 auto; 
       background: white; 
-      padding: 50px 60px; /* Margin pinggir kertas */
+      padding: 50px 60px 100px 60px; /* Bawah diperlebar jadi 100px agar tidak nabrak TTD */
       position: relative;
       box-sizing: border-box;
-      transform-origin: top left; /* Poros zoom out */
+      transform-origin: top left;
     }
     
     .table-dinas { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
@@ -541,16 +541,32 @@
       const paper = document.getElementById('print-area');
       const wrapper = document.getElementById('print-wrapper');
       
-      // 1. Matikan zoom sementara agar browser me-render ukuran asli (Vektor)
+      // 1. Ambil data untuk nama file
+      const oriTitle = document.title; // Simpan judul asli tab browser
+      const kader = document.getElementById("f-kader").value || "Kader_Kosong";
+      const jenisVal = document.getElementById("jenis-cetak").value;
+      const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
+      const thn = document.getElementById("tahun-cetak").value;
+      
+      // 2. Ubah judul tab web sesuai format: Jenis_Nama_Bulan_Tahun
+      if (jenisVal === "RENJA") {
+        document.title = `Renja_${kader}_${thn}`;
+      } else {
+        document.title = `Laporan_${kader}_${blnText}_${thn}`;
+      }
+
+      // 3. Matikan zoom agar kualitas render Vektor maksimal
       paper.style.transform = 'none';
       wrapper.style.height = 'auto';
 
-      // 2. Panggil sistem cetak bawaan HP/Laptop
-      // Di HP, nanti Bapak tinggal pilih "Simpan sebagai PDF"
+      // 4. Panggil jendela print (Browser akan otomatis membaca document.title sebagai nama PDF)
       window.print();
 
-      // 3. Setelah jendela cetak ditutup, nyalakan lagi zoom mobile-nya
-      setTimeout(scalePrintArea, 500);
+      // 5. Kembalikan zoom dan kembalikan judul tab web seperti semula
+      setTimeout(() => {
+        scalePrintArea();
+        document.title = oriTitle; 
+      }, 500);
     }
   </script>
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 no-print">
