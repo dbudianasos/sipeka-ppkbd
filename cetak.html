@@ -307,7 +307,7 @@
              let rows = "";
              dataKaderSaja.forEach((row, index) => {
                 if (jenis === "RENJA") {
-                  rows += `<tr><td class="text-center">${index+1}</td><td><b>${row[4]}</b></td><td>${row[5]}<br><small>📍 ${row[10]}</small></td><td>${row[6]}</td><td class="text-center">${row[7]} ${row[8]}</td></tr>`;
+                  rows += `<tr><td class="text-center">${index+1}</td><td><b>${row[4]}</b></td><td>${row[5]}<br><small>📍 ${row[10]}</small></td><td>${row[6]}</td><td class="text-center">${row[7]} Kali ${row[8]}</td></tr>`;
                 } else {
                   let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
                   let thumb = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w200" style="width:60px; height:45px; object-fit:cover; margin:auto;">` : `-`;
