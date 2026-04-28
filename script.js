@@ -913,9 +913,154 @@ function updateLabelSatuanLaporan() {
   }
 }
 
-// --- G. VALIDASI FORM (UNTUK BUKA TOMBOL KAMERA) ---
-// Kita buat fungsi "kosong" dulu agar error di console hilang
+// --- G. VALIDASI FORM (UNTUK BUKA KUNCI KAMERA) ---
 function validasiFotoLaporan() {
-  console.log("Validasi berjalan...");
-  // Logika lengkapnya akan kita isi di tahap berikutnya (Watermark)
+  const tgl = document.getElementById("lap-tgl").value;
+  const lokasi = document.getElementById("lap-lokasi").value.trim();
+  const sumber = document.getElementById("sumber-kegiatan").value;
+  const realisasi = document.getElementById("lap-realisasi").value;
+  
+  const areaFoto = document.getElementById("area-foto-klik");
+  const labelFoto = document.getElementById("label-foto");
+  const ikon = document.getElementById("ikon-kamera");
+
+  let kegiatanOk = false;
+  if (sumber === "renja") {
+    // Cek apakah sudah pilih renja dan isi catatan
+    const renjaId = document.getElementById("pilih-renja").value;
+    const catatan = document.getElementById("lap-catatan-renja").value.trim();
+    if (renjaId && catatan.length >= 5) kegiatanOk = true;
+  } else {
+    // Cek apakah isi kegiatan manual minimal 5 karakter
+    const manualTeks = document.getElementById("lap-kegiatan-manual").value.trim();
+    if (manualTeks.length >= 5) kegiatanOk = true;
+  }
+
+  // Jika semua syarat (Tgl, Lokasi, Kegiatan, Hasil) terpenuhi, buka kunci kamera
+  if (tgl && lokasi && kegiatanOk && realisasi > 0) {
+    areaFoto.classList.remove("opacity-30", "pointer-events-none");
+    areaFoto.classList.add("bg-blue-50/50", "border-blue-200");
+    labelFoto.innerText = "Klik untuk Ambil Foto Visum";
+    labelFoto.classList.replace("text-gray-400", "text-blue-800");
+    if (document.getElementById("img-preview").classList.contains("hidden")) {
+      ikon.innerText = "📸";
+    }
+  } else {
+    // Kunci kembali jika ada data yang dihapus
+    areaFoto.classList.add("opacity-30", "pointer-events-none");
+    areaFoto.classList.remove("bg-blue-50/50", "border-blue-200");
+    labelFoto.innerText = "Lengkapi Data di Atas Terlebih Dahulu";
+    labelFoto.classList.replace("text-blue-800", "text-gray-400");
+    ikon.innerText = "🔒";
+  }
+}
+
+// --- H. FUNGSI BUKA KAMERA ---
+function bukaKamera() {
+  document.getElementById('lap-foto-file').click();
+}
+
+// --- I. PROSES FOTO & WATERMARK (LOGIKA BACKUP) ---
+function previewFoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const loading = document.getElementById("loading-foto");
+  const preview = document.getElementById("img-preview");
+  const ikon = document.getElementById("ikon-kamera");
+  const label = document.getElementById("label-foto");
+
+  loading.classList.remove("hidden");
+  preview.classList.add("hidden");
+  ikon.classList.add("hidden");
+  label.innerText = "Sedang Memproses...";
+
+  const reader = new FileReader();
+  
+  // Ambil data untuk Watermark
+  const tglInput = document.getElementById("lap-tgl").value;
+  const lokasiRaw = document.getElementById("lap-lokasi").value.toUpperCase();
+  const realisasi = document.getElementById("lap-realisasi").value;
+  const sumber = document.getElementById("sumber-kegiatan").value;
+  
+  // Ambil satuan
+  let satuan = "Orang";
+  if (sumber === "renja") {
+    const containerSatuan = document.getElementById("container-satuan-laporan");
+    satuan = containerSatuan ? containerSatuan.innerText.replace("🔒", "").trim() : "Orang";
+  } else {
+    satuan = document.getElementById("lap-satuan-manual").value;
+  }
+
+  // Ambil nama kegiatan
+  let teksKegiatan = "";
+  if (sumber === "renja") {
+    const drp = document.getElementById("pilih-renja");
+    teksKegiatan = drp.options[drp.selectedIndex].getAttribute("data-kegiatan");
+  } else {
+    teksKegiatan = document.getElementById("lap-kegiatan-manual").value;
+  }
+
+  reader.onload = function(e) {
+    const img = new Image();
+    img.src = e.target.result;
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const MAX_WIDTH = 1000; // Kompresi agar tidak berat saat upload
+      let width = img.width;
+      let height = img.height;
+
+      if (width > MAX_WIDTH) {
+        height *= MAX_WIDTH / width;
+        width = MAX_WIDTH;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // --- DRAW WATERMARK BOX (Sesuai Backup Bapak) ---
+      const boxHeight = height * 0.18; 
+      ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; 
+      ctx.fillRect(0, height - boxHeight, width, boxHeight);
+
+      ctx.fillStyle = "white";
+      const padding = width * 0.04;
+      const fontSizeBig = Math.round(width * 0.04); 
+      const fontSizeSmall = Math.round(width * 0.03);
+
+      // Kiri: Nama Aplikasi & Kegiatan
+      ctx.textAlign = "left";
+      ctx.font = `bold ${fontSizeBig}px Arial`;
+      ctx.fillText("siPeKa PPKBD", padding, height - (boxHeight * 0.7));
+      
+      ctx.font = `${fontSizeSmall}px Arial`;
+      const cetakKeg = teksKegiatan.length > 35 ? teksKegiatan.substring(0, 35) + "..." : teksKegiatan;
+      ctx.fillText(cetakKeg.toUpperCase(), padding, height - (boxHeight * 0.45));
+      
+      ctx.fillStyle = "#FFD700"; // Warna Emas untuk Hasil
+      ctx.font = `bold ${fontSizeSmall}px Arial`;
+      ctx.fillText(`HASIL: ${realisasi} ${satuan}`, padding, height - (boxHeight * 0.2));
+
+      // Kanan: Lokasi & Tanggal
+      ctx.textAlign = "right";
+      ctx.fillStyle = "white";
+      ctx.font = `bold ${fontSizeSmall}px Arial`;
+      const cetakLok = lokasiRaw.length > 25 ? lokasiRaw.substring(0, 25) + "..." : lokasiRaw;
+      ctx.fillText("📍 " + cetakLok, width - padding, height - (boxHeight * 0.6));
+      
+      ctx.font = `${fontSizeSmall}px Arial`;
+      ctx.fillText("📅 " + tglInput, width - padding, height - (boxHeight * 0.3));
+
+      // Simpan ke variabel global base64Foto
+      base64Foto = canvas.toDataURL("image/jpeg", 0.8);
+      preview.src = base64Foto;
+
+      loading.classList.add("hidden");
+      preview.classList.remove("hidden");
+      label.innerText = "Foto Berhasil Diverifikasi!";
+    }
+  }
+  reader.readAsDataURL(file);
 }
