@@ -819,9 +819,11 @@ function filterRenjaBerdasarkanTanggal() {
   if (!dropdown || !tglInput) return;
 
   const tahunPilih = String(tglInput.split("-")[0]);
+  dropdown.innerHTML = '<option value="">-- Pilih Renja --</option>';
   
   // Filter: Tahun harus sama & Sisa Volume > 0
   const renjaTersedia = dataRenjaGlobal.filter(r => {
+    const tahunCocok = String(r.tahun).trim() === String(tahunPilih).trim();
     return String(r.tahun) === tahunPilih && Number(r.sisa_vol) > 0;
   });
 
@@ -837,8 +839,9 @@ function filterRenjaBerdasarkanTanggal() {
       </option>`;
     });
   }
-  updateLabelSatuanLaporan(); 
-  validasiFotoLaporan();      
+  if (typeof updateLabelSatuanLaporan === 'function') updateLabelSatuanLaporan();
+  if (typeof validasiFotoLaporan === 'function') validasiFotoLaporan();
+        
 }
 
 // --- D. PINDAH MODE: RENJA VS LUAR RENJA ---
