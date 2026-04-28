@@ -204,7 +204,16 @@
             document.getElementById("prev-wilayah").innerText = data.ttd_wilayah;
             document.getElementById("prev-nama").innerText = data.ttd_nama;
             document.getElementById("prev-nip").innerText = data.ttd_nip;
+          }else {
+            // PERINGATAN JIKA DATA KOSONG
+            alert(`Perhatian: Admin Kecamatan ${kec} belum mengatur Kop Surat & Tanda Tangan pimpinan. Laporan akan tampil tanpa Kop resmi.`);
+            
+            document.getElementById("info-kop-uptd").innerText = "BELUM DIATUR ADMIN KECAMATAN";
+            document.getElementById("info-kop-uptd").classList.add("text-red-600");
           }
+        })
+        .catch(err => {
+          console.error("Gagal memuat pengaturan:", err);
         });
     }
 
@@ -239,6 +248,7 @@
       const thn = document.getElementById("tahun-cetak").value;
       const btn = document.getElementById("btn-preview");
       const paper = document.getElementById('print-area');
+      const isKopKosong = !document.getElementById("set-kop-uptd").value;
 
       btn.innerText = "⏳ MEMUAT DATA...";
       document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} ${thn}`;
@@ -256,6 +266,12 @@
         theadTr.innerHTML = `<th width="4%">NO</th><th width="26%">KADER & LOKASI</th><th width="35%">KEGIATAN & REALISASI</th><th width="20%">BUKTI FOTO</th><th width="15%">VALIDATOR</th>`;
       }
 
+      if (isKopKosong) {
+         // Pesan konfirmasi yang lebih jelas
+         const pesan = "Kop Surat & Pejabat belum diatur oleh Admin Kecamatan. \n\nTetap lanjutkan cetak dengan format kosong? \n(Disarankan hubungi Admin Kecamatan untuk melengkapi data)";
+         if(!confirm(pesan)) return;
+      }
+      
       fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${blnValue}&tahun=${thn}&role=super_admin`)
         .then(res => res.json())
         .then(data => {
