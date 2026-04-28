@@ -449,10 +449,7 @@
       const thn = document.getElementById("tahun-cetak").value;
       const btn = document.getElementById("btn-preview");
       const paper = document.getElementById('print-area');
-      const theadTr = document.querySelector(".table-dinas thead tr");
-      const bioKader = document.getElementById("biodata-kader"); // Tangkap elemen biodata
-      const desaDipilih = document.getElementById("f-desa").options[document.getElementById("f-desa").selectedIndex].text; // Ambil nama desa
-
+      
       const isKopKosong = !document.getElementById("set-kop-uptd").value;
       if (isKopKosong) {
          if(!confirm("Kop Surat dan Pejabat belum diatur. Tetap lanjutkan cetak dengan format kosong?")) return;
@@ -471,6 +468,9 @@
       document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} ${thn}`;
 
       const theadTr = document.querySelector(".table-dinas thead tr");
+      const bioKader = document.getElementById("biodata-kader"); // Tangkap elemen biodata
+      const desaDipilih = document.getElementById("f-desa").options[document.getElementById("f-desa").selectedIndex].text; // Ambil nama desa
+
       if (jenis === "RENJA") {
         paper.classList.add("landscape-preview");
         document.getElementById("judul-dokumen").innerText = `REKAPITULASI RENCANA KERJA KADER`;
