@@ -15,6 +15,9 @@
     /* Wadah Pembungkus Kertas untuk Fitur Zoom Out di Layar Kecil */
     .print-wrapper { width: 100%; overflow: hidden; background: #e2e8f0; border-radius: 1rem; transition: all 0.3s ease; }
     
+    /* 1. Aturan untuk Layar HP/Laptop (Sembunyikan Validator) */
+    .print-validator { display: none; }
+    
     /* Ukuran Baku Kertas F4 (816px x 1248px) - Resolusi Tinggi */
     .f4-preview { 
       width: 816px; 
@@ -43,8 +46,8 @@
 
     /* --- CSS Khusus Cetak Agar Hasil Jernih (Vektor) & Anti-Patah --- */
     @media print {
-      /* Sembunyikan semua elemen navigasi dan tombol saat diprint */
-      .no-print, header, button, footer, .bg-white.p-5 { display: none !important; }
+      /* Sembunyikan semua elemen navigasi, tombol, dan footer lama (#digital-footprint) saat diprint */
+      .no-print, header, button, footer, .bg-white.p-5, #digital-footprint { display: none !important; }
       
       body { background: white !important; margin: 0; padding: 0; }
       
@@ -79,7 +82,8 @@
         size: 215mm 330mm;
         margin: 0;
       }
-      /* Efek Ajaib: Elemen dengan position fixed akan diulang di setiap halaman cetak */
+      
+      /* 2. Efek Ajaib: Elemen dengan position fixed akan diulang di setiap halaman cetak */
       .print-validator {
         display: block !important;
         position: fixed;
@@ -94,11 +98,7 @@
         font-family: monospace;
         text-transform: uppercase;
       }
-      
-      /* Sembunyikan footer lama saat di-print agar tidak dobel */
-      #digital-footprint { display: none !important; }
     }
-    
   </style>
 </head>
 <body class="pb-20">
@@ -244,12 +244,13 @@
            </div>
          </div>
 
-         <div class="system-footer" id="digital-footprint">
-           * Dokumen belum ditarik dari sistem.
-         </div>
-         <div class="print-validator hidden no-print" id="validator-footer">
-            Dokumen Sah siPeKa PPKBD | ID Dokumen: <span id="val-id" class="font-bold text-black"></span> | <span id="val-time"></span>
-         </div>
+         <div class="system-footer no-print" id="digital-footprint">
+          * Dokumen belum ditarik dari sistem.
+        </div>
+        
+        <div class="print-validator" id="validator-footer">
+          Dokumen Sah siPeKa PPKBD | ID Dokumen: <span id="val-id" class="font-bold text-black"></span> | <span id="val-time"></span>
+        </div>
       </div>
     </div>
 
