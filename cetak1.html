@@ -12,26 +12,20 @@
     body { font-family: 'Poppins', sans-serif; background-color: #f1f5f9; }
     .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
     
-    /* Wadah Pembungkus Kertas untuk Fitur Zoom Out di Layar Kecil */
     .print-wrapper { width: 100%; overflow: hidden; background: #e2e8f0; border-radius: 1rem; transition: all 0.3s ease; }
     
-    /* 1. Aturan untuk Layar HP/Laptop (Sembunyikan Validator) */
-    .print-validator { display: none; }
-    
-    /* Ukuran Baku Kertas F4 (816px x 1248px) - Resolusi Tinggi */
     .f4-preview { 
       width: 816px; 
       min-height: 1248px; 
       margin: 0 auto; 
       background: white; 
-      padding: 50px 60px 100px 60px; /* Bawah diperlebar jadi 100px agar tidak nabrak TTD */
+      padding: 50px 60px 100px 60px; 
       position: relative;
       box-sizing: border-box;
       transform-origin: top left;
       transition: all 0.3s ease;
     }
 
-    /* Ukuran Preview Layar untuk Renja (Landscape) */
     .landscape-preview {
       width: 1248px;
       min-height: 816px;
@@ -44,14 +38,11 @@
     
     .system-footer { position: absolute; bottom: 15mm; left: 15mm; font-size: 9px; color: #64748b; font-style: italic; }
 
-    /* --- CSS Khusus Cetak Agar Hasil Jernih (Vektor) & Anti-Patah --- */
     @media print {
-      /* Sembunyikan semua elemen navigasi, tombol, dan footer lama (#digital-footprint) saat diprint */
       .no-print, header, button, footer, .bg-white.p-5, #digital-footprint { display: none !important; }
       
       body { background: white !important; margin: 0; padding: 0; }
       
-      /* Hilangkan pembungkus abu-abu, radius, dan BAYANGAN */
       .print-wrapper { 
         background: none !important; 
         padding: 0 !important; 
@@ -61,7 +52,6 @@
         border: none !important;
       }
       
-      /* Paksa ukuran f4-preview kembali normal (tanpa zoom) saat cetak */
       .f4-preview { 
         transform: none !important; 
         width: 100% !important; 
@@ -71,32 +61,14 @@
         padding: 10mm 15mm 25mm 15mm !important; 
       }
 
-      /* CSS SAKTI: Cegah baris tabel dan tanda tangan terpotong di tengah kertas */
       tr, .ttd-container {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
       }
 
-      /* Setting Ukuran Kertas F4 Default (Portrait) */
       @page {
         size: 215mm 330mm;
         margin: 0;
-      }
-      
-      /* 2. Efek Ajaib: Elemen dengan position fixed akan diulang di setiap halaman cetak */
-      .print-validator {
-        display: block !important;
-        position: fixed;
-        bottom: 5mm; 
-        left: 15mm;
-        right: 15mm;
-        font-size: 8px;
-        color: #64748b;
-        border-top: 1px dashed #cbd5e1;
-        padding-top: 5px;
-        text-align: center;
-        font-family: monospace;
-        text-transform: uppercase;
       }
     }
   </style>
@@ -120,7 +92,6 @@
   <main class="max-w-5xl mx-auto px-4 space-y-6">
     
     <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200 space-y-5 no-print">
-      
       <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-center border-b border-blue-200 pb-2">
           <p class="text-[10px] font-black text-blue-900 uppercase tracking-widest">Pengaturan Kop & Tanda Tangan</p>
@@ -189,11 +160,9 @@
       <div id="print-area" class="f4-preview">
          
          <div class="flex items-center justify-between border-b-[3px] border-black mb-1 pb-2 px-2">
-           
            <div class="w-20 md:w-24">
              <img src="bekasikab.png" class="w-full object-contain" alt="Logo Bekasi">
            </div>
-           
            <div class="flex-1 text-center px-2">
              <h3 class="font-black text-[16px] md:text-[17px] uppercase leading-tight">PEMERINTAH KABUPATEN BEKASI</h3>
              <h3 class="font-black text-[13px] md:text-[14px] uppercase leading-tight tracking-tighter">DINAS PENGENDALIAN PENDUDUK DAN KELUARGA BERENCANA</h3>
@@ -201,10 +170,9 @@
              <h4 class="font-bold text-[12px] md:text-[13px] uppercase" id="prev-kop-kec">KECAMATAN...</h4>
              <p class="text-[10px] mt-1" id="prev-kop-alamat">Alamat...</p>
            </div>
-           
            <div class="w-20 md:w-24"></div> 
-           
-         </div> <div class="w-full border-b-[1px] border-black mb-6"></div> 
+         </div> 
+         <div class="w-full border-b-[1px] border-black mb-6"></div> 
 
          <h2 id="judul-dokumen" class="text-center font-bold text-[16px] uppercase tracking-wide">REKAPITULASI DOKUMEN</h2>
          <p id="sub-judul-dokumen" class="text-center font-bold text-[14px] mb-8 uppercase">PERIODE: -</p>
@@ -246,15 +214,9 @@
 
          <div class="system-footer no-print" id="digital-footprint">
           * Dokumen belum ditarik dari sistem.
-        </div>
-        
-        <div class="print-validator" id="validator-footer">
-          Dokumen Sah siPeKa PPKBD | ID Dokumen: <span id="val-id" class="font-bold text-black"></span> | <span id="val-time"></span>
-        </div>
-      </div>
-    </div>
+         </div>
 
-    <button onclick="downloadPDF()" class="fixed bottom-6 right-6 bg-red-600 text-white w-14 h-14 rounded-full shadow-[0_10px_20px_rgba(220,38,38,0.4)] flex items-center justify-center active:scale-90 transition z-50 no-print">
+      </div> </div> <button onclick="downloadPDF()" class="fixed bottom-6 right-6 bg-red-600 text-white w-14 h-14 rounded-full shadow-[0_10px_20px_rgba(220,38,38,0.4)] flex items-center justify-center active:scale-90 transition z-50 no-print">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
     </button>
   </main>
@@ -269,34 +231,25 @@
     function formatAlamatRapi(el) {
       let text = el.value.trim();
       if(!text) return;
-      
       text = text.replace(/\.([^\s])/g, '. $1');
-      
       text = text.toLowerCase().split(' ').map(word => {
         if (["RT", "RW", "NO", "KAB"].includes(word.toUpperCase())) return word.toUpperCase();
         return word.charAt(0).toUpperCase() + word.slice(1);
       }).join(' ');
-
       el.value = text;
     }
 
     function autoFillJabatan() {
       let uptd = document.getElementById("set-kop-uptd").value;
       const kec = document.getElementById("set-kop-kec").value;
-
-      if (uptd) {
-        uptd = uptd.replace(/PENGENDALIAN PENDUDUK/ig, "PP");
-      }
-
+      if (uptd) { uptd = uptd.replace(/PENGENDALIAN PENDUDUK/ig, "PP"); }
       const uppers = ["UPTD", "PP", "V", "IV", "III", "II", "I", "VI", "VII", "VIII", "IX", "X", "XII", "XI"];
-      
       const formatTitleCase = (str) => {
         return str.toLowerCase().split(' ').map(word => {
           if (uppers.includes(word.toUpperCase())) return word.toUpperCase();
           return word.charAt(0).toUpperCase() + word.slice(1);
         }).join(' ');
       };
-
       if(uptd) document.getElementById("set-ttd-jabatan").value = "Kepala " + formatTitleCase(uptd);
       if(kec) document.getElementById("set-ttd-wilayah").value = formatTitleCase(kec);
     }
@@ -309,15 +262,12 @@
       const paper = document.getElementById('print-area');
       const screenWidth = wrapper.clientWidth;
       
-      // Deteksi mode Renja (Landscape)
       const isLandscape = paper.classList.contains('landscape-preview');
       const targetWidth = isLandscape ? 1248 : 816;
 
       if (screenWidth < targetWidth + 40) {
         const scaleRatio = screenWidth / targetWidth; 
         paper.style.transform = `scale(${scaleRatio})`;
-        
-        // PERBAIKAN: Gunakan tinggi ASLI konten, bukan tinggi standar kertas
         const actualHeight = paper.offsetHeight; 
         wrapper.style.height = `${actualHeight * scaleRatio}px`;
       } else {
@@ -467,7 +417,6 @@
     }
 
     function previewCetak() {
-      // 1. Validasi: Wajib Pilih Kader
       const namaKaderDipilih = document.getElementById("f-kader") ? document.getElementById("f-kader").value : "";
       if (namaKaderDipilih === "") {
         alert("Peringatan: Silakan pilih Nama Kader sasaran terlebih dahulu!");
@@ -481,13 +430,11 @@
       const btn = document.getElementById("btn-preview");
       const paper = document.getElementById('print-area');
 
-      // 2. Konfirmasi Kop
       const isKopKosong = !document.getElementById("set-kop-uptd").value;
       if (isKopKosong) {
          if(!confirm("Kop Surat dan Pejabat belum diatur. Tetap lanjutkan cetak dengan format kosong?")) return;
       }
 
-      // 3. Update Visual Preview (Kop & Tanda Tangan)
       document.getElementById("prev-kop-uptd").innerText = document.getElementById("set-kop-uptd").value || "UPTD PENGENDALIAN PENDUDUK WILAYAH...";
       document.getElementById("prev-kop-kec").innerText = document.getElementById("set-kop-kec").value || "KECAMATAN...";
       document.getElementById("prev-kop-alamat").innerText = document.getElementById("set-kop-alamat").value || "Alamat...";
@@ -500,7 +447,6 @@
       document.getElementById("prev-nama-kanan").innerText = `( ${namaKaderDipilih} )`;
       document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} ${thn}`;
 
-      // 4. LOGIKA DUA JALUR: SETTING HEADER TABEL & ORIENTASI KERTAS
       const theadTr = document.querySelector(".table-dinas thead tr");
       if (jenis === "RENJA") {
         paper.classList.add("landscape-preview");
@@ -526,75 +472,50 @@
         `;
       }
       
-      scalePrintArea(); // Panggil zoom ulang karena ukuran kertas berubah
+      scalePrintArea(); 
 
       btn.innerText = "⏳ MENYUSUN DOKUMEN...";
 
       fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${blnValue}&tahun=${thn}&role=super_admin`)
         .then(res => res.json())
         .then(data => {
-           // FILTER CERDAS: Cari indeks berdasarkan jenis (Renja indeks 2, Laporan indeks 3)
            const idxNama = (jenis === "RENJA") ? 2 : 3;
            const dataKaderSaja = data.filter(row => row && row[idxNama] && row[idxNama].trim().toUpperCase() === namaKaderDipilih.trim().toUpperCase());
 
            let tbody = document.getElementById("isi-rekap");
-           const validatorFooter = document.getElementById("validator-footer"); // Tangkap elemen validator
            
            if(dataKaderSaja.length === 0) {
              let pesan = jenis === "RENJA" ? `BELUM ADA DATA RENCANA KERJA TAHUN ${thn} UNTUK KADER ${namaKaderDipilih}` : `TIDAK ADA DATA APPROVED UNTUK KADER ${namaKaderDipilih} PADA PERIODE INI`;
              tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">${pesan}</td></tr>`;
              document.getElementById("digital-footprint").innerText = `* Tidak ada data ditemukan.`;
              
-             // Sembunyikan ID Validasi jika data kosong
-             if (validatorFooter) validatorFooter.classList.add("hidden", "no-print");
+             // Jangan isi ID jika data kosong
+             document.getElementById("val-id").innerText = "-";
+             document.getElementById("val-time").innerText = "";
              
            } else {
              let rows = "";
              dataKaderSaja.forEach((row, index) => {
                 if (jenis === "RENJA") {
-                  // MAPPING DATA RENJA
-                  let keg = row[4] || '-';
-                  let sasaran = row[5] || '-';
-                  let indikator = row[6] || '-';
-                  let vol = row[7] || '-';
-                  let satuan = row[8] || '';
-                  let lokasi = row[10] || '-';
-
+                  let keg = row[4] || '-'; let sasaran = row[5] || '-'; let indikator = row[6] || '-';
+                  let vol = row[7] || '-'; let satuan = row[8] || ''; let lokasi = row[10] || '-';
                   rows += `<tr style="page-break-inside: avoid;">
                             <td class="text-center">${index+1}</td>
                             <td><p class="font-bold text-[10px] uppercase">${keg}</p></td>
-                            <td>
-                              <p class="font-bold text-[10px] mb-1 uppercase">${sasaran}</p>
-                              <p class="text-[8px] text-slate-600">📍 ${lokasi}</p>
-                            </td>
+                            <td><p class="font-bold text-[10px] mb-1 uppercase">${sasaran}</p><p class="text-[8px] text-slate-600">📍 ${lokasi}</p></td>
                             <td><p class="text-[9px] leading-tight">${indikator}</p></td>
-                            <td class="text-center">
-                              <p class="text-[10px] font-bold text-blue-800">${vol}</p>
-                              <p class="text-[9px] text-slate-600">${satuan}</p>
-                            </td>
+                            <td class="text-center"><p class="text-[10px] font-bold text-blue-800">${vol}</p><p class="text-[9px] text-slate-600">${satuan}</p></td>
                           </tr>`;
                 } else {
-                  // MAPPING DATA LAPORAN
                   let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
                   let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
                   let validator = row[11] ? row[11] : "Sistem";
-
                   rows += `<tr style="page-break-inside: avoid;">
                             <td class="text-center">${index+1}</td>
-                            <td>
-                              <p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p>
-                              <p class="text-[8px] text-slate-600">📍 ${row[8]}</p>
-                              <p class="text-[8px] text-slate-600">📅 ${row[4]}</p>
-                            </td>
-                            <td>
-                              <p class="font-bold text-[10px] mb-1">${row[5]}</p>
-                              <p class="text-[9px] text-blue-800">Capaian: <span class="font-bold">${row[6]}</span></p>
-                            </td>
+                            <td><p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p><p class="text-[8px] text-slate-600">📍 ${row[8]}</p><p class="text-[8px] text-slate-600">📅 ${row[4]}</p></td>
+                            <td><p class="font-bold text-[10px] mb-1">${row[5]}</p><p class="text-[9px] text-blue-800">Capaian: <span class="font-bold">${row[6]}</span></p></td>
                             <td class="text-center p-2">${thumbFoto}</td>
-                            <td class="text-center">
-                              <p class="text-[8px] text-slate-500 uppercase mb-1">Disetujui Oleh:</p>
-                              <p class="text-[9px] font-bold text-green-700 uppercase">${validator}</p>
-                            </td>
+                            <td class="text-center"><p class="text-[8px] text-slate-500 uppercase mb-1">Disetujui Oleh:</p><p class="text-[9px] font-bold text-green-700 uppercase">${validator}</p></td>
                           </tr>`;
                 }
              });
@@ -607,11 +528,9 @@
              const randomHash = Math.random().toString(36).substring(2, 7).toUpperCase(); 
              const docID = `SPK-${thn}-${randomHash}`;
              
-             if (validatorFooter) {
-                 document.getElementById("val-id").innerText = docID;
-                 document.getElementById("val-time").innerText = `DICETAK PADA: ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB`;
-                 validatorFooter.classList.remove("hidden", "no-print");
-             }
+             // HANYA MENGISI TEKS, TIDAK MAIN CLASSLIST
+             document.getElementById("val-id").innerText = docID;
+             document.getElementById("val-time").innerText = `DICETAK PADA: ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB`;
 
              const statusTxt = jenis === "RENJA" ? "Status: DOKUMEN PERENCANAAN." : "Status: APPROVED.";
              document.getElementById("digital-footprint").innerText = `* Dicetak otomatis dari aplikasi siPeKa PPKBD pada ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB. ${statusTxt}`;
@@ -633,7 +552,6 @@
       const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
       const thn = document.getElementById("tahun-cetak").value;
       
-      // SUNTIK CSS KHUSUS LANDSCAPE SAAT PRINT RENJA
       const styleTagId = 'landscape-print-force';
       if (jenisVal === "RENJA") {
         document.title = `Renja_${kader}_${thn}`;
@@ -654,13 +572,19 @@
         scalePrintArea();
         document.title = oriTitle; 
         const injectedStyle = document.getElementById(styleTagId);
-        if (injectedStyle) injectedStyle.remove(); // Bersihkan CSS landscape setelah print selesai
+        if (injectedStyle) injectedStyle.remove(); 
       }, 500);
     }
   </script>
-<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 no-print">
-  &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
-  Aplikasi Pelaporan Kinerja PPKBD
-</footer>
+
+  <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 no-print">
+    &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
+    Aplikasi Pelaporan Kinerja PPKBD
+  </footer>
+
+  <div class="hidden print:block" style="position: fixed; bottom: 5mm; left: 15mm; right: 15mm; font-size: 8px; color: #64748b; border-top: 1px dashed #cbd5e1; padding-top: 5px; text-align: center; font-family: monospace; z-index: 9999;">
+      Dokumen Sah siPeKa PPKBD | ID Dokumen: <span id="val-id" class="font-bold text-black"></span> | <span id="val-time"></span>
+  </div>
+
 </body>
 </html>
