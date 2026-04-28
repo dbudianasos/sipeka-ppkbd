@@ -31,6 +31,17 @@
       </svg>
     </button>
 
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        cekLogin(); // Pastikan satpam digital jalan
+        batasiTanggalLaporan(); // Kunci tanggal masa depan
+        
+        if (document.getElementById("pilih-renja")) {
+          loadRenjaUntukLaporan(); // Tarik data renja ke memori
+        }
+      });
+    </script>
+    
     <div class="leading-tight">
       <h1 class="font-bold text-base md:text-lg tracking-wide">Buat Laporan</h1>
       <p class="text-[9px] text-blue-200 uppercase tracking-widest font-bold mt-0.5">Input Realisasi Kegiatan</p>
