@@ -41,16 +41,25 @@
       
       body { background: white !important; margin: 0; padding: 0; }
       
-      /* Hilangkan pembungkus abu-abu dan radius */
-      .print-wrapper { background: none !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+      /* Hilangkan pembungkus abu-abu, radius, dan BAYANGAN */
+      .print-wrapper { 
+        background: none !important; 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        overflow: visible !important; 
+        box-shadow: none !important; /* <--- Obat Anti Bayangan */
+        border: none !important;
+      }
       
       /* Paksa ukuran f4-preview kembali normal (tanpa zoom) saat cetak */
       .f4-preview { 
         transform: none !important; 
         width: 100% !important; 
+        min-height: auto !important; 
         box-shadow: none !important;
         margin: 0 !important;
-        padding: 10mm 15mm !important; 
+        /* Padding bawah diperbesar (25mm) agar ada ruang untuk text footer */
+        padding: 10mm 15mm 25mm 15mm !important; 
       }
 
       /* CSS SAKTI: Cegah baris tabel dan tanda tangan terpotong di tengah kertas */
