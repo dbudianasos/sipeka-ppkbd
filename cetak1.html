@@ -271,7 +271,7 @@
         }).join(' ');
       };
       if(uptd) document.getElementById("set-ttd-jabatan").value = "Kepala " + formatTitleCase(uptd);
-      if(kec) document.getElementById("set-ttd-wilayah").value = formatTitleCase(kec);
+      if(kec) document.getElementById("set-ttd-wilayah").value = formatTitleCase(kec).replace(/Kecamatan/gi, "Kec.");
     }
 
     // ==========================================
