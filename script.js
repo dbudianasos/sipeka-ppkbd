@@ -561,3 +561,51 @@ function updateSatuanOtomatis() {
     satuanSel.value = "Orang";
   }
 }
+
+function generateIndikator() {
+  const jenis = document.getElementById("renja-jenis").value;
+  const substansiEl = document.getElementById("renja-substansi");
+  const substansi = substansiEl && substansiEl.value ? substansiEl.value : "";
+  const keterangan = document.getElementById("renja-keterangan").value.trim();
+  const sasaran = document.getElementById("renja-sasaran").value.trim() || "[Sasaran]";
+  const angkaTarget = document.getElementById("renja-target-angka").value.trim();
+  const satuanTarget = document.getElementById("renja-target-satuan").value;
+  const peserta = angkaTarget ? `${angkaTarget} ${satuanTarget}` : "[Jumlah]";
+  const lokasi = document.getElementById("renja-lokasi").value || "[Lokasi]";
+  
+  const inputIndikator = document.getElementById("renja-indikator");
+
+  if (!jenis || jenis === "" || !inputIndikator) {
+    if (inputIndikator) inputIndikator.value = "";
+    return;
+  }
+  
+  let namaKegiatan = (substansi && substansi !== "") ? substansi : jenis;
+  if (jenis === "Lainnya") {
+    namaKegiatan = "kegiatan operasional";
+  }
+
+  // Gabungkan keterangan jika ada
+  const detailKegiatan = keterangan ? `${namaKegiatan} (${keterangan})` : namaKegiatan;
+  let kalimatBaku = "";
+
+  // Logika Switch-Case asli dari backup Bapak
+  switch (jenis) {
+    case "Pertemuan":
+      kalimatBaku = `Terselenggaranya agenda ${detailKegiatan} serta meningkatnya kesepahaman pada ${peserta} dari unsur ${sasaran} di wilayah ${lokasi}.`;
+      break;
+    case "KIE":
+      kalimatBaku = `Meningkatnya pengetahuan dan kesadaran ${peserta} sasaran ${sasaran} mengenai program Bangga Kencana melalui edukasi ${detailKegiatan} di ${lokasi}.`;
+      break;
+    case "Pelayanan & Penggerakan":
+      kalimatBaku = `Terlaksananya fasilitasi bagi ${peserta} sasaran ${sasaran} melalui aktivitas ${detailKegiatan} secara optimal di wilayah ${lokasi}.`;
+      break;
+    case "Pencatatan & Pelaporan":
+      kalimatBaku = `Tersusunnya administrasi ${detailKegiatan} untuk sasaran ${sasaran} sebanyak ${peserta} di ${lokasi} yang valid dan akurat.`;
+      break;
+    default:
+      kalimatBaku = `Terlaksananya ${detailKegiatan} dengan capaian ${peserta} dari target ${sasaran} di ${lokasi} sesuai dengan rencana kerja.`;
+  }
+  
+  inputIndikator.value = kalimatBaku;
+}
