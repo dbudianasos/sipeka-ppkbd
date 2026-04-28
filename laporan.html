@@ -58,7 +58,7 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Tanggal</label>
-          <input id="lap-tgl" type="date" onchange="bukaKunciForm()" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-inner">
+          <input id="lap-tgl" type="date" onchange="bukaKunciForm() validasiFotoLaporan()"" class="w-full p-4 text-sm font-semibold text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-inner">
         </div>
 
         <div>
@@ -119,7 +119,7 @@
   <div>
     <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-2 mb-1 block">Hasil / Jumlah Sasaran Kegiatan</label>
     <div class="flex gap-3">
-      <input id="lap-realisasi" type="number" placeholder="0" class="w-1/3 p-4 text-xl text-center font-black text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
+      <input id="lap-realisasi" type="number" oninput="validasiFotoLaporan()" placeholder="0" class="w-1/3 p-4 text-xl text-center font-black text-blue-900 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 transition-all">
       
       <div id="container-satuan-laporan" class="w-2/3">
         <div class="w-full p-4 bg-slate-100 border border-slate-200 text-gray-400 font-bold rounded-2xl text-center text-sm shadow-inner italic">
