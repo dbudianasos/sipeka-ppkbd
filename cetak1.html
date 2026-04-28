@@ -79,6 +79,24 @@
         size: 215mm 330mm;
         margin: 0;
       }
+      /* Efek Ajaib: Elemen dengan position fixed akan diulang di setiap halaman cetak */
+      .print-validator {
+        display: block !important;
+        position: fixed;
+        bottom: 5mm; 
+        left: 15mm;
+        right: 15mm;
+        font-size: 8px;
+        color: #64748b;
+        border-top: 1px dashed #cbd5e1;
+        padding-top: 5px;
+        text-align: center;
+        font-family: monospace;
+        text-transform: uppercase;
+      }
+      
+      /* Sembunyikan footer lama saat di-print agar tidak dobel */
+      #digital-footprint { display: none !important; }
     }
     
   </style>
@@ -229,7 +247,9 @@
          <div class="system-footer" id="digital-footprint">
            * Dokumen belum ditarik dari sistem.
          </div>
-
+         <div class="print-validator hidden no-print" id="validator-footer">
+            Dokumen Sah siPeKa PPKBD | ID Dokumen: <span id="val-id" class="font-bold text-black"></span> | <span id="val-time"></span>
+         </div>
       </div>
     </div>
 
@@ -517,11 +537,16 @@
            const dataKaderSaja = data.filter(row => row && row[idxNama] && row[idxNama].trim().toUpperCase() === namaKaderDipilih.trim().toUpperCase());
 
            let tbody = document.getElementById("isi-rekap");
+           const validatorFooter = document.getElementById("validator-footer"); // Tangkap elemen validator
            
            if(dataKaderSaja.length === 0) {
              let pesan = jenis === "RENJA" ? `BELUM ADA DATA RENCANA KERJA TAHUN ${thn} UNTUK KADER ${namaKaderDipilih}` : `TIDAK ADA DATA APPROVED UNTUK KADER ${namaKaderDipilih} PADA PERIODE INI`;
              tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">${pesan}</td></tr>`;
              document.getElementById("digital-footprint").innerText = `* Tidak ada data ditemukan.`;
+             
+             // Sembunyikan ID Validasi jika data kosong
+             if (validatorFooter) validatorFooter.classList.add("hidden", "no-print");
+             
            } else {
              let rows = "";
              dataKaderSaja.forEach((row, index) => {
@@ -574,7 +599,19 @@
              });
              tbody.innerHTML = rows;
              setTimeout(scalePrintArea, 100);
+             
              const printDate = new Date();
+             
+             // --- GENERATOR ID VALIDASI DOKUMEN ---
+             const randomHash = Math.random().toString(36).substring(2, 7).toUpperCase(); 
+             const docID = `SPK-${thn}-${randomHash}`;
+             
+             if (validatorFooter) {
+                 document.getElementById("val-id").innerText = docID;
+                 document.getElementById("val-time").innerText = `DICETAK PADA: ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB`;
+                 validatorFooter.classList.remove("hidden", "no-print");
+             }
+
              const statusTxt = jenis === "RENJA" ? "Status: DOKUMEN PERENCANAAN." : "Status: APPROVED.";
              document.getElementById("digital-footprint").innerText = `* Dicetak otomatis dari aplikasi siPeKa PPKBD pada ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB. ${statusTxt}`;
            }
