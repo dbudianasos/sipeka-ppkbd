@@ -288,15 +288,17 @@
       const paper = document.getElementById('print-area');
       const screenWidth = wrapper.clientWidth;
       
-      // Deteksi apakah sedang dalam mode Renja (Landscape)
+      // Deteksi mode Renja (Landscape)
       const isLandscape = paper.classList.contains('landscape-preview');
       const targetWidth = isLandscape ? 1248 : 816;
-      const targetHeight = isLandscape ? 816 : 1248;
 
       if (screenWidth < targetWidth + 40) {
         const scaleRatio = screenWidth / targetWidth; 
         paper.style.transform = `scale(${scaleRatio})`;
-        wrapper.style.height = `${targetHeight * scaleRatio}px`;
+        
+        // PERBAIKAN: Gunakan tinggi ASLI konten, bukan tinggi standar kertas
+        const actualHeight = paper.offsetHeight; 
+        wrapper.style.height = `${actualHeight * scaleRatio}px`;
       } else {
         paper.style.transform = 'none';
         wrapper.style.height = 'auto';
@@ -571,7 +573,7 @@
                 }
              });
              tbody.innerHTML = rows;
-             
+             setTimeout(scalePrintArea, 100);
              const printDate = new Date();
              const statusTxt = jenis === "RENJA" ? "Status: DOKUMEN PERENCANAAN." : "Status: APPROVED.";
              document.getElementById("digital-footprint").innerText = `* Dicetak otomatis dari aplikasi siPeKa PPKBD pada ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB. ${statusTxt}`;
