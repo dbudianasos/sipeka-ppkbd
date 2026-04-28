@@ -162,7 +162,7 @@
   </footer>
 
   <script>
-    // FUNGSI INISIALISASI (Taruh di sini saja agar rapi)
+    // 1. Inisialisasi Utama Dashboard
     function initAdminDashboard() {
       initDashboard();
       const role = localStorage.getItem("role");
@@ -175,33 +175,101 @@
       let roleText = "";
       let wilayahText = "";
 
+      // Pasang Info Otoritas
       if (role === "super_admin") {
         roleText = "Administrator Kabupaten";
         wilayahText = "Kabupaten Bekasi";
       } else if (role === "admin_kec") {
         roleText = "Administrator Kecamatan";
         wilayahText = "Kecamatan " + kec;
-        const selKec = document.getElementById("filter-kecamatan");
-        if(selKec) { selKec.value = kec; selKec.disabled = true; }
       } else if (role === "admin_desa") {
         roleText = "Administrator Desa";
         wilayahText = "Desa " + desa + " (" + kec + ")";
-        const selKec = document.getElementById("filter-kecamatan");
-        const selDesa = document.getElementById("filter-desa");
-        const role = localStorage.getItem("role");
-        if(selKec) { selKec.value = kec; selKec.disabled = true; }
-        if(selDesa) {
-          selDesa.innerHTML = `<option value="${desa}">${desa}</option>`;
-          selDesa.value = desa;
-          selDesa.disabled = true;
-        }
       }
 
       if(document.getElementById("labelRole")) document.getElementById("labelRole").innerText = roleText;
       if(document.getElementById("wilayahOtoritas")) document.getElementById("wilayahOtoritas").innerText = "📍 Otoritas: " + wilayahText;
       
-      if (typeof loadGrafik === 'function') loadGrafik();
+      // Jalankan Engine Filter Dinamis
+      initFilterWilayah(role, kec, desa);
     }
+
+    // 2. Engine Filter Dinamis Berantai
+    function initFilterWilayah(role, userKec, userDesa) {
+      fetch(`${API_URL}?action=get_users&role_admin=${role}&kec_admin=${userKec}&desa_admin=${userDesa}`)
+        .then(res => res.json())
+        .then(users => {
+           window.ALL_KADERS_DASHBOARD = users.filter(u => (u.Role || u.role) === "kader");
+           
+           const selKec = document.getElementById("filter-kecamatan");
+           const selDesa = document.getElementById("filter-desa");
+
+           // Isi Dropdown Kecamatan
+           if (selKec) {
+             const unikKec = [...new Set(window.ALL_KADERS_DASHBOARD.map(u => (u.Kecamatan || u.kecamatan || "").toUpperCase()))].sort();
+             selKec.innerHTML = '<option value="">-- Semua Kecamatan --</option>';
+             unikKec.forEach(k => { if(k) selKec.innerHTML += `<option value="${k}">${k}</option>`; });
+             
+             if (role !== "super_admin") {
+               selKec.value = userKec.toUpperCase();
+               selKec.disabled = true;
+             }
+           }
+
+           // Isi Dropdown Desa (Untuk pertama kali)
+           updateFilterDesaDash();
+        });
+    }
+
+    // 3. Fungsi Saat Kecamatan Berubah (Refresh Desa)
+    function updateFilterDesaDash() {
+      const role = localStorage.getItem("role");
+      const selKec = document.getElementById("filter-kecamatan") ? document.getElementById("filter-kecamatan").value.toUpperCase() : "";
+      const selDesa = document.getElementById("filter-desa");
+
+      if (selDesa && window.ALL_KADERS_DASHBOARD) {
+        selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
+        
+        const filteredKader = window.ALL_KADERS_DASHBOARD.filter(u => selKec === "" || (u.Kecamatan || u.kecamatan || "").toUpperCase() === selKec);
+        const unikDesa = [...new Set(filteredKader.map(u => (u.Desa || u.desa || "").toUpperCase()))].sort();
+        
+        unikDesa.forEach(d => { if(d) selDesa.innerHTML += `<option value="${d}">${d}</option>`; });
+
+        if (role === "admin_desa") {
+          selDesa.value = localStorage.getItem("desa").toUpperCase();
+          selDesa.disabled = true;
+        }
+      }
+      // Setelah Desa berubah, update Dropdown Kader
+      updateFilterKaderDash();
+    }
+
+    // 4. Fungsi Saat Desa Berubah (Refresh Daftar Kader & Grafik)
+    function updateFilterKaderDash() {
+      const selKec = document.getElementById("filter-kecamatan") ? document.getElementById("filter-kecamatan").value.toUpperCase() : "";
+      const selDesa = document.getElementById("filter-desa") ? document.getElementById("filter-desa").value.toUpperCase() : "";
+      const userEl = document.getElementById("filter-user");
+
+      if (userEl && window.ALL_KADERS_DASHBOARD) {
+        userEl.innerHTML = '<option value="">-- Semua Kader (Total Wilayah) --</option>';
+        
+        window.ALL_KADERS_DASHBOARD.forEach(u => {
+          const uKec = (u.Kecamatan || u.kecamatan || "").toUpperCase();
+          const uDesa = (u.Desa || u.desa || "").toUpperCase();
+          
+          if ((selKec === "" || uKec === selKec) && (selDesa === "" || uDesa === selDesa)) {
+             userEl.innerHTML += `<option value="${u.NIK || u.nik}">${u.Nama || u.nama}</option>`;
+          }
+        });
+      }
+      
+      // Pemicu Terakhir: Load Ulang Grafik sesuai Pilihan
+      loadGrafik();
+    }
+
+    // Ganti fungsi onchange di elemen HTML (Pastikan ID filter di HTML menggunakan fungsi baru ini)
+    document.getElementById("filter-kecamatan").setAttribute("onchange", "updateFilterDesaDash()");
+    document.getElementById("filter-desa").setAttribute("onchange", "updateFilterKaderDash()");
 
     // Jalankan saat halaman siap
     window.addEventListener('load', initAdminDashboard);
