@@ -1191,3 +1191,73 @@ async function simpanLaporan() {
     btn.innerText = "KIRIM LAPORAN SEKARANG";
   }
 }
+
+// ============================================================
+// 9. LOGIKA RIWAYAT LAPORAN MANDIRI (KADER)
+// ============================================================
+
+function loadRiwayatKader() {
+  const container = document.getElementById("list-riwayat-kader");
+  const nik = localStorage.getItem("nik");
+  if (!container) return;
+
+  fetch(`${API_URL}?action=get_riwayat&nik=${nik}`)
+    .then(res => res.json())
+    .then(data => {
+      container.innerHTML = "";
+      
+      let countApproved = 0;
+      let countPending = 0;
+
+      if (!data || data.length === 0) {
+        container.innerHTML = `<p class="text-center text-gray-400 text-xs py-10 italic">Belum ada laporan terkirim.</p>`;
+        return;
+      }
+
+      // Urutkan dari yang terbaru (berdasarkan ID/Timestamp)
+      data.reverse().forEach(item => {
+        const isDraft = item.status.toLowerCase() === "draft";
+        if (!isDraft) countApproved++; else countPending++;
+
+        const statusColor = isDraft ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-700";
+        
+        container.innerHTML += `
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-3 relative">
+            <div class="flex justify-between items-start mb-3">
+               <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase">${item.status}</span>
+               <p class="text-[9px] text-slate-400 font-bold tracking-tighter uppercase font-mono">${item.id}</p>
+            </div>
+            
+            <h3 class="text-xs font-black text-blue-900 uppercase leading-tight mb-1">${item.kegiatan}</h3>
+            <p class="text-[9px] text-slate-500 font-medium mb-3 italic">📍 ${item.realisasi} di ${item.tanggal}</p>
+            
+            <div class="flex items-center justify-between border-t border-dashed border-slate-100 pt-3 mt-3">
+               <p class="text-[9px] text-slate-400 font-bold">Verifikator: <span class="text-blue-700">${item.verifikator || '-'}</span></p>
+               ${isDraft ? 
+                 `<button onclick="hapusLaporanKader('${item.id}')" class="bg-red-50 text-red-600 text-[10px] font-bold px-4 py-1.5 rounded-lg active:scale-95 transition">🗑️ HAPUS</button>` 
+                 : `<span class="text-[10px] text-green-500 font-black">Laporan Sah ✅</span>`
+               }
+            </div>
+          </div>`;
+      });
+
+      // Update Mini Stats di atas
+      if(document.getElementById("stat-approved")) document.getElementById("stat-approved").innerText = countApproved;
+      if(document.getElementById("stat-pending")) document.getElementById("stat-pending").innerText = countPending;
+    });
+}
+
+function hapusLaporanKader(id) {
+  if (!confirm("Hapus laporan ini? Foto di server juga akan ikut dihapus permanen.")) return;
+  
+  fetch(`${API_URL}?action=hapus_laporan&laporan_id=${id}`)
+    .then(res => res.text())
+    .then(res => {
+      if (res.trim() === "success") {
+        alert("Laporan berhasil dihapus!");
+        loadRiwayatKader();
+      } else {
+        alert("Gagal menghapus: " + res);
+      }
+    });
+}
