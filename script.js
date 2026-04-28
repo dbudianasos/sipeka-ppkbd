@@ -464,8 +464,22 @@ function tampilkanMotivasi() {
 }
 
 function setTahunOtomatis() {
-  const thn = new Date().getFullYear();
-  if (document.getElementById("filter-tahun")) document.getElementById("filter-tahun").innerHTML = `<option value="${thn}">${thn}</option>`;
+  const thn = new Date().getFullYear();
+  
+  // 1. Untuk Filter Statistik (Hanya tahun ini)
+  const elFilter = document.getElementById("filter-tahun");
+  if (elFilter) {
+    elFilter.innerHTML = `<option value="${thn}">${thn}</option>`;
+  }
+
+  // 2. Untuk Form Renja (Tahun ini & Tahun depan)
+  const elRenja = document.getElementById("renja-tahun");
+  if (elRenja) {
+    elRenja.innerHTML = `
+      <option value="${thn}">${thn}</option>
+      <option value="${thn + 1}">${thn + 1}</option>
+    `;
+  }
 }
 
 // ================= 5. PENGGERAK DOM =================
