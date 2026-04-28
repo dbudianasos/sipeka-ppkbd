@@ -293,7 +293,7 @@ function hapusUser(nik, nama) {
   fetch(API_URL, { method: "POST", body: new URLSearchParams({ action: "hapus_user", nik_target: nik }) }).then(() => loadUsers());
 }
 
-// ================= 4. DASHBOARD & STATISTIK (FUNGSI LAMA) =================
+// ================= DASHBOARD & STATISTIK (FUNGSI LAMA) =================
 function initDashboard() {
   const nama = localStorage.getItem("nama");
   const role = localStorage.getItem("role");
@@ -348,111 +348,88 @@ function initDashboard() {
 
 //====================== 4. LOAD STATISTIK (GRAFIK KINERJA) ==========================//
 function loadGrafik() {
-  const role = localStorage.getItem("role");
-  const nikLogin = localStorage.getItem("nik");
-  const kecAdmin = localStorage.getItem("kecamatan"); 
-  const desaAdmin = localStorage.getItem("desa");
-  
-  const elTahun = document.getElementById("filter-tahun");
-  const elBulan = document.getElementById("filter-bulan");
-  if (!elTahun || !elBulan) return; 
+  const role = localStorage.getItem("role");
+  const nikLogin = localStorage.getItem("nik");
+  
+  const elTahun = document.getElementById("filter-tahun");
+  const elBulan = document.getElementById("filter-bulan");
+  if (!elTahun || !elBulan) return; 
 
-  const tahun = elTahun.value;
-  const bulan = elBulan.value;
-  const userEl = document.getElementById("filter-user"); // Dropdown pilih kader
-  const userSelect = userEl ? userEl.value : "";
+  const tahun = elTahun.value;
+  const bulan = elBulan.value;
+  const userEl = document.getElementById("filter-user");
+  const userSelect = userEl ? userEl.value : "";
 
-  // 1. LOGIKA DROPDOWN PILIHAN KADER (KHUSUS ADMIN)
-  if (role && role.includes("admin")) {
-    const adminArea = document.getElementById("admin-filter-area");
-    if (adminArea) adminArea.classList.remove("hidden");
+  // KUNCI PERBAIKAN: Deteksi NIK secara akurat per level wilayah
+  let nikTarget = nikLogin; // Default untuk Kader biasa
 
-    if (userEl && userEl.options.length <= 1) {
-      const params = new URLSearchParams({
-        action: "get_users",
-        role_admin: role,
-        kec_admin: kecAdmin,
-        desa_admin: desaAdmin
-      });
+  if (role && role.includes("admin")) {
+    const adminArea = document.getElementById("admin-filter-area");
+    if (adminArea) adminArea.classList.remove("hidden");
 
-      fetch(`${API_URL}?${params.toString()}`)
-        .then(res => res.json())
-        .then(users => {
-          users.forEach(u => {
-            const uRole = u.Role || u.role || "";
-            const uNama = u.Nama || u.nama || "Tanpa Nama";
-            const uNik = u.NIK || u.nik || "";
-            
-            if (uRole === 'kader') { 
-              let opt = document.createElement("option");
-              opt.value = uNik;
-              opt.innerHTML = uNama;
-              userEl.appendChild(opt);
-            }
-          });
-        });
-    }
-  }
+    if (userSelect !== "") {
+       nikTarget = userSelect; // Tarik data 1 kader spesifik
+    } else {
+       // Kumpulkan semua NIK Kader dari dropdown untuk rekap regional
+       let targetNiks = [];
+       if (userEl) {
+         for (let i = 1; i < userEl.options.length; i++) {
+            targetNiks.push(userEl.options[i].value);
+         }
+       }
+       
+       if (role === "super_admin" && targetNiks.length === 0) {
+          nikTarget = ""; // Super admin kosong = tarik seluruh kabupaten
+       } else {
+          nikTarget = targetNiks.join(",") || "KOSONG"; // Gabungkan NIK pake koma
+       }
+    }
+  }
 
-  // 2. TENTUKAN TARGET DATA
-  let nikTarget = (role && role.includes("admin") && userSelect !== "") ? userSelect : nikLogin;
+  // Minta Data ke Server
+  fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
+    .then(res => res.json())
+    .then(data => {
+      
+      // --- UPDATE KARTU RINGKASAN ---
+      const totalReal = data.realisasi_tahunan.reduce((a, b) => a + b, 0);
+      const totalTarget = data.target_tahunan.reduce((a, b) => a + b, 0);
+      const persen = totalTarget > 0 ? Math.round((totalReal / totalTarget) * 100) : 0;
 
-  // 3. TARIK DATA STATISTIK DARI APPS SCRIPT
-  fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
-    .then(res => res.json())
-    .then(data => {
-      
-      // --- UPDATE KARTU RINGKASAN ---
-      const totalReal = data.realisasi_tahunan.reduce((a, b) => a + b, 0);
-      const totalTarget = data.target_tahunan.reduce((a, b) => a + b, 0);
-      const persen = totalTarget > 0 ? Math.round((totalReal / totalTarget) * 100) : 0;
+      if (document.getElementById("total-realisasi")) document.getElementById("total-realisasi").innerText = totalReal;
+      if (document.getElementById("total-persen")) document.getElementById("total-persen").innerText = persen + "%";
 
-      if (document.getElementById("total-realisasi")) 
-          document.getElementById("total-realisasi").innerText = totalReal;
-      
-      if (document.getElementById("total-persen")) 
-          document.getElementById("total-persen").innerText = persen + "%";
-      
-      const pb = document.getElementById("progress-bar");
-      if (pb) pb.style.width = (persen > 100 ? 100 : persen) + "%";
+      // --- UPDATE DIAGRAM DONUT ---
+      const canvas = document.getElementById('myChart');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (myChartInstance) myChartInstance.destroy();
+        
+        myChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
+            datasets: [{
+              data: data.realisasi_bulanan, 
+              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#94a3b8'],
+              borderWidth: 2, borderColor: '#ffffff', hoverOffset: 6
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false, cutout: '65%',
+            plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } }
+          }
+        });
+      }
 
-      // --- UPDATE DIAGRAM DONUT ---
-      const canvas = document.getElementById('myChart');
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        if (myChartInstance) myChartInstance.destroy();
-        
-        myChartInstance = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
-            datasets: [{
-              data: data.realisasi_bulanan, 
-              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#94a3b8'],
-              borderWidth: 2,
-              borderColor: '#ffffff',
-              hoverOffset: 6
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '65%',
-            plugins: {
-              legend: { display: true, position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } }
-            }
-          }
-        });
-      }
-
-      // --- UPDATE PERINGKAT (Hanya Admin) ---
-      const rankArea = document.getElementById("section-peringkat");
-      if (role && role.includes("admin") && rankArea) {
-        rankArea.classList.remove("hidden");
-        renderPeringkat(data.ranking);
-      }
-    })
-    .catch(err => console.error("Gagal load statistik:", err));
+      // --- UPDATE PERINGKAT TOP 5 ---
+      const rankArea = document.getElementById("section-peringkat");
+      if (role && role.includes("admin") && rankArea) {
+        rankArea.classList.remove("hidden");
+        renderPeringkat(data.ranking);
+      }
+    })
+    .catch(err => console.error("Gagal load statistik:", err));
 }
 
 //====================== 5. RENDER PERINGKAT ==========================//
