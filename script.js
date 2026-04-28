@@ -840,3 +840,82 @@ function filterRenjaBerdasarkanTanggal() {
   updateLabelSatuanLaporan(); 
   validasiFotoLaporan();      
 }
+
+// --- D. PINDAH MODE: RENJA VS LUAR RENJA ---
+function toggleAreaForm() {
+  const sumber = document.getElementById("sumber-kegiatan").value;
+  const areaRenja = document.getElementById("area-pilih-renja");
+  const areaManual = document.getElementById("area-manual");
+
+  if (sumber === "luar") {
+    areaRenja.style.display = "none";
+    areaManual.style.display = "block";
+  } else {
+    areaRenja.style.display = "block";
+    areaManual.style.display = "none";
+  }
+  updateLabelSatuanLaporan(); 
+  validasiFotoLaporan();      
+}
+
+// --- E. TAMPILKAN DETAIL RENCANA YANG DIPILIH ---
+function showDetailRenja() {
+  const drp = document.getElementById("pilih-renja");
+  const previewBox = document.getElementById("preview-renja-full");
+  const previewTeks = document.getElementById("teks-renja-full");
+
+  if (drp && drp.selectedIndex > 0) {
+    const opt = drp.options[drp.selectedIndex];
+    // Ambil detail dari teks option (kegiatan + sisa)
+    previewTeks.innerText = opt.text;
+    previewBox.classList.remove("hidden");
+  } else {
+    if(previewBox) previewBox.classList.add("hidden");
+  }
+  updateLabelSatuanLaporan(); 
+}
+
+// --- F. UPDATE LABEL SATUAN (ORANG/KELUARGA/DLL) ---
+function updateLabelSatuanLaporan() {
+  const drp = document.getElementById("pilih-renja");
+  const container = document.getElementById("container-satuan-laporan");
+  const sumber = document.getElementById("sumber-kegiatan").value;
+
+  if (!container) return;
+
+  if (sumber === "renja") {
+    let satuanAsli = "Orang"; // Default
+    if (drp && drp.selectedIndex > 0) {
+      const teksTarget = drp.options[drp.selectedIndex].getAttribute("data-satuan") || "";
+      // Pecah "12 Keluarga" ambil kata "Keluarga"-nya saja
+      const parts = teksTarget.split(" ");
+      satuanAsli = parts.length > 1 ? parts[parts.length - 1] : "Orang";
+    }
+    
+    container.innerHTML = `
+      <div class="w-full p-4 bg-blue-100 border border-blue-200 text-blue-800 font-bold rounded-2xl text-center text-sm shadow-inner flex items-center justify-center gap-2">
+        <span>${satuanAsli}</span>
+        <span class="text-[10px] opacity-50">🔒</span>
+      </div>
+    `;
+  } else {
+    // Jika Luar Renja, biarkan kader pilih satuan secara manual
+    container.innerHTML = `
+      <select id="lap-satuan-manual" onchange="validasiFotoLaporan()" class="w-full p-4 text-sm font-bold text-amber-900 bg-amber-50 border border-amber-200 rounded-2xl outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
+        <option value="Orang">Orang</option>
+        <option value="Keluarga">Keluarga</option>
+        <option value="Akseptor">Akseptor</option>
+        <option value="Dokumen">Dokumen</option>
+        <option value="Kegiatan">Kegiatan</option>
+        <option value="Kelompok">Kelompok</option>
+      </select>
+    `;
+  }
+}
+
+// --- G. VALIDASI FORM (UNTUK BUKA TOMBOL KAMERA) ---
+// Kita buat fungsi "kosong" dulu agar error di console hilang
+function validasiFotoLaporan() {
+  console.log("Validasi berjalan...");
+  // Logika lengkapnya akan kita isi di tahap berikutnya (Watermark)
+}
