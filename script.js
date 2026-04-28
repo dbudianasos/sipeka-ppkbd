@@ -778,9 +778,14 @@ function batasiTanggalLaporan() {
   }
 }
 
-// --- B. TARIK DATA RENJA KE MEMORI (UNTUK DROPDOWN) ---
+/// --- B. TARIK DATA RENJA KE MEMORI (DENGAN AUTO-CHECK) ---
 function loadRenjaUntukLaporan() {
   const nik = localStorage.getItem("nik");
+  const dropdown = document.getElementById("pilih-renja");
+  
+  // Beri indikasi ke user bahwa data sedang diambil
+  if (dropdown) dropdown.innerHTML = '<option value="">⏳ Sinkronisasi Renja...</option>';
+  
   dataRenjaGlobal = []; // Reset penampung global
   
   fetch(`${API_URL}?action=get_renja&nik=${nik}`)
@@ -789,7 +794,25 @@ function loadRenjaUntukLaporan() {
       if(data && data.length > 0) {
         dataRenjaGlobal = data;
         console.log("Data Renja untuk laporan siap!");
+
+        // JURUS ANTI-BALAPAN:
+        // Cek apakah user sudah terlanjur isi tanggal. 
+        // Jika sudah, langsung jalankan filter tanpa nunggu klik kedua kali.
+        const tglSudahAda = document.getElementById("lap-tgl").value;
+        if (tglSudahAda) {
+          console.log("Tanggal terdeteksi, menjalankan filter otomatis...");
+          filterRenjaBerdasarkanTanggal();
+        } else {
+          // Jika belum isi tanggal, kembalikan teks dropdown ke semula
+          if (dropdown) dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
+        }
+      } else {
+        if (dropdown) dropdown.innerHTML = '<option value="">(Belum ada Renja tersimpan)</option>';
       }
+    })
+    .catch(err => {
+      console.error("Gagal sinkronisasi:", err);
+      if (dropdown) dropdown.innerHTML = '<option value="">❌ Gagal memuat data</option>';
     });
 }
 
