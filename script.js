@@ -661,10 +661,29 @@ function simpanRenja() {
   .then(res => {
     if (res.trim() === "success") {
       alert("✅ Rencana Kerja Berhasil Disimpan!");
-      // Reset form tipis-tipis
-      document.getElementById("renja-volume").value = "";
-      document.getElementById("renja-target-angka").value = "";
+
+      // --- PROSES RESET TOTAL FORM ---
+      
+      // 1. Reset Dropdown Utama & Sembunyikan Substansi
+      document.getElementById("renja-jenis").value = "";
+      const wrapperSub = document.getElementById("wrapper-substansi");
+      if (wrapperSub) wrapperSub.classList.add("hidden");
+      
+      const subEl = document.getElementById("renja-substansi");
+      if (subEl) subEl.innerHTML = '<option value="">-- Pilih Substansi --</option>';
+
+      // 2. Kosongkan Semua Kolom Input Teks & Angka
       document.getElementById("renja-keterangan").value = "";
+      document.getElementById("renja-volume").value = "";
+      document.getElementById("renja-sasaran").value = "";
+      document.getElementById("renja-target-angka").value = "";
+      document.getElementById("renja-indikator").value = "";
+
+      // 3. Khusus Lokasi: Tidak perlu direset jika Kader 
+      // ingin menginput banyak data di lokasi yang sama (biar cepat)
+      // Tapi jika ingin dikosongkan juga, aktifkan baris bawah ini:
+      // document.getElementById("renja-lokasi").value = "";
+
       loadRenja(); // Segarkan daftar di bawah
     } else {
       alert("❌ Gagal menyimpan: " + res);
