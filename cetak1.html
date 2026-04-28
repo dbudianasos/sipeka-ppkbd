@@ -449,6 +449,9 @@
       const thn = document.getElementById("tahun-cetak").value;
       const btn = document.getElementById("btn-preview");
       const paper = document.getElementById('print-area');
+      const theadTr = document.querySelector(".table-dinas thead tr");
+      const bioKader = document.getElementById("biodata-kader"); // Tangkap elemen biodata
+      const desaDipilih = document.getElementById("f-desa").options[document.getElementById("f-desa").selectedIndex].text; // Ambil nama desa
 
       const isKopKosong = !document.getElementById("set-kop-uptd").value;
       if (isKopKosong) {
@@ -472,6 +475,11 @@
         paper.classList.add("landscape-preview");
         document.getElementById("judul-dokumen").innerText = `REKAPITULASI RENCANA KERJA KADER`;
         document.getElementById("sub-judul-dokumen").innerText = `TAHUN ANGGARAN ${thn}`;
+        // MUNCULKAN BIODATA
+        bioKader.classList.remove("hidden");
+        document.getElementById("bio-nama").innerText = namaKaderDipilih;
+        document.getElementById("bio-desa").innerText = `DESA ${desaDipilih}`;
+
         theadTr.innerHTML = `
            <th width="4%">NO</th>
            <th width="28%">KEGIATAN</th>
@@ -483,6 +491,10 @@
         paper.classList.remove("landscape-preview");
         document.getElementById("judul-dokumen").innerText = `REKAPITULASI REALISASI KINERJA KADER`;
         document.getElementById("sub-judul-dokumen").innerText = `PERIODE BULAN ${blnText.toUpperCase()} ${thn}`;
+        
+        // SEMBUNYIKAN BIODATA (Karena Laporan pakai format lama)
+        bioKader.classList.add("hidden");
+
         theadTr.innerHTML = `
            <th width="4%">NO</th>
            <th width="26%">KADER & LOKASI</th>
