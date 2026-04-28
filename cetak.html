@@ -177,23 +177,30 @@
     };
 
     function loadSettingsKader(kec) {
-      // Helper untuk membuat tulisan jadi rapi (Title Case) tapi menjaga singkatan
-      const formatRapi = (str) => {
+      // Fungsi Internal Formatter (Penerjemah Huruf)
+      const buatTulisanRapi = (str) => {
         if (!str) return "-";
-        const singkatan = ["UPTD", "PP", "V", "IV", "III", "II", "I", "VI", "VII", "VIII", "IX", "X", "XII", "XI", "KAB", "NIP"];
-        return str.toLowerCase().split(' ').map(word => {
-          // Jika kata tersebut ada di daftar singkatan, paksa jadi UPPERCASE
-          if (singkatan.includes(word.toUpperCase())) return word.toUpperCase();
-          // Jika tidak, buat jadi Title Case (Huruf depan besar)
-          return word.charAt(0).toUpperCase() + word.slice(1);
+        // Daftar kata yang WAJIB huruf besar semua
+        const singkatan = ["UPTD", "PP", "V", "IV", "III", "II", "I", "VI", "VII", "VIII", "IX", "X", "XII", "XI", "KAB", "NIP", "KEC", "S.KM", "M.SI", "SKM", "MSI"];
+        
+        return str.trim().split(/\s+/).map(word => {
+          // Hilangkan tanda baca sementara untuk pengecekan (misal "uptd," -> "UPTD")
+          const cleanWord = word.replace(/[^a-zA-Z]/g, '').toUpperCase();
+          if (singkatan.includes(cleanWord)) return word.toUpperCase();
+          
+          // Selain itu, jadikan Huruf Besar di Awal (Title Case)
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
         }).join(' ');
       };
       
       fetch(`${API_URL}?action=get_settings_cetak&kecamatan=${kec}`)
         .then(res => res.json())
         .then(data => {
-          if (data.kop_uptd) {
-            // Isi ke hidden inputs & preview text
+          // DEBUG: Lihat data yang datang di Console F12
+          console.log("Data dari Spreadsheet:", data);
+
+          if (data && data.kop_uptd) {
+            // A. Simpan data asli ke hidden input (untuk keperluan cetak yang butuh UPPERCASE)
             document.getElementById("set-kop-uptd").value = data.kop_uptd;
             document.getElementById("set-kop-kec").value = data.kop_kec;
             document.getElementById("set-kop-alamat").value = data.kop_alamat;
@@ -202,21 +209,24 @@
             document.getElementById("set-ttd-jabatan").value = data.ttd_jabatan;
             document.getElementById("set-ttd-wilayah").value = data.ttd_wilayah;
 
-            // Info Box di atas
-            document.getElementById("info-kop-uptd").innerText = data.kop_uptd;
-            document.getElementById("info-kop-kec").innerText = data.kop_kec;
-            document.getElementById("info-ttd-nama").innerText = data.ttd_nama;
+            // B. Tampilkan di Kotak Info (Gunakan Formatter di sini)
+            // Kita bungkus datanya dengan fungsi buatTulisanRapi()
+            document.getElementById("info-kop-uptd").innerText = buatTulisanRapi(data.kop_uptd);
+            document.getElementById("info-kop-kec").innerText = buatTulisanRapi(data.kop_kec);
+            document.getElementById("info-ttd-nama").innerText = data.ttd_nama; // Nama biasanya sudah rapi
             document.getElementById("info-ttd-nip").innerText = "NIP. " + data.ttd_nip;
 
-            // Langsung isi KOP di preview kertas
-            document.getElementById("prev-kop-uptd").innerText = data.kop_uptd;
-            document.getElementById("prev-kop-kec").innerText = data.kop_kec;
+            // C. Preview Kertas (Tetap paksa UPPERCASE biar gagah)
+            document.getElementById("prev-kop-uptd").innerText = data.kop_uptd.toUpperCase();
+            document.getElementById("prev-kop-kec").innerText = data.kop_kec.toUpperCase();
             document.getElementById("prev-kop-alamat").innerText = data.kop_alamat;
-            document.getElementById("prev-jabatan").innerText = data.ttd_jabatan;
-            document.getElementById("prev-wilayah").innerText = data.ttd_wilayah;
-            document.getElementById("prev-nama").innerText = data.ttd_nama;
+            document.getElementById("prev-jabatan").innerText = data.ttd_jabatan.toUpperCase();
+            document.getElementById("prev-wilayah").innerText = data.ttd_wilayah.toUpperCase();
+            document.getElementById("prev-nama").innerText = data.ttd_nama.toUpperCase();
             document.getElementById("prev-nip").innerText = data.ttd_nip;
-          }else {
+            
+            console.log("Tampilan berhasil diperbarui!");
+          } else {
             // PERINGATAN JIKA DATA KOSONG
             alert(`Perhatian: Admin Kecamatan ${kec} belum mengatur Kop Surat & Tanda Tangan pimpinan. Laporan akan tampil tanpa Kop resmi.`);
             
