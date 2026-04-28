@@ -221,7 +221,7 @@
             document.getElementById("prev-kop-kec").innerText = data.kop_kec.toUpperCase();
             document.getElementById("prev-kop-alamat").innerText = data.kop_alamat;
             document.getElementById("prev-jabatan").innerText = data.ttd_jabatan.toUpperCase();
-            document.getElementById("prev-wilayah").innerText = data.ttd_wilayah.toUpperCase();
+            document.getElementById("prev-wilayah").innerText = data.ttd_wilayah.replace(/Kecamatan/gi, "Kec.").toUpperCase();
             document.getElementById("prev-nama").innerText = data.ttd_nama.toUpperCase();
             document.getElementById("prev-nip").innerText = data.ttd_nip;
             
