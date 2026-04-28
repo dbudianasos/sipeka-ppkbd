@@ -62,85 +62,112 @@ function logout() {
 
 // ================= 2. SISTEM WILAYAH (FIXED) =================
 function loadWilayahDatabase() {
-  const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
-  if (!selKec) return;
-  selKec.innerHTML = '<option value="">⏳ Sinkronisasi Wilayah...</option>';
-  fetch(`${API_URL}?action=get_wilayah_lengkap`)
-    .then(res => res.json())
-    .then(data => {
-      GLOBAL_WILAYAH = data;
-      const uniqueKec = [...new Map(data.map(item => [item['kode_kec'], item])).values()];
-      selKec.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
-      uniqueKec.forEach(item => {
-        if(item.nama_kec && item.nama_kec !== "-") {
-          let opt = document.createElement("option");
-          opt.value = item.nama_kec;
-          opt.setAttribute("data-kode", item.kode_kec); 
-          opt.innerHTML = item.nama_kec;
-          selKec.appendChild(opt);
-        }
-      });
-      initUserPage();
-    })
-    .catch(() => { selKec.innerHTML = '<option value="">❌ Gagal Memuat Data</option>'; });
+  const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
+  if (!selKec) return;
+  selKec.innerHTML = '<option value="">⏳ Sinkronisasi Wilayah...</option>';
+  fetch(`${API_URL}?action=get_wilayah_lengkap`)
+    .then(res => res.json())
+    .then(data => {
+      GLOBAL_WILAYAH = data;
+      const uniqueKec = [...new Map(data.map(item => [item['kode_kec'], item])).values()];
+      selKec.innerHTML = '<option value="">-- Pilih Kecamatan --</option>';
+      uniqueKec.forEach(item => {
+        if(item.nama_kec && item.nama_kec !== "-") {
+          let opt = document.createElement("option");
+          // Paksa huruf besar agar pencocokan selalu berhasil
+          opt.value = item.nama_kec.toUpperCase(); 
+          opt.setAttribute("data-kode", item.kode_kec); 
+          opt.innerHTML = item.nama_kec.toUpperCase();
+          selKec.appendChild(opt);
+        }
+      });
+      initUserPage();
+    })
+    .catch(() => { selKec.innerHTML = '<option value="">❌ Gagal Memuat Data</option>'; });
 }
 
 function updateDropdownDesa(desaTerpilih = "") {
-  const roleLogin = localStorage.getItem("role");
-  const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
-  const selDesa = document.getElementById("user-wilayah");
-  if (!selDesa || !selKec) return;
-  const kecDipilih = selKec.value;
-  selDesa.innerHTML = '<option value="">-- Pilih Desa --</option>';
-  if (kecDipilih && roleLogin === "super_admin") {
-    let optSemua = document.createElement("option");
-    optSemua.value = "SEMUA DESA";
-    optSemua.innerHTML = "--- SEMUA DESA (OTORITAS KEC) ---";
-    selDesa.appendChild(optSemua);
-  }
-  const filtered = GLOBAL_WILAYAH.filter(item => item.nama_kec === kecDipilih);
-  filtered.forEach(item => {
-    if(item.nama_desa && item.nama_desa !== "-") {
-      let opt = document.createElement("option");
-      opt.value = item.nama_desa;
-      opt.innerHTML = item.nama_desa;
-      if(item.nama_desa === desaTerpilih) opt.selected = true;
-      selDesa.appendChild(opt);
-    }
-  });
+  const roleLogin = localStorage.getItem("role");
+  const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
+  const selDesa = document.getElementById("user-wilayah");
+  if (!selDesa || !selKec) return;
+  
+  const kecDipilih = selKec.value.toUpperCase();
+  selDesa.innerHTML = '<option value="">-- Pilih Desa --</option>';
+  
+  if (kecDipilih && roleLogin === "super_admin") {
+    let optSemua = document.createElement("option");
+    optSemua.value = "SEMUA DESA";
+    optSemua.innerHTML = "--- SEMUA DESA (OTORITAS KEC) ---";
+    selDesa.appendChild(optSemua);
+  }
+  
+  const filtered = GLOBAL_WILAYAH.filter(item => (item.nama_kec || "").toUpperCase() === kecDipilih);
+  
+  // Filter Anti Ganda (Mencegah nama desa kembar muncul di form pendaftaran)
+  const uniqueDesa = [...new Set(filtered.map(item => (item.nama_desa || "").trim().toUpperCase()))].sort();
+  
+  uniqueDesa.forEach(namaDesa => {
+    if(namaDesa && namaDesa !== "-") {
+      let opt = document.createElement("option");
+      opt.value = namaDesa;
+      opt.innerHTML = namaDesa;
+      // Pencocokan kebal salah huruf besar/kecil
+      if(desaTerpilih && namaDesa === desaTerpilih.toUpperCase()) opt.selected = true;
+      selDesa.appendChild(opt);
+    }
+  });
 }
 
 function initUserPage() {
-  const role = localStorage.getItem("role");
-  const kec = localStorage.getItem("kecamatan");
-  const desa = localStorage.getItem("desa");
-  const subTitle = document.getElementById("sub-title-admin");
-  const selRole = document.getElementById("user-role"); 
-  const filterRole = document.getElementById("filter-role"); 
-  const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
-  const selDesa = document.getElementById("user-wilayah");
-  const displayWil = document.getElementById("display-wilayah");
+  const role = localStorage.getItem("role");
+  // Paksa uppercase sejak awal
+  const kec = localStorage.getItem("kecamatan") ? localStorage.getItem("kecamatan").toUpperCase() : "";
+  const desa = localStorage.getItem("desa") ? localStorage.getItem("desa").toUpperCase() : "";
+  
+  const subTitle = document.getElementById("sub-title-admin");
+  const selRole = document.getElementById("user-role"); 
+  const filterRole = document.getElementById("filter-role"); 
+  const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
+  const selDesa = document.getElementById("user-wilayah");
+  const displayWil = document.getElementById("display-wilayah");
 
-  if (subTitle) {
-    if (role === "super_admin") subTitle.innerText = "Otoritas: Kabupaten Bekasi";
-    else if (role === "admin_kec") subTitle.innerText = "Otoritas: Kecamatan " + kec;
-    else subTitle.innerText = "Otoritas: Desa " + desa;
-  }
-  if (displayWil) displayWil.innerText = (role === "super_admin") ? "Kabupaten Bekasi" : "Kecamatan " + kec;
-  if (selKec && role !== "super_admin") { selKec.value = kec; selKec.disabled = true; if (selDesa) updateDropdownDesa(); }
+  if (subTitle) {
+    if (role === "super_admin") subTitle.innerText = "Otoritas: Kabupaten Bekasi";
+    else if (role === "admin_kec") subTitle.innerText = "Otoritas: Kecamatan " + kec;
+    else subTitle.innerText = "Otoritas: Desa " + desa;
+  }
+  if (displayWil) displayWil.innerText = (role === "super_admin") ? "Kabupaten Bekasi" : "Kecamatan " + kec;
+  
+  // 1. Kunci Kecamatan
+  if (selKec && role !== "super_admin") { 
+    selKec.value = kec; 
+    selKec.disabled = true; 
+  }
 
-  if (!selRole) return;
-  let ops = "";
-  if (role === "super_admin") {
-    ops = `<option value="admin_kec">Admin Kecamatan</option><option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
-  } else if (role === "admin_kec") {
-    ops = `<option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
-  } else {
-    ops = `<option value="kader">Kader PPKBD</option>`;
-    if(selDesa) { updateDropdownDesa(desa); selDesa.disabled = true; }
-  }
-  selRole.innerHTML = ops;
-  if(filterRole) filterRole.innerHTML = `<option value="">Semua Role</option>` + ops;
+  if (!selRole) return;
+  let ops = "";
+  
+  // 2. Logika Otoritas Pembuatan Akun
+  if (role === "super_admin") {
+    ops = `<option value="admin_kec">Admin Kecamatan</option><option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
+    if(selDesa) updateDropdownDesa();
+    
+  } else if (role === "admin_kec") {
+    ops = `<option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
+    if(selDesa) updateDropdownDesa();
+    
+  } else {
+    ops = `<option value="kader">Kader PPKBD</option>`;
+    // Khusus Admin Desa: Langsung isikan nama desanya dan kunci!
+    if(selDesa) { 
+        updateDropdownDesa(desa); 
+        selDesa.disabled = true; 
+    }
+  }
+  
+  selRole.innerHTML = ops;
+  if(filterRole) filterRole.innerHTML = `<option value="">Semua Role</option>` + ops;
 }
 
 // ================= 3. MANAJEMEN USER (SEARCH & FILTER) =================
