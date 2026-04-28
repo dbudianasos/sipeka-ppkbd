@@ -34,7 +34,7 @@
     
     .system-footer { position: absolute; bottom: 15mm; left: 15mm; font-size: 9px; color: #64748b; font-style: italic; }
 
-    /* --- CSS Khusus Cetak Agar Hasil Jernih (Vektor) --- */
+    /* --- CSS Khusus Cetak Agar Hasil Jernih (Vektor) & Anti-Patah --- */
     @media print {
       /* Sembunyikan semua elemen navigasi dan tombol saat diprint */
       .no-print, header, button, footer, .bg-white.p-5 { display: none !important; }
@@ -53,30 +53,10 @@
         padding: 10mm 15mm !important; 
       }
 
-      /* Setting Ukuran Kertas F4 untuk Browser */
-      @page {
-        size: 215mm 330mm;
-        margin: 0;
-      }
-    }
-
-    /* --- CSS Khusus Cetak Agar Hasil Jernih (Vektor) --- */
-    @media print {
-      /* Sembunyikan semua elemen navigasi dan tombol saat diprint */
-      .no-print, header, button, footer, .bg-white.p-5 { display: none !important; }
-      
-      body { background: white !important; margin: 0; padding: 0; }
-      
-      /* Hilangkan pembungkus abu-abu dan radius */
-      .print-wrapper { background: none !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
-      
-      /* Paksa ukuran f4-preview kembali normal (tanpa zoom) saat cetak */
-      .f4-preview { 
-        transform: none !important; 
-        width: 100% !important; 
-        box-shadow: none !important;
-        margin: 0 !important;
-        padding: 10mm 15mm !important; 
+      /* CSS SAKTI: Cegah baris tabel dan tanda tangan terpotong di tengah kertas */
+      tr, .ttd-container {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
       }
 
       /* Setting Ukuran Kertas F4 untuk Browser */
@@ -85,7 +65,7 @@
         margin: 0;
       }
     }
-  
+    
   </style>
 </head>
 <body class="pb-20">
@@ -211,7 +191,7 @@
            </tbody>
          </table>
 
-         <div class="flex justify-between items-start text-sm mt-16" style="page-break-inside: avoid;">
+         <div class="flex justify-between items-start text-sm mt-16 ttd-container" style="page-break-inside: avoid;">
            <div class="text-center w-72">
              <p class="mb-1">Mengetahui,</p>
              <p id="prev-jabatan" class="font-bold">Kepala UPTD...</p>
@@ -366,18 +346,33 @@
       fetch(`${API_URL}?action=get_wilayah_lengkap`).then(res => res.json()).then(data => {
           MASTER_WILAYAH = data;
           const selKec = document.getElementById("f-kecamatan");
+          const selDesa = document.getElementById("f-desa");
+          
+          // Isi Pilihan Kecamatan
           const uniqueKec = [...new Set(data.map(item => item.nama_kec.toUpperCase().trim()))].sort();
           uniqueKec.forEach(k => { if(k && k !== "-") selKec.innerHTML += `<option value="${k}">${k}</option>`; });
           
           const role = localStorage.getItem("role");
+          const userKec = (localStorage.getItem("kecamatan") || "").toUpperCase();
+          const userDesa = (localStorage.getItem("desa") || "").toUpperCase();
+
+          // PROSES PENGUNCIAN SINKRON
           if(role === "admin_kec" || role === "admin_desa") {
-            selKec.value = localStorage.getItem("kecamatan").toUpperCase();
+            selKec.value = userKec;
             selKec.disabled = true;
-            updateDesaFilter();
             
+            // Langsung isi Dropdown Desa
+            selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
+            MASTER_WILAYAH.filter(item => item.nama_kec.toUpperCase().trim() === userKec).forEach(item => {
+              if(item.nama_desa && item.nama_desa !== "-") {
+                selDesa.innerHTML += `<option value="${item.nama_desa.toUpperCase()}">${item.nama_desa.toUpperCase()}</option>`;
+              }
+            });
+
+            // JIKA ADMIN DESA, KUNCI DISINI (Tanpa Timer!)
             if(role === "admin_desa") {
               const selDesa = document.getElementById("f-desa");
-              selDesa.value = localStorage.getItem("desa").toUpperCase();
+              selDesa.value = userDesa;
               selDesa.disabled = true;
             }
             loadKaderDropdown();
@@ -501,7 +496,8 @@
                 let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
                 let validator = row[11] ? row[11] : "Sistem";
 
-                rows += `<tr>
+                // CSS SAKTI DITAMBAHKAN DISINI (style="page-break-inside: avoid;")
+                rows += `<tr style="page-break-inside: avoid;">
                           <td class="text-center">${index+1}</td>
                           <td>
                             <p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p>
