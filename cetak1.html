@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Cetak Laporan Admin | siPeKa</title>
+  <title>Cetak Laporan & Renja | siPeKa</title>
   <link rel="icon" type="image/png" href="logo-sipeka.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -33,11 +33,64 @@
     .table-dinas td { vertical-align: middle; }
     
     .system-footer { position: absolute; bottom: 15mm; left: 15mm; font-size: 9px; color: #64748b; font-style: italic; }
+
+    /* --- CSS Khusus Cetak Agar Hasil Jernih (Vektor) --- */
+    @media print {
+      /* Sembunyikan semua elemen navigasi dan tombol saat diprint */
+      .no-print, header, button, footer, .bg-white.p-5 { display: none !important; }
+      
+      body { background: white !important; margin: 0; padding: 0; }
+      
+      /* Hilangkan pembungkus abu-abu dan radius */
+      .print-wrapper { background: none !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+      
+      /* Paksa ukuran f4-preview kembali normal (tanpa zoom) saat cetak */
+      .f4-preview { 
+        transform: none !important; 
+        width: 100% !important; 
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 10mm 15mm !important; 
+      }
+
+      /* Setting Ukuran Kertas F4 untuk Browser */
+      @page {
+        size: 215mm 330mm;
+        margin: 0;
+      }
+    }
+
+    /* --- CSS Khusus Cetak Agar Hasil Jernih (Vektor) --- */
+    @media print {
+      /* Sembunyikan semua elemen navigasi dan tombol saat diprint */
+      .no-print, header, button, footer, .bg-white.p-5 { display: none !important; }
+      
+      body { background: white !important; margin: 0; padding: 0; }
+      
+      /* Hilangkan pembungkus abu-abu dan radius */
+      .print-wrapper { background: none !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+      
+      /* Paksa ukuran f4-preview kembali normal (tanpa zoom) saat cetak */
+      .f4-preview { 
+        transform: none !important; 
+        width: 100% !important; 
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 10mm 15mm !important; 
+      }
+
+      /* Setting Ukuran Kertas F4 untuk Browser */
+      @page {
+        size: 215mm 330mm;
+        margin: 0;
+      }
+    }
+  
   </style>
 </head>
 <body class="pb-20">
 
-  <header class="sticky top-0 z-50 nav-gradient py-3 px-5 rounded-b-[1.5rem] shadow-lg mb-6">
+  <header class="sticky top-0 z-50 nav-gradient py-3 px-5 rounded-b-[1.5rem] shadow-lg mb-6 no-print">
     <div class="flex items-center gap-3 max-w-5xl mx-auto text-white">
       <button onclick="window.location.href='dashboard-admin.html'" class="bg-white/10 p-2 rounded-xl border border-white/10 active:scale-95">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -53,7 +106,7 @@
 
   <main class="max-w-5xl mx-auto px-4 space-y-6">
     
-    <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200 space-y-5">
+    <div class="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-200 space-y-5 no-print">
       
       <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-center border-b border-blue-200 pb-2">
@@ -185,7 +238,7 @@
       </div>
     </div>
 
-    <button onclick="downloadPDF()" class="fixed bottom-6 right-6 bg-red-600 text-white w-14 h-14 rounded-full shadow-[0_10px_20px_rgba(220,38,38,0.4)] flex items-center justify-center active:scale-90 transition z-50">
+    <button onclick="downloadPDF()" class="fixed bottom-6 right-6 bg-red-600 text-white w-14 h-14 rounded-full shadow-[0_10px_20px_rgba(220,38,38,0.4)] flex items-center justify-center active:scale-90 transition z-50 no-print">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
     </button>
   </main>
@@ -482,36 +535,19 @@
       const paper = document.getElementById('print-area');
       const wrapper = document.getElementById('print-wrapper');
       
-      // Matikan zoom agar kualitas render PDF maksimal
+      // 1. Matikan zoom sementara agar browser me-render ukuran asli (Vektor)
       paper.style.transform = 'none';
       wrapper.style.height = 'auto';
 
-      const jenis = document.getElementById("jenis-cetak").value;
-      const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
-      const thn = document.getElementById("tahun-cetak").value;
-      const namaKader = document.getElementById("f-kader").value.replace(/\s+/g, '_'); 
-      
-      let namaFile = jenis === "RENJA" ? `Renja_${namaKader}_${thn}.pdf` : `Laporan_${namaKader}_${blnText}_${thn}.pdf`;
+      // 2. Panggil sistem cetak bawaan HP/Laptop
+      // Di HP, nanti Bapak tinggal pilih "Simpan sebagai PDF"
+      window.print();
 
-      const opt = {
-        margin:       0, 
-        filename:     namaFile,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'mm', format: [215, 330], orientation: 'portrait' } 
-      };
-
-      const btnPdf = document.querySelector("button[onclick='downloadPDF()']");
-      const oriIcon = btnPdf.innerHTML;
-      btnPdf.innerHTML = `<span class="text-xs font-black">⏳</span>`;
-
-      html2pdf().set(opt).from(paper).save().then(() => {
-        btnPdf.innerHTML = oriIcon; 
-        scalePrintArea(); // Nyalakan zoom kembali
-      });
+      // 3. Setelah jendela cetak ditutup, nyalakan lagi zoom mobile-nya
+      setTimeout(scalePrintArea, 500);
     }
   </script>
-<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
+<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 no-print">
   &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
   Aplikasi Pelaporan Kinerja PPKBD
 </footer>
