@@ -764,3 +764,79 @@ function hapusRenja(id) {
       }
     });
 }
+
+// ============================================================
+// 7. LOGIKA INPUT LAPORAN (VISUM) - TAHAP 1
+// ============================================================
+
+// --- A. BATASI TANGGAL MAKSIMAL HARI INI ---
+function batasiTanggalLaporan() {
+  const inputTgl = document.getElementById("lap-tgl");
+  if (inputTgl) {
+    const today = new Date().toISOString().split('T')[0];
+    inputTgl.setAttribute("max", today);
+  }
+}
+
+// --- B. TARIK DATA RENJA KE MEMORI (UNTUK DROPDOWN) ---
+function loadRenjaUntukLaporan() {
+  const nik = localStorage.getItem("nik");
+  dataRenjaGlobal = []; // Reset penampung global
+  
+  fetch(`${API_URL}?action=get_renja&nik=${nik}`)
+    .then(res => res.json())
+    .then(data => {
+      if(data && data.length > 0) {
+        dataRenjaGlobal = data;
+        console.log("Data Renja untuk laporan siap!");
+      }
+    });
+}
+
+// --- C. BUKA KUNCI FORM & FILTER TAHUN ---
+function bukaKunciForm() {
+  const tglInput = document.getElementById("lap-tgl").value;
+  const areaLanjutan = document.getElementById("area-lanjutan");
+  const pesanKunci = document.getElementById("pesan-kunci");
+  
+  if (tglInput) {
+    areaLanjutan.removeAttribute("disabled");
+    areaLanjutan.classList.remove("opacity-40");
+    if (pesanKunci) pesanKunci.style.display = "none";
+    
+    // Jalankan filter otomatis
+    filterRenjaBerdasarkanTanggal();
+  } else {
+    areaLanjutan.setAttribute("disabled", "true");
+    areaLanjutan.classList.add("opacity-40");
+    if (pesanKunci) pesanKunci.style.display = "block";
+  }
+}
+
+function filterRenjaBerdasarkanTanggal() {
+  const tglInput = document.getElementById("lap-tgl").value;
+  const dropdown = document.getElementById("pilih-renja");
+  if (!dropdown || !tglInput) return;
+
+  const tahunPilih = String(tglInput.split("-")[0]);
+  
+  // Filter: Tahun harus sama & Sisa Volume > 0
+  const renjaTersedia = dataRenjaGlobal.filter(r => {
+    return String(r.tahun) === tahunPilih && Number(r.sisa_vol) > 0;
+  });
+
+  dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
+  
+  if (renjaTersedia.length === 0) {
+    dropdown.innerHTML = `<option value="">(Tidak ada Renja aktif tahun ${tahunPilih})</option>`;
+  } else {
+    renjaTersedia.forEach(r => {
+      // Masukkan satuan ke data-attribute agar bisa diambil nanti
+      dropdown.innerHTML += `<option value="${r.renja_id}" data-satuan="${r.target_peserta}" data-kegiatan="${r.kegiatan}">
+        ${r.kegiatan} (Sisa: ${r.sisa_vol}x)
+      </option>`;
+    });
+  }
+  updateLabelSatuanLaporan(); 
+  validasiFotoLaporan();      
+}
