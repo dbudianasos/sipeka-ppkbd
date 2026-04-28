@@ -491,3 +491,73 @@ document.addEventListener("DOMContentLoaded", () => {
   // Jika di halaman dashboard, jalankan initDashboard
   if (document.getElementById("namaUser")) initDashboard();
 });
+
+// ==========================================
+// 6. LOGIKA KAMUS PPKBD & SATUAN (TAHAP 2)
+// ==========================================
+
+function updateSubstansi() {
+  const jenis = document.getElementById("renja-jenis").value;
+  const wrapperSub = document.getElementById("wrapper-substansi");
+  const selectSub = document.getElementById("renja-substansi");
+  
+  // Kamus asli dari backup Bapak
+  const dataSubstansi = {
+    "Pertemuan": ["Pertemuan Rutin Kader", "Rapat Koordinasi (Desa/RW)", "Pertemuan Kelompok Kerja (Pokja)"],
+    "KIE": ["Penyuluhan Kelompok", "Konseling Individu", "Kunjungan Rumah (Door-to-door)", "Penyebaran Media Informasi"],
+    "Pelayanan & Penggerakan": ["Pendampingan Rujukan KB", "Distribusi Alkon (Sub-PPKBD)", "Pembinaan Poktan (BKB/BKR/BKL/UPPKA)", "Fasilitasi Pelayanan KB/Baksos"],
+    "Pencatatan & Pelaporan": ["Pemutakhiran Data Keluarga (Verval)", "Pemetaan Sasaran (PUS Unmet Need)", "Pengisian Buku Bantu / K0", "Input Laporan ke New SIGA"]
+  };
+
+  selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
+
+  // Logika: Sembunyikan jika "Lainnya" atau kosong
+  if (jenis === "Lainnya" || jenis === "") {
+    if (wrapperSub) wrapperSub.classList.add("hidden");
+    let opt = document.createElement("option");
+    opt.value = "Lainnya";
+    opt.selected = true;
+    selectSub.appendChild(opt);
+  } else {
+    if (wrapperSub) wrapperSub.classList.remove("hidden");
+    if (dataSubstansi[jenis]) {
+      dataSubstansi[jenis].forEach(item => {
+        let opt = document.createElement("option");
+        opt.value = item;
+        opt.innerHTML = item;
+        selectSub.appendChild(opt);
+      });
+      // Tambahkan pilihan lainnya di tiap kategori
+      let optLain = document.createElement("option");
+      optLain.value = "Lainnya di " + jenis;
+      optLain.innerHTML = "Lainnya...";
+      selectSub.appendChild(optLain);
+    }
+  }
+  updateSatuanOtomatis(); // Panggil otomatisasi satuan
+  if (typeof generateIndikator === 'function') generateIndikator(); 
+}
+
+function updateSatuanOtomatis() {
+  const jenis = document.getElementById("renja-jenis").value;
+  const subEl = document.getElementById("renja-substansi");
+  const substansi = subEl ? subEl.value : "";
+  const satuanSel = document.getElementById("renja-target-satuan");
+
+  if (!satuanSel) return;
+
+  // Logika cerdas penentuan satuan sesuai juknis Bapak
+  if (jenis === "Pencatatan & Pelaporan") {
+    if (substansi.toLowerCase().includes("verval")) {
+      satuanSel.value = "Keluarga";
+    } else {
+      satuanSel.value = "Dokumen";
+    }
+  } else if (jenis === "Pelayanan & Penggerakan") {
+    satuanSel.value = "Akseptor";
+  } else if (jenis === "Pertemuan") {
+    satuanSel.value = "Kegiatan";
+  } else {
+    satuanSel.value = "Orang";
+  }
+}
