@@ -1234,7 +1234,7 @@ function loadRiwayatKader() {
             <div class="flex justify-between items-start mb-3">
                <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase">${item.status}</span>
                <div class="flex gap-2">
-                 <button onclick="intipFoto('${item.foto}')" class="bg-blue-50 text-blue-600 text-[9px] font-bold px-2 py-1 rounded-md border border-blue-100 active:scale-95 transition">🖼️ INTIP FOTO</button>
+                 <button onclick="intipFoto('${item.fotoId}')" class="bg-blue-50 text-blue-600 text-[9px] font-bold px-2 py-1 rounded-md border border-blue-100 active:scale-95 transition">🖼️ LIHAT FOTO</button>
                  <p class="text-[9px] text-slate-400 font-bold font-mono pt-1">${item.id}</p>
                </div>
             </div>
@@ -1263,18 +1263,20 @@ function loadRiwayatKader() {
 }
 
 // --- B. LOGIKA MODAL PREVIEW FOTO ---
-function intipFoto(url) {
-  if (!url || url === "-" || url === "undefined") {
-    return alert("⚠️ Foto tidak ditemukan atau gagal diproses server.");
+function intipFoto(id) {
+  if (!id || id === "-" || id === "undefined") {
+    return alert("⚠️ Foto tidak ditemukan (ID Kosong).");
   }
   
   const modal = document.getElementById("modal-foto");
   const img = document.getElementById("img-intip");
   
   if (modal && img) {
-    img.src = url;
+    // Gunakan format thumbnail Google Drive yang lebih cepat dan langsung tampil
+    const directLink = `https://lh3.googleusercontent.com/d/${id}`;
+    
+    img.src = directLink;
     modal.classList.remove("hidden");
-    // Mencegah scroll body saat modal buka
     document.body.style.overflow = "hidden";
   }
 }
