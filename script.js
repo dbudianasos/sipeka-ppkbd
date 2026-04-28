@@ -609,3 +609,139 @@ function generateIndikator() {
   
   inputIndikator.value = kalimatBaku;
 }
+
+// --- SIMPAN RENCANA KERJA KE SERVER ---
+function simpanRenja() {
+  const btn = document.getElementById("btn-simpan-renja");
+  const info = document.getElementById("info-renja");
+  
+  // Ambil identitas dari localStorage
+  const nik = localStorage.getItem("nik");
+  const nama = localStorage.getItem("nama");
+  
+  // Ambil data form
+  const jenis = document.getElementById("renja-jenis").value;
+  const substansi = document.getElementById("renja-substansi").value;
+  const keterangan = document.getElementById("renja-keterangan").value.trim();
+  const volume = document.getElementById("renja-volume").value;
+  const targetAngka = document.getElementById("renja-target-angka").value;
+  const targetSatuan = document.getElementById("renja-target-satuan").value;
+
+  // Validasi Dasar
+  if (!jenis || !volume || !targetAngka) {
+    alert("⚠️ Mohon lengkapi Jenis Kegiatan, Volume, dan Target Sasaran!");
+    return;
+  }
+
+  // Jahit Nama Kegiatan (Persis logika backup Bapak untuk GAS)
+  let kegiatanGabung = (jenis === "Lainnya") ? "Lainnya: " + keterangan : jenis + ": " + substansi + (keterangan ? " - " + keterangan : "");
+
+  btn.disabled = true;
+  btn.innerText = "⏳ MENYIMPAN...";
+
+  const payload = {
+    action: "submit_renja",
+    nik: nik,
+    nama: nama,
+    tahun: document.getElementById("renja-tahun").value,
+    bulan: "TAHUNAN",
+    kegiatan: kegiatanGabung,
+    sasaran: document.getElementById("renja-sasaran").value,
+    target_volume: volume,
+    target_peserta: `${targetAngka} ${targetSatuan}`,
+    indikator: document.getElementById("renja-indikator").value,
+    lokasi: document.getElementById("renja-lokasi").value
+  };
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams(payload)
+  })
+  .then(res => res.text())
+  .then(res => {
+    if (res.trim() === "success") {
+      alert("✅ Rencana Kerja Berhasil Disimpan!");
+      // Reset form tipis-tipis
+      document.getElementById("renja-volume").value = "";
+      document.getElementById("renja-target-angka").value = "";
+      document.getElementById("renja-keterangan").value = "";
+      loadRenja(); // Segarkan daftar di bawah
+    } else {
+      alert("❌ Gagal menyimpan: " + res);
+    }
+    btn.disabled = false;
+    btn.innerText = "SIMPAN RENCANA KERJA";
+  })
+  .catch(err => {
+    console.error("Error Simpan:", err);
+    alert("Koneksi bermasalah!");
+    btn.disabled = false;
+    btn.innerText = "SIMPAN RENCANA KERJA";
+  });
+}
+
+// --- MUAT DAFTAR RENJA SAYA ---
+function loadRenja() {
+  const list = document.getElementById("listRenja");
+  const nik = localStorage.getItem("nik");
+  if (!list) return;
+
+  list.innerHTML = "<p class='text-center text-gray-400 text-[10px] animate-pulse py-5'>Sinkronisasi data...</p>";
+
+  fetch(`${API_URL}?action=get_renja&nik=${nik}`)
+    .then(res => res.json())
+    .then(data => {
+      list.innerHTML = "";
+      if (!data || data.length === 0) {
+        list.innerHTML = "<p class='text-center text-gray-400 text-xs py-10 italic'>Belum ada rencana kerja tersimpan.</p>";
+        return;
+      }
+
+      data.forEach(item => {
+        // Logika warna border: Biru jika bisa dihapus, Hijau jika sudah terkunci (dipakai lapor)
+        const borderCol = item.can_delete ? 'border-blue-900' : 'border-green-500';
+        const statusLabel = item.can_delete ? 
+          `<button onclick="hapusRenja('${item.renja_id}')" class="text-red-300 hover:text-red-500 transition">🗑️</button>` : 
+          `<span class="text-[8px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold">TERKUNCI</span>`;
+
+        list.innerHTML += `
+          <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${borderCol} mb-3 relative animate-fadeIn">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class="bg-blue-50 text-blue-700 text-[8px] px-2 py-0.5 rounded-md font-black uppercase">TA ${item.tahun}</span>
+                </div>
+                <h3 class="font-bold text-blue-900 text-xs uppercase leading-tight pr-10">${item.kegiatan}</h3>
+                <div class="flex gap-4 mt-3">
+                  <div class="flex flex-col">
+                    <span class="text-[8px] text-gray-400 uppercase font-bold">Volume</span>
+                    <span class="text-xs font-black text-slate-700">${item.sisa_vol} / ${item.target_vol}</span>
+                  </div>
+                  <div class="flex flex-col border-l pl-4">
+                    <span class="text-[8px] text-gray-400 uppercase font-bold">Target Sasaran</span>
+                    <span class="text-xs font-black text-blue-700">${item.target_peserta}</span>
+                  </div>
+                </div>
+              </div>
+              ${statusLabel}
+            </div>
+          </div>`;
+      });
+    });
+}
+
+// --- HAPUS RENJA ---
+function hapusRenja(id) {
+  if (!confirm("Apakah Anda yakin ingin menghapus Rencana Kerja ini?")) return;
+  
+  fetch(`${API_URL}?action=hapus_renja&renja_id=${id}`)
+    .then(res => res.text())
+    .then(res => {
+      if (res.trim() === "success") {
+        alert("Terhapus!");
+        loadRenja();
+      } else {
+        alert("Gagal menghapus: " + res);
+      }
+    });
+}
