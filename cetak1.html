@@ -13,7 +13,7 @@
     .nav-gradient { background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%); }
     
     /* Wadah Pembungkus Kertas untuk Fitur Zoom Out di Layar Kecil */
-    .print-wrapper { width: 100%; overflow: hidden; background: #e2e8f0; border-radius: 1rem; }
+    .print-wrapper { width: 100%; overflow: hidden; background: #e2e8f0; border-radius: 1rem; transition: all 0.3s ease; }
     
     /* Ukuran Baku Kertas F4 (816px x 1248px) - Resolusi Tinggi */
     .f4-preview { 
@@ -25,6 +25,13 @@
       position: relative;
       box-sizing: border-box;
       transform-origin: top left;
+      transition: all 0.3s ease;
+    }
+
+    /* Ukuran Preview Layar untuk Renja (Landscape) */
+    .landscape-preview {
+      width: 1248px;
+      min-height: 816px;
     }
     
     .table-dinas { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
@@ -47,7 +54,7 @@
         padding: 0 !important; 
         margin: 0 !important; 
         overflow: visible !important; 
-        box-shadow: none !important; /* <--- Obat Anti Bayangan */
+        box-shadow: none !important; 
         border: none !important;
       }
       
@@ -58,7 +65,6 @@
         min-height: auto !important; 
         box-shadow: none !important;
         margin: 0 !important;
-        /* Padding bawah diperbesar (25mm) agar ada ruang untuk text footer */
         padding: 10mm 15mm 25mm 15mm !important; 
       }
 
@@ -68,7 +74,7 @@
         break-inside: avoid !important;
       }
 
-      /* Setting Ukuran Kertas F4 untuk Browser */
+      /* Setting Ukuran Kertas F4 Default (Portrait) */
       @page {
         size: 215mm 330mm;
         margin: 0;
@@ -243,12 +249,9 @@
       let text = el.value.trim();
       if(!text) return;
       
-      // Auto Spasi setelah titik (jika depannya nyambung)
       text = text.replace(/\.([^\s])/g, '. $1');
       
-      // Title Case (Huruf besar di awal kata)
       text = text.toLowerCase().split(' ').map(word => {
-        // Pengecualian huruf besar untuk singkatan
         if (["RT", "RW", "NO", "KAB"].includes(word.toUpperCase())) return word.toUpperCase();
         return word.charAt(0).toUpperCase() + word.slice(1);
       }).join(' ');
@@ -260,12 +263,10 @@
       let uptd = document.getElementById("set-kop-uptd").value;
       const kec = document.getElementById("set-kop-kec").value;
 
-      // Rumus Ajaib: Singkat kata "Pengendalian Penduduk" menjadi "PP" agar muat 1 baris
       if (uptd) {
         uptd = uptd.replace(/PENGENDALIAN PENDUDUK/ig, "PP");
       }
 
-      // Converter ke Title Case Khusus (Menjaga V, UPTD, dan PP tetap besar)
       const uppers = ["UPTD", "PP", "V", "IV", "III", "II", "I", "VI", "VII", "VIII", "IX", "X", "XII", "XI"];
       
       const formatTitleCase = (str) => {
@@ -280,24 +281,27 @@
     }
 
     // ==========================================
-    // 1. FITUR ZOOM MOBILE (PDF VIEWER SIMULATOR)
+    // 1. FITUR ZOOM MOBILE CERDAS (PORTRAIT/LANDSCAPE)
     // ==========================================
     function scalePrintArea() {
       const wrapper = document.getElementById('print-wrapper');
       const paper = document.getElementById('print-area');
       const screenWidth = wrapper.clientWidth;
+      
+      // Deteksi apakah sedang dalam mode Renja (Landscape)
+      const isLandscape = paper.classList.contains('landscape-preview');
+      const targetWidth = isLandscape ? 1248 : 816;
+      const targetHeight = isLandscape ? 816 : 1248;
 
-      // Jika layar lebih kecil dari kertas 816px, lakukan Zoom Out
-      if (screenWidth < 850) {
-        const scaleRatio = screenWidth / 816; 
+      if (screenWidth < targetWidth + 40) {
+        const scaleRatio = screenWidth / targetWidth; 
         paper.style.transform = `scale(${scaleRatio})`;
-        wrapper.style.height = `${1248 * scaleRatio}px`; // Sesuaikan tinggi wadah
+        wrapper.style.height = `${targetHeight * scaleRatio}px`;
       } else {
         paper.style.transform = 'none';
         wrapper.style.height = 'auto';
       }
     }
-    // Pantau perubahan ukuran layar HP (Rotate/Landscape)
     window.addEventListener('resize', scalePrintArea);
 
     // ==========================================
@@ -333,7 +337,7 @@
             document.getElementById("set-kop-alamat").value = data.kop_alamat;
             document.getElementById("set-ttd-nama").value = data.ttd_nama || "";
             document.getElementById("set-ttd-nip").value = data.ttd_nip || "";
-            autoFillJabatan(); // Isi otomatis jabatan dari data yang ditarik
+            autoFillJabatan(); 
           } else {
             document.getElementById("set-kop-uptd").value = ""; document.getElementById("set-kop-kec").value = ""; document.getElementById("set-kop-alamat").value = "";
             document.getElementById("set-ttd-jabatan").value = ""; document.getElementById("set-ttd-wilayah").value = ""; document.getElementById("set-ttd-nama").value = ""; document.getElementById("set-ttd-nip").value = "";
@@ -357,7 +361,6 @@
           const selKec = document.getElementById("f-kecamatan");
           const selDesa = document.getElementById("f-desa");
           
-          // Isi Pilihan Kecamatan
           const uniqueKec = [...new Set(data.map(item => item.nama_kec.toUpperCase().trim()))].sort();
           uniqueKec.forEach(k => { if(k && k !== "-") selKec.innerHTML += `<option value="${k}">${k}</option>`; });
           
@@ -365,12 +368,10 @@
           const userKec = (localStorage.getItem("kecamatan") || "").toUpperCase();
           const userDesa = (localStorage.getItem("desa") || "").toUpperCase();
 
-          // PROSES PENGUNCIAN SINKRON
           if(role === "admin_kec" || role === "admin_desa") {
             selKec.value = userKec;
             selKec.disabled = true;
             
-            // Langsung isi Dropdown Desa
             selDesa.innerHTML = '<option value="">-- Semua Desa --</option>';
             MASTER_WILAYAH.filter(item => item.nama_kec.toUpperCase().trim() === userKec).forEach(item => {
               if(item.nama_desa && item.nama_desa !== "-") {
@@ -378,7 +379,6 @@
               }
             });
 
-            // JIKA ADMIN DESA, KUNCI DISINI (Tanpa Timer!)
             if(role === "admin_desa") {
               const selDesa = document.getElementById("f-desa");
               selDesa.value = userDesa;
@@ -398,7 +398,6 @@
         if(item.nama_desa && item.nama_desa !== "-") selDesa.innerHTML += `<option value="${item.nama_desa.toUpperCase()}">${item.nama_desa.toUpperCase()}</option>`;
       });
       loadSettings(); 
-      
     }
 
     function loadKaderDropdown() {
@@ -457,8 +456,9 @@
       const blnValue = document.getElementById("bulan-cetak").value;
       const thn = document.getElementById("tahun-cetak").value;
       const btn = document.getElementById("btn-preview");
+      const paper = document.getElementById('print-area');
 
-      // 2. Konfirmasi jika Kop belum di-setting
+      // 2. Konfirmasi Kop
       const isKopKosong = !document.getElementById("set-kop-uptd").value;
       if (isKopKosong) {
          if(!confirm("Kop Surat dan Pejabat belum diatur. Tetap lanjutkan cetak dengan format kosong?")) return;
@@ -477,58 +477,104 @@
       document.getElementById("prev-nama-kanan").innerText = `( ${namaKaderDipilih} )`;
       document.getElementById("prev-tgl").innerText = `Bekasi, ${new Date().getDate()} ${blnText} ${thn}`;
 
-      // Set Judul Dokumen
+      // 4. LOGIKA DUA JALUR: SETTING HEADER TABEL & ORIENTASI KERTAS
+      const theadTr = document.querySelector(".table-dinas thead tr");
       if (jenis === "RENJA") {
+        paper.classList.add("landscape-preview");
         document.getElementById("judul-dokumen").innerText = `REKAPITULASI RENCANA KERJA KADER`;
         document.getElementById("sub-judul-dokumen").innerText = `TAHUN ANGGARAN ${thn}`;
+        theadTr.innerHTML = `
+           <th width="4%">NO</th>
+           <th width="28%">KEGIATAN</th>
+           <th width="22%">SASARAN & LOKASI</th>
+           <th width="28%">INDIKATOR</th>
+           <th width="18%">TARGET</th>
+        `;
       } else {
+        paper.classList.remove("landscape-preview");
         document.getElementById("judul-dokumen").innerText = `REKAPITULASI REALISASI KINERJA KADER`;
         document.getElementById("sub-judul-dokumen").innerText = `PERIODE BULAN ${blnText.toUpperCase()} ${thn}`;
+        theadTr.innerHTML = `
+           <th width="4%">NO</th>
+           <th width="26%">KADER & LOKASI</th>
+           <th width="35%">KEGIATAN & REALISASI</th>
+           <th width="20%">BUKTI FOTO</th>
+           <th width="15%">VALIDATOR</th>
+        `;
       }
+      
+      scalePrintArea(); // Panggil zoom ulang karena ukuran kertas berubah
 
       btn.innerText = "⏳ MENYUSUN DOKUMEN...";
 
-      // 4. Fetch Data: Pakai role super_admin agar menarik semua data tervalidasi tanpa hambatan wilayah
       fetch(`${API_URL}?action=get_rekap_cetak&jenis=${jenis}&bulan=${blnValue}&tahun=${thn}&role=super_admin`)
         .then(res => res.json())
         .then(data => {
-           // FILTER UTAMA: Membandingkan Nama Kader di Laporan (Index 3) dengan Pilihan di Dropdown
-           const dataKaderSaja = data.filter(row => row[3].trim().toUpperCase() === namaKaderDipilih.trim().toUpperCase());
+           // FILTER CERDAS: Cari indeks berdasarkan jenis (Renja indeks 2, Laporan indeks 3)
+           const idxNama = (jenis === "RENJA") ? 2 : 3;
+           const dataKaderSaja = data.filter(row => row && row[idxNama] && row[idxNama].trim().toUpperCase() === namaKaderDipilih.trim().toUpperCase());
 
            let tbody = document.getElementById("isi-rekap");
+           
            if(dataKaderSaja.length === 0) {
-             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">TIDAK ADA DATA APPROVED UNTUK KADER ${namaKaderDipilih} PADA PERIODE INI</td></tr>`;
+             let pesan = jenis === "RENJA" ? `BELUM ADA DATA RENCANA KERJA TAHUN ${thn} UNTUK KADER ${namaKaderDipilih}` : `TIDAK ADA DATA APPROVED UNTUK KADER ${namaKaderDipilih} PADA PERIODE INI`;
+             tbody.innerHTML = `<tr><td colspan="5" class="text-center font-bold text-red-500 py-10">${pesan}</td></tr>`;
              document.getElementById("digital-footprint").innerText = `* Tidak ada data ditemukan.`;
            } else {
              let rows = "";
              dataKaderSaja.forEach((row, index) => {
-                let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
-                let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
-                let validator = row[11] ? row[11] : "Sistem";
+                if (jenis === "RENJA") {
+                  // MAPPING DATA RENJA
+                  let keg = row[4] || '-';
+                  let sasaran = row[5] || '-';
+                  let indikator = row[6] || '-';
+                  let vol = row[7] || '-';
+                  let satuan = row[8] || '';
+                  let lokasi = row[10] || '-';
 
-                // CSS SAKTI DITAMBAHKAN DISINI (style="page-break-inside: avoid;")
-                rows += `<tr style="page-break-inside: avoid;">
-                          <td class="text-center">${index+1}</td>
-                          <td>
-                            <p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p>
-                            <p class="text-[8px] text-slate-600">📍 ${row[8]}</p>
-                            <p class="text-[8px] text-slate-600">📅 ${row[4]}</p>
-                          </td>
-                          <td>
-                            <p class="font-bold text-[10px] mb-1">${row[5]}</p>
-                            <p class="text-[9px] text-blue-800">Capaian: <span class="font-bold">${row[6]}</span></p>
-                          </td>
-                          <td class="text-center p-2">${thumbFoto}</td>
-                          <td class="text-center">
-                            <p class="text-[8px] text-slate-500 uppercase mb-1">Disetujui Oleh:</p>
-                            <p class="text-[9px] font-bold text-green-700 uppercase">${validator}</p>
-                          </td>
-                        </tr>`;
+                  rows += `<tr style="page-break-inside: avoid;">
+                            <td class="text-center">${index+1}</td>
+                            <td><p class="font-bold text-[10px] uppercase">${keg}</p></td>
+                            <td>
+                              <p class="font-bold text-[10px] mb-1 uppercase">${sasaran}</p>
+                              <p class="text-[8px] text-slate-600">📍 ${lokasi}</p>
+                            </td>
+                            <td><p class="text-[9px] leading-tight">${indikator}</p></td>
+                            <td class="text-center">
+                              <p class="text-[10px] font-bold text-blue-800">${vol}</p>
+                              <p class="text-[9px] text-slate-600">${satuan}</p>
+                            </td>
+                          </tr>`;
+                } else {
+                  // MAPPING DATA LAPORAN
+                  let fileId = (row[13] && row[13] !== "-") ? row[13] : "";
+                  let thumbFoto = fileId ? `<img src="https://drive.google.com/thumbnail?id=${fileId}&sz=w400" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #cbd5e1; margin: 0 auto;">` : `<span class="text-[8px] text-slate-400 italic">Tanpa Foto</span>`;
+                  let validator = row[11] ? row[11] : "Sistem";
+
+                  rows += `<tr style="page-break-inside: avoid;">
+                            <td class="text-center">${index+1}</td>
+                            <td>
+                              <p class="font-bold text-[11px] mb-1 uppercase">${row[3]}</p>
+                              <p class="text-[8px] text-slate-600">📍 ${row[8]}</p>
+                              <p class="text-[8px] text-slate-600">📅 ${row[4]}</p>
+                            </td>
+                            <td>
+                              <p class="font-bold text-[10px] mb-1">${row[5]}</p>
+                              <p class="text-[9px] text-blue-800">Capaian: <span class="font-bold">${row[6]}</span></p>
+                            </td>
+                            <td class="text-center p-2">${thumbFoto}</td>
+                            <td class="text-center">
+                              <p class="text-[8px] text-slate-500 uppercase mb-1">Disetujui Oleh:</p>
+                              <p class="text-[9px] font-bold text-green-700 uppercase">${validator}</p>
+                            </td>
+                          </tr>`;
+                }
              });
              tbody.innerHTML = rows;
              
              const printDate = new Date();
-             document.getElementById("digital-footprint").innerText = `* Dicetak otomatis dari aplikasi siPeKa PPKBD pada ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB. Status: APPROVED.`;
+             const statusTxt = jenis === "RENJA" ? "Status: DOKUMEN PERENCANAAN." : "Status: APPROVED.";
+             document.getElementById("digital-footprint").innerText = `* Dicetak otomatis dari aplikasi siPeKa PPKBD pada ${printDate.toLocaleDateString('id-ID')} ${printDate.getHours()}:${printDate.getMinutes().toString().padStart(2, '0')} WIB. ${statusTxt}`;
            }
            btn.innerText = "Tarik Data Dokumen";
         });
@@ -541,31 +587,34 @@
       const paper = document.getElementById('print-area');
       const wrapper = document.getElementById('print-wrapper');
       
-      // 1. Ambil data untuk nama file
-      const oriTitle = document.title; // Simpan judul asli tab browser
+      const oriTitle = document.title; 
       const kader = document.getElementById("f-kader").value || "Kader_Kosong";
       const jenisVal = document.getElementById("jenis-cetak").value;
       const blnText = document.getElementById("bulan-cetak").options[document.getElementById("bulan-cetak").selectedIndex].text;
       const thn = document.getElementById("tahun-cetak").value;
       
-      // 2. Ubah judul tab web sesuai format: Jenis_Nama_Bulan_Tahun
+      // SUNTIK CSS KHUSUS LANDSCAPE SAAT PRINT RENJA
+      const styleTagId = 'landscape-print-force';
       if (jenisVal === "RENJA") {
         document.title = `Renja_${kader}_${thn}`;
+        const style = document.createElement('style');
+        style.id = styleTagId;
+        style.innerHTML = '@media print { @page { size: 330mm 215mm !important; margin: 0; } }';
+        document.head.appendChild(style);
       } else {
         document.title = `Laporan_${kader}_${blnText}_${thn}`;
       }
 
-      // 3. Matikan zoom agar kualitas render Vektor maksimal
       paper.style.transform = 'none';
       wrapper.style.height = 'auto';
 
-      // 4. Panggil jendela print (Browser akan otomatis membaca document.title sebagai nama PDF)
       window.print();
 
-      // 5. Kembalikan zoom dan kembalikan judul tab web seperti semula
       setTimeout(() => {
         scalePrintArea();
         document.title = oriTitle; 
+        const injectedStyle = document.getElementById(styleTagId);
+        if (injectedStyle) injectedStyle.remove(); // Bersihkan CSS landscape setelah print selesai
       }, 500);
     }
   </script>
