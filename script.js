@@ -1280,6 +1280,8 @@ function intipFoto(id) {
     img.src = directLink;
     modal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
+  } else {
+    alert("❌ Error: Elemen modal-foto tidak ditemukan di HTML!");
   }
 }
 
