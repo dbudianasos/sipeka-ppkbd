@@ -50,23 +50,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // ============================================================
-// A. LOGIKA MENU AKSES
+// A. LOGIKA MENU AKSES (ANTI-ERROR)
 // ============================================================
-function aturTampilanMenu(role) {
+function aturTampilanMenu() {
+    // Tarik data role, bersihkan spasi, paksa jadi huruf kecil semua
+    const rawRole = localStorage.getItem("role") || "";
+    const role = rawRole.toLowerCase().trim();
+    
+    // Tampilkan di konsol buat ngecek kalau masih bandel
+    console.log("Sistem mendeteksi akses sebagai:", role);
+
     const menuSetting = document.getElementById("menu-setting-target");
     const menuAB = document.getElementById("menu-ab");
     const menuCU = document.getElementById("menu-cu");
+    const menuCetak = document.getElementById("menu-cetak");
 
-    // Super Admin: Buka pengaturan target
-    if (menuSetting && role === "super_admin") {
-        menuSetting.classList.remove("hidden");
+    // 1. Logika Super Admin (Buka Semua)
+    if (role === "super_admin") {
+        if (menuSetting) menuSetting.classList.remove("hidden");
+        if (menuAB) menuAB.classList.remove("hidden");
+        if (menuCU) menuCU.classList.remove("hidden");
+    } 
+    // 2. Logika Admin Biasa (Buka AB & CU saja)
+    else if (role === "admin_kec" || role === "admin_desa") {
+        if (menuAB) menuAB.classList.remove("hidden");
+        if (menuCU) menuCU.classList.remove("hidden");
     }
+    // 3. Kalau Kader, otomatis yang if di atas dicuekin (tetap hidden)
 
-    // Admin (Super, Kec, Desa): Buka form input
-    if (menuAB && menuCU && (role === "super_admin" || role === "admin_kec" || role === "admin_desa")) {
-        menuAB.classList.remove("hidden");
-        menuCU.classList.remove("hidden");
-    }
+    // Pastikan Cetak selalu kelihatan buat siapa saja
+    if (menuCetak) menuCetak.classList.remove("hidden");
 }
 
 
