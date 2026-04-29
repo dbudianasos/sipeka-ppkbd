@@ -252,25 +252,33 @@
   }
 
   function prosesApprove(id, status) {
-  const confirmText = status === 'APPROVED' ? "Terima laporan ini?" : "Tolak laporan ini?";
-  if (!confirm(confirmText)) return;
+  let alasan = "-";
+  
+  // Jika statusnya REJECT, wajib minta alasan
+  if (status === 'REJECT') {
+    alasan = prompt("Sebutkan alasan penolakan (Contoh: Foto tidak jelas / Data tidak sesuai):");
+    if (!alasan || alasan.trim() === "") {
+      alert("Alasan penolakan wajib diisi agar Kader bisa memperbaiki laporannya.");
+      return;
+    }
+  } else {
+    if (!confirm("Terima laporan ini?")) return;
+  }
 
-  // 1. Tampilkan loading agar user tahu proses sedang jalan
   const listArea = document.getElementById("listLaporan");
   const originalHTML = listArea.innerHTML;
   listArea.innerHTML = `<div class="text-center py-20 animate-pulse text-blue-900 font-black uppercase text-[10px]">⏳ Memproses Validasi...</div>`;
 
-  // 2. Ambil identitas admin dari localStorage (PENTING!)
   const params = new URLSearchParams({
     action: "process_approval",
     id_laporan: id,
     status_baru: status,
-    admin_nik: localStorage.getItem("nik"),  // Ambil langsung dari storage
-    admin_nama: localStorage.getItem("nama"), // Ambil langsung dari storage
-    admin_role: localStorage.getItem("role")   // Ambil langsung dari storage
+    alasan: alasan, // Kirim alasan ke server
+    admin_nik: localStorage.getItem("nik"),
+    admin_nama: localStorage.getItem("nama"),
+    admin_role: localStorage.getItem("role")
   });
 
-  // 3. Kirim ke Server
   fetch(API_URL, {
     method: "POST",
     body: params
@@ -278,16 +286,15 @@
   .then(res => res.text())
   .then(res => {
     if (res.trim() === "success") {
-      alert("✅ Berhasil memvalidasi laporan!");
-      loadLaporanDatabase(); // Refresh list tanpa reload halaman
+      alert(status === 'REJECT' ? "❌ Laporan Berhasil Ditolak" : "✅ Laporan Berhasil Diterima");
+      loadLaporanDatabase();
     } else {
-      alert("❌ Gagal: " + res);
-      listArea.innerHTML = originalHTML; // Kembalikan tampilan jika gagal
+      alert("Gagal: " + res);
+      listArea.innerHTML = originalHTML;
     }
   })
   .catch(err => {
-    console.error("Error Approval:", err);
-    alert("❌ Masalah Koneksi!");
+    alert("Koneksi Bermasalah");
     listArea.innerHTML = originalHTML;
   });
 }
