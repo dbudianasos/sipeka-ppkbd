@@ -8,6 +8,7 @@ let dataRenjaGlobal = []; 
 let GLOBAL_WILAYAH = []; 
 let DATA_USERS_ALL = []; // Untuk penampung filter user
 let myChartInstance = null;
+let currentScale = 1;
 
 // ================= 1. LOGIN & SATPAM DIGITAL (FIXED) =================
 function login() {
@@ -1267,30 +1268,52 @@ function loadRiwayatKader() {
 // --- B. LOGIKA MODAL PREVIEW FOTO ---
 function intipFoto(id) {
   if (!id || id === "-" || id === "undefined") {
-    return alert("⚠️ Foto tidak ditemukan (ID Kosong).");
+    return alert("⚠️ Foto tidak tersedia.");
   }
   
   const modal = document.getElementById("modal-foto");
   const img = document.getElementById("img-intip");
   
   if (modal && img) {
-    // Gunakan format thumbnail Google Drive yang lebih cepat dan langsung tampil
-    const directLink = `https://lh3.googleusercontent.com/d/${id}`;
+    // Reset Zoom setiap kali buka foto baru
+    resetZoom();
     
+    const directLink = `https://drive.google.com/thumbnail?id=${id}&sz=w1200`;
     img.src = directLink;
+    
     modal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
-  } else {
-    alert("❌ Error: Elemen modal-foto tidak ditemukan di HTML!");
   }
+}
+
+function prosesZoom(delta) {
+  const container = document.getElementById("zoom-container");
+  const label = document.getElementById("zoom-label");
+  
+  currentScale += delta;
+  
+  // Batasi zoom minimal 0.5x dan maksimal 3x
+  if (currentScale < 0.5) currentScale = 0.5;
+  if (currentScale > 3) currentScale = 3;
+  
+  container.style.transform = `scale(${currentScale})`;
+  label.innerText = Math.round(currentScale * 100) + "%";
+}
+
+function resetZoom() {
+  currentScale = 1;
+  const container = document.getElementById("zoom-container");
+  const label = document.getElementById("zoom-label");
+  if (container) container.style.transform = `scale(1)`;
+  if (label) label.innerText = "100%";
 }
 
 function tutupIntip() {
   const modal = document.getElementById("modal-foto");
   if (modal) {
     modal.classList.add("hidden");
-    // Kembalikan scroll body agar bisa digulir lagi
     document.body.style.overflow = "auto";
+    resetZoom(); // Bersihkan zoom saat tutup
   }
 }
 
