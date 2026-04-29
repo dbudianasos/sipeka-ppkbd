@@ -1317,6 +1317,47 @@ function tutupIntip() {
   }
 }
 
+// --- FUNGSI PROSES ZOOM (IN/OUT) ---
+function prosesZoom(delta) {
+  const container = document.getElementById("zoom-container");
+  const label = document.getElementById("zoom-label");
+  
+  if (!container || !label) return;
+
+  currentScale += delta;
+  
+  // Batasi zoom: Minimal 0.5x (setengah) dan Maksimal 3x (tiga kali lipat)
+  if (currentScale < 0.5) currentScale = 0.5;
+  if (currentScale > 3) currentScale = 3;
+  
+  // Terapkan perubahan ke CSS
+  container.style.transform = `scale(${currentScale})`;
+  
+  // Update angka persentase di label
+  label.innerText = Math.round(currentScale * 100) + "%";
+}
+
+// --- FUNGSI RESET ZOOM KE SEMULA ---
+function resetZoom() {
+  currentScale = 1;
+  const container = document.getElementById("zoom-container");
+  const label = document.getElementById("zoom-label");
+  
+  if (container) container.style.transform = `scale(1)`;
+  if (label) label.innerText = "100%";
+}
+
+// --- UPDATE FUNGSI TUTUP MODAL ---
+// Pastikan fungsi tutupIntip Bapak memanggil resetZoom agar saat buka foto lain tidak miring
+function tutupIntip() {
+  const modal = document.getElementById("modal-foto");
+  if (modal) {
+    modal.classList.add("hidden");
+    document.body.style.overflow = "auto";
+    resetZoom(); // Reset posisi foto ke 100%
+  }
+}
+
 // --- C. LOGIKA HAPUS LAPORAN ---
 function hapusLaporanKader(id) {
   if (!confirm("Hapus laporan ini? Foto di server juga akan ikut dihapus permanen.")) return;
