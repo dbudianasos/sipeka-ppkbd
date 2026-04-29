@@ -1480,11 +1480,10 @@ function proteksiHalaman() {
 // ============================================================
 // 11. LOGIKA EDIT USER SEPERTI SIGA (TANPA POPUP)
 // ============================================================
-
 // 1. Menyiapkan Form untuk Mode Edit
 function siapkanEditUser(nik) {
   const user = DATA_USERS_ALL.find(u => u.NIK.toString() === nik.toString());
-  if (!user) return alert("Data tidak ditemukan di memori lokal.");
+  if (!user) return alert("Data tidak ditemukan.");
 
   document.getElementById("form-title").innerText = "✏️ EDIT DATA: " + (user.Nama || "").toUpperCase();
   document.getElementById("btn-batal-edit").classList.remove("hidden");
@@ -1492,27 +1491,26 @@ function siapkanEditUser(nik) {
   document.getElementById("edit-nik-target").value = user.NIK; 
   document.getElementById("user-nik").value = user.NIK;
   document.getElementById("user-nik").disabled = true; 
-  
   document.getElementById("user-nama").value = user.Nama;
   document.getElementById("user-hp").value = user.HP || "";
   
-  const roleEl = document.getElementById("user-role");
-  if(roleEl) roleEl.value = user.Role;
-
+  // Set Wilayah (Akan memicu evaluasiRoleOtomatis secara pasif)
   const kecEl = document.getElementById("user-kecamatan");
   if (kecEl) {
     kecEl.value = (user.Kecamatan || "").toUpperCase();
     updateDropdownDesa(user.Desa); 
   }
+  
+  // Set Role manual (khusus edit jangan di-otomatiskan dulu)
+  setTimeout(() => {
+    const roleEl = document.getElementById("user-role");
+    if(roleEl) roleEl.value = user.Role;
+  }, 100);
 
-  // --- UBAH TOMBOL SECARA PAKSA ---
   const btnSubmit = document.getElementById("btn-tambah-user");
   btnSubmit.innerText = "UPDATE DATA PENGGUNA";
-  btnSubmit.classList.remove("bg-blue-900");  // Buang biru
-  btnSubmit.classList.add("bg-orange-500");   // Masukkan oranye
-  
-  // Cara paling ampuh untuk ganti fungsi tombol di JS
-  btnSubmit.onclick = function() { prosesUpdateUser(); }; 
+  btnSubmit.classList.replace("bg-blue-900", "bg-orange-500");
+  btnSubmit.onclick = function() { prosesUpdateUser(); }; // Arahkan ke Update
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1522,25 +1520,21 @@ function batalEdit() {
   document.getElementById("form-title").innerText = "👤 Registrasi Akun Baru";
   document.getElementById("btn-batal-edit").classList.add("hidden");
   
-  if (document.getElementById("edit-nik-target")) {
-      document.getElementById("edit-nik-target").value = "";
-  }
+  document.getElementById("edit-nik-target").value = "";
   document.getElementById("user-nik").value = "";
   document.getElementById("user-nik").disabled = false;
   document.getElementById("user-nama").value = "";
   document.getElementById("user-hp").value = "";
   
-  // --- KEMBALIKAN TOMBOL SECARA PAKSA ---
   const btnSubmit = document.getElementById("btn-tambah-user");
-  btnSubmit.innerText = "SIMPAN DATA PENGGUNA"; // Teks kembali semula
-  btnSubmit.classList.remove("bg-orange-500");  // Buang oranye
-  btnSubmit.classList.add("bg-blue-900");       // Kembalikan biru
+  btnSubmit.innerText = "SIMPAN DATA PENGGUNA";
+  btnSubmit.classList.replace("bg-orange-500", "bg-blue-900");
   
-  // Kembalikan fungsinya ke tambahUser
+  // KEMBALIKAN KE FUNGSI TAMBAH (PASTIKAN FUNGSI TAMBAHUSER ADA DI BAWAH)
   btnSubmit.onclick = function() { tambahUser(); }; 
-  btnSubmit.disabled = false; // Pastikan tombol bisa diklik lagi
+  btnSubmit.disabled = false;
   
-  if (typeof initUserPage === "function") initUserPage(); 
+  initUserPage(); 
 }
 
 // 3. Proses Pengiriman Data Update ke Server
@@ -1591,4 +1585,83 @@ function prosesUpdateUser() {
     btn.innerText = "UPDATE DATA PENGGUNA";
     btn.disabled = false;
   });
+}
+// ============================================================
+// 12. FUNGSI TAMBAH USER
+// ============================================================
+function tambahUser() {
+  const btn = document.getElementById("btn-tambah-user");
+  const payload = {
+    action: "tambah_user",
+    admin_nik: localStorage.getItem("nik"),
+    admin_nama: localStorage.getItem("nama"),
+    admin_role: localStorage.getItem("role"),
+    user_nik: document.getElementById("user-nik").value,
+    nama: document.getElementById("user-nama").value.toUpperCase(),
+    password: "123456", // Default
+    role: document.getElementById("user-role").value,
+    kecamatan: document.getElementById("user-kecamatan").value,
+    desa: document.getElementById("user-wilayah").value,
+    hp: document.getElementById("user-hp").value
+  };
+
+  if (!payload.user_nik || !payload.nama || !payload.kecamatan || !payload.desa) {
+    return alert("⚠️ Lengkapi NIK, Nama, Kecamatan dan Desa!");
+  }
+
+  btn.innerText = "⏳ MENYIMPAN...";
+  btn.disabled = true;
+
+  fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
+  .then(res => res.text())
+  .then(res => {
+    if (res.trim() === "success") {
+      alert("✅ User Berhasil Didaftarkan!");
+      batalEdit();
+      loadUsers();
+    } else {
+      alert("❌ Gagal: " + res);
+      btn.innerText = "SIMPAN DATA PENGGUNA";
+      btn.disabled = false;
+    }
+  });
+}
+// ============================================================
+// 13. ROLE OTOMATIS
+// ============================================================
+// Fungsi ini dipanggil setiap kali dropdown Desa/Wilayah berubah
+function evaluasiRoleOtomatis() {
+  const selRole = document.getElementById("user-role");
+  const selKec = document.getElementById("user-kecamatan");
+  const selDesa = document.getElementById("user-wilayah");
+  if (!selRole || !selKec || !selDesa) return;
+
+  // Jangan ganggu kalau lagi mode EDIT
+  const isEditing = document.getElementById("edit-nik-target").value !== "";
+  if (isEditing) return;
+
+  const kec = selKec.value.toUpperCase();
+  const desa = selDesa.value.toUpperCase();
+
+  // 1. Logika Super Admin
+  if (kec.includes("SEMUA KECAMATAN")) {
+    selRole.innerHTML = `<option value="super_admin">👑 Super Admin</option>`;
+  } 
+  // 2. Logika Admin Kecamatan
+  else if (kec !== "" && desa === "SEMUA DESA") {
+    selRole.innerHTML = `<option value="admin_kec">🏛️ Admin Kecamatan</option>`;
+  } 
+  // 3. Logika Admin Desa & Kader
+  else if (kec !== "" && desa !== "" && desa !== "SEMUA DESA") {
+    const myRole = localStorage.getItem("role");
+    if (myRole === "super_admin" || myRole === "admin_kec") {
+      selRole.innerHTML = `
+        <option value="admin_desa">🏠 Admin Desa</option>
+        <option value="kader" selected>👤 Kader PPKBD</option>
+      `;
+    } else {
+      // Admin Desa hanya bisa daftarkan Kader
+      selRole.innerHTML = `<option value="kader">👤 Kader PPKBD</option>`;
+    }
+  }
 }
