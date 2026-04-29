@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modul Lapbul | siPeKa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <style> body { font-family: 'Poppins', sans-serif; } </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-20">
+
+  <header class="sticky top-0 z-50 bg-blue-900 py-4 px-5 rounded-b-[1.5rem] shadow-lg text-white">
+    <div class="flex items-center gap-3 max-w-5xl mx-auto">
+      <button onclick="window.location.href='dashboard-admin.html'" class="bg-white/10 p-2 rounded-xl active:scale-95 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
+      <div class="leading-tight">
+        <h1 class="font-bold text-base uppercase tracking-wide">Modul Lapbul</h1>
+        <p class="text-[9px] text-blue-200 uppercase tracking-widest font-bold">Ruang Kerja Khusus PPKBD</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="px-5 pt-8 max-w-2xl mx-auto">
+    <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 pl-2">📂 Pilih Akses Data</h2>
+
+    <div class="space-y-4">
+      
+      <div onclick="window.location.href='form-ab.html'" class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100 flex items-center gap-4 active:scale-95 transition cursor-pointer hover:border-blue-300">
+        <div class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl border border-blue-100">📊</div>
+        <div class="flex-1">
+          <h3 class="font-black text-blue-900 text-sm uppercase">1. Register AB (PPM)</h3>
+          <p class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Input Capaian Akseptor Baru</p>
+        </div>
+        <div class="text-slate-300 text-xl font-black">❯</div>
+      </div>
+
+      <div onclick="window.location.href='form-cu.html'" class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100 flex items-center gap-4 active:scale-95 transition cursor-pointer hover:border-green-300">
+        <div class="w-14 h-14 rounded-2xl bg-green-50 flex items-center justify-center text-2xl border border-green-100">📈</div>
+        <div class="flex-1">
+          <h3 class="font-black text-slate-800 text-sm uppercase">2. Register CU</h3>
+          <p class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Input Peserta KB Aktif</p>
+        </div>
+        <div class="text-slate-300 text-xl font-black">❯</div>
+      </div>
+
+      <div onclick="window.location.href='cetak-lapbul.html'" class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100 flex items-center gap-4 active:scale-95 transition cursor-pointer border-l-4 border-l-orange-500 hover:border-orange-300 mt-8">
+        <div class="w-14 h-14 rounded-2xl bg-orange-50 flex items-center justify-center text-2xl border border-orange-100">🖨️</div>
+        <div class="flex-1">
+          <h3 class="font-black text-slate-800 text-sm uppercase">3. Cetak Lapbul</h3>
+          <p class="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Generate PDF Form R/I/PPKBD</p>
+        </div>
+        <div class="text-slate-300 text-xl font-black">❯</div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      cekLogin(); // Mencegah orang masuk tanpa login
+    });
+  </script>
+</body>
+</html>
