@@ -1731,3 +1731,64 @@ function siapkanEditUser(nik) {
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+// ==========================================
+// 14. LOGIKA HALAMAN LOG AKTIVITAS (AUDIT)
+// ==========================================
+function loadLogAktivitas() {
+  const container = document.getElementById("container-log");
+  if (!container) return;
+
+  const role = localStorage.getItem("role");
+  const kec = localStorage.getItem("kecamatan");
+
+  fetch(`${API_URL}?action=get_logs&role=${role}&kec=${kec}`)
+    .then(res => res.json())
+    .then(data => {
+      container.innerHTML = "";
+      if (data.length === 0) {
+        container.innerHTML = "<p class='pl-6 text-xs text-slate-400 italic'>Belum ada rekaman aktivitas.</p>";
+        return;
+      }
+
+      data.forEach(log => {
+        // Format Waktu
+        const tgl = new Date(log.timestamp);
+        const waktuStr = tgl.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const tglStr = tgl.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+
+        // Warna Badge Aksi
+        let colorAksi = "bg-slate-100 text-slate-600";
+        if (log.aksi.includes("HAPUS")) colorAksi = "bg-red-100 text-red-600";
+        if (log.aksi.includes("TAMBAH")) colorAksi = "bg-green-100 text-green-600";
+        if (log.aksi.includes("LOGIN")) colorAksi = "bg-blue-100 text-blue-600";
+        if (log.aksi.includes("APPROVAL")) colorAksi = "bg-orange-100 text-orange-600";
+
+        container.innerHTML += `
+          <div class="relative pl-8">
+            <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-4 border-slate-300"></div>
+            
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[8px] font-black px-2 py-0.5 rounded-md uppercase ${colorAksi}">${log.aksi}</span>
+                <span class="text-[9px] font-bold text-slate-400">${tglStr} | ${waktuStr}</span>
+              </div>
+              
+              <p class="text-[11px] font-bold text-slate-800 leading-tight mb-1 uppercase">${log.keterangan}</p>
+              
+              <div class="flex items-center gap-2 mt-3 pt-2 border-t border-dashed border-slate-100">
+                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px]">👤</div>
+                <div class="leading-none">
+                  <p class="text-[10px] font-black text-blue-900 uppercase">${log.nama}</p>
+                  <p class="text-[8px] text-slate-400 font-bold uppercase">${log.role}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    })
+    .catch(err => {
+      container.innerHTML = "<p class='pl-6 text-xs text-red-500'>Gagal sinkronisasi log audit.</p>";
+    });
+}
