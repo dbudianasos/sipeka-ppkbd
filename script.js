@@ -1200,6 +1200,14 @@ async function simpanLaporan() {
 // ============================================================
 // 9. LOGIKA RIWAYAT LAPORAN MANDIRI (KADER)
 // ============================================================
+
+// --- VARIABEL GLOBAL UNTUK ZOOM & GESER ---
+let currentScale = 1;
+let isDragging = false;
+let startX, startY;
+let translateX = 0;
+let translateY = 0;
+
 // --- A. LOAD RIWAYAT DENGAN FILTER & INTIP FOTO ---
 function loadRiwayatKader() {
   const container = document.getElementById("list-riwayat-kader");
@@ -1222,11 +1230,9 @@ function loadRiwayatKader() {
         return;
       }
 
-      // Balik data agar yang terbaru muncul paling atas
       data.reverse().forEach(item => {
-        // Logika Filter Bulan
         const tglObj = new Date(item.tanggal);
-        const bulanIndex = tglObj.getMonth().toString(); // 0-11
+        const bulanIndex = tglObj.getMonth().toString(); 
         if (filterBulan !== "ALL" && bulanIndex !== filterBulan) return;
 
         const isDraft = item.status.toLowerCase() === "draft";
@@ -1239,16 +1245,14 @@ function loadRiwayatKader() {
             <div class="flex justify-between items-start mb-3">
                <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase">${item.status}</span>
                <div class="flex gap-2">
-                 <button onclick="intipFoto('${item.fotoId}')" class="text-[10px] text-blue-600 font-bold border border-blue-200 px-2 py-1 rounded-lg bg-blue-50">
+                 <button onclick="intipFoto('${item.fotoId}')" class="text-[10px] text-blue-600 font-black border border-blue-200 px-2 py-1 rounded-lg bg-blue-50 active:scale-95 transition">
                     🖼️ LIHAT FOTO
                  </button>
-                <p class="text-[9px] text-slate-400 font-bold font-mono pt-1">${item.id}</p>
+                 <p class="text-[9px] text-slate-400 font-bold font-mono pt-1">${item.id}</p>
                </div>
             </div>
-            
             <h3 class="text-xs font-black text-blue-900 uppercase leading-tight mb-1">${item.kegiatan}</h3>
             <p class="text-[9px] text-slate-500 font-medium mb-3 italic">📍 ${item.realisasi} di ${item.tanggal}</p>
-            
             <div class="flex items-center justify-between border-t border-dashed border-slate-100 pt-3 mt-3">
                <p class="text-[9px] text-slate-400 font-bold">Verifikator: <span class="text-blue-700">${item.verifikator || '-'}</span></p>
                ${isDraft ? 
@@ -1259,7 +1263,6 @@ function loadRiwayatKader() {
           </div>`;
       });
 
-      // Update angka statistik di atas
       if(document.getElementById("stat-approved")) document.getElementById("stat-approved").innerText = countApproved;
       if(document.getElementById("stat-pending")) document.getElementById("stat-pending").innerText = countPending;
     })
@@ -1269,22 +1272,16 @@ function loadRiwayatKader() {
     });
 }
 
-// --- B. LOGIKA MODAL PREVIEW FOTO ---
+// --- B. LOGIKA MODAL PREVIEW FOTO (ZOOM & DRAG) ---
 function intipFoto(id) {
-  if (!id || id === "-" || id === "undefined") {
-    return alert("⚠️ Foto tidak tersedia.");
-  }
+  if (!id || id === "-" || id === "undefined") return alert("⚠️ Foto tidak tersedia.");
   
   const modal = document.getElementById("modal-foto");
   const img = document.getElementById("img-intip");
   
   if (modal && img) {
-    // Reset Zoom setiap kali buka foto baru
     resetZoom();
-    
-    const directLink = `https://drive.google.com/thumbnail?id=${id}&sz=w1200`;
-    img.src = directLink;
-    
+    img.src = `https://drive.google.com/thumbnail?id=${id}&sz=w1200`;
     modal.classList.remove("hidden");
     document.body.style.overflow = "hidden";
   }
@@ -1293,92 +1290,23 @@ function intipFoto(id) {
 function prosesZoom(delta) {
   const container = document.getElementById("zoom-container");
   const label = document.getElementById("zoom-label");
-  
-  currentScale += delta;
-  
-  // Batasi zoom minimal 0.5x dan maksimal 3x
-  if (currentScale < 0.5) currentScale = 0.5;
-  if (currentScale > 3) currentScale = 3;
-  
-  container.style.transform = `scale(${currentScale})`;
-  label.innerText = Math.round(currentScale * 100) + "%";
-}
-
-function tutupIntip() {
-  const modal = document.getElementById("modal-foto");
-  if (modal) {
-    modal.classList.add("hidden");
-    document.body.style.overflow = "auto";
-    resetZoom(); // Bersihkan zoom saat tutup
-  }
-}
-
-/ --- 1. FUNGSI UNTUK MERESPON ZOOM ---
-function prosesZoom(delta) {
-  const container = document.getElementById("zoom-container");
-  const label = document.getElementById("zoom-label");
   if (!container) return;
 
   currentScale += delta;
   if (currentScale < 0.5) currentScale = 0.5;
-  if (currentScale > 4) currentScale = 4; // Maksimal 4x lipat
+  if (currentScale > 4) currentScale = 4; 
 
   updateTransform();
   if (label) label.innerText = Math.round(currentScale * 100) + "%";
 }
 
-// --- 2. FUNGSI UPDATE POSISI & SKALA (CSS) ---
 function updateTransform() {
   const container = document.getElementById("zoom-container");
   if (container) {
-    // Gabungkan Skala dan Posisi Geser
     container.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
   }
 }
 
-// --- 3. LOGIKA GESER (MOUSE & TOUCH) ---
-const zoomArea = document.getElementById("modal-foto"); // Area sensitif sentuhan
-
-if (zoomArea) {
-  // START: Saat layar ditekan / Mouse diklik
-  const startAction = (e) => {
-    isDragging = true;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    startX = clientX - translateX;
-    startY = clientY - translateY;
-    document.getElementById("zoom-container").style.transition = "none"; // Matikan animasi pas digeser biar enteng
-  };
-
-  // MOVE: Saat jari/mouse bergerak
-  const moveAction = (e) => {
-    if (!isDragging) return;
-    e.preventDefault(); // Biar layar gak ikut scroll pas geser foto
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    
-    translateX = clientX - startX;
-    translateY = clientY - startY;
-    updateTransform();
-  };
-
-  // END: Saat jari lepas / Mouse lepas
-  const stopAction = () => {
-    isDragging = false;
-    document.getElementById("zoom-container").style.transition = "transform 0.2s ease-out";
-  };
-
-  // Pasang kabel sensor ke layar
-  zoomArea.addEventListener("mousedown", startAction);
-  window.addEventListener("mousemove", moveAction);
-  window.addEventListener("mouseup", stopAction);
-
-  zoomArea.addEventListener("touchstart", startAction, { passive: false });
-  window.addEventListener("touchmove", moveAction, { passive: false });
-  window.addEventListener("touchend", stopAction);
-}
-
-// --- 4. RESET KE POSISI SEMULA ---
 function resetZoom() {
   currentScale = 1;
   translateX = 0;
@@ -1387,7 +1315,6 @@ function resetZoom() {
   if (document.getElementById("zoom-label")) document.getElementById("zoom-label").innerText = "100%";
 }
 
-// --- 5. TUTUP MODAL ---
 function tutupIntip() {
   const modal = document.getElementById("modal-foto");
   if (modal) {
@@ -1397,10 +1324,48 @@ function tutupIntip() {
   }
 }
 
-// --- C. LOGIKA HAPUS LAPORAN ---
+// --- C. LOGIKA GESER (MOUSE & TOUCH) ---
+document.addEventListener("DOMContentLoaded", () => {
+  const zoomArea = document.getElementById("modal-foto");
+  if (zoomArea) {
+    const startAction = (e) => {
+      isDragging = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      startX = clientX - translateX;
+      startY = clientY - translateY;
+      const container = document.getElementById("zoom-container");
+      if(container) container.style.transition = "none";
+    };
+
+    const moveAction = (e) => {
+      if (!isDragging) return;
+      if (e.touches) e.preventDefault(); 
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      translateX = clientX - startX;
+      translateY = clientY - startY;
+      updateTransform();
+    };
+
+    const stopAction = () => {
+      isDragging = false;
+      const container = document.getElementById("zoom-container");
+      if(container) container.style.transition = "transform 0.2s ease-out";
+    };
+
+    zoomArea.addEventListener("mousedown", startAction);
+    window.addEventListener("mousemove", moveAction);
+    window.addEventListener("mouseup", stopAction);
+    zoomArea.addEventListener("touchstart", startAction, { passive: false });
+    window.addEventListener("touchmove", moveAction, { passive: false });
+    window.addEventListener("touchend", stopAction);
+  }
+});
+
+// --- D. LOGIKA HAPUS LAPORAN ---
 function hapusLaporanKader(id) {
   if (!confirm("Hapus laporan ini? Foto di server juga akan ikut dihapus permanen.")) return;
-  
   fetch(`${API_URL}?action=hapus_laporan&laporan_id=${id}`)
     .then(res => res.text())
     .then(res => {
