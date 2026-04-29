@@ -1289,6 +1289,7 @@ function tutupIntip() {
   const modal = document.getElementById("modal-foto");
   if (modal) {
     modal.classList.add("hidden");
+    // Kembalikan scroll body agar bisa digulir lagi
     document.body.style.overflow = "auto";
   }
 }
