@@ -1200,14 +1200,6 @@ async function simpanLaporan() {
 // ============================================================
 // 9. LOGIKA RIWAYAT LAPORAN MANDIRI (KADER)
 // ============================================================
-
-// --- VARIABEL GLOBAL UNTUK ZOOM & GESER ---
-let currentScale = 1;
-let isDragging = false;
-let startX, startY;
-let translateX = 0;
-let translateY = 0;
-
 // --- A. LOAD RIWAYAT DENGAN FILTER & INTIP FOTO ---
 function loadRiwayatKader() {
   const container = document.getElementById("list-riwayat-kader");
