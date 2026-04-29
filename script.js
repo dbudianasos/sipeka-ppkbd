@@ -273,8 +273,21 @@ function applyFilters() {
 
 function tambahUser() {
   const btn = document.getElementById("btn-tambah-user");
+  const info = document.getElementById("info-user"); // Jika ada elemen info pesan
+
+  // 1. Ambil Identitas Admin dari LocalStorage
+  const adminNik = localStorage.getItem("nik");
+  const adminNama = localStorage.getItem("nama");
+  const adminRole = localStorage.getItem("role");
+
+  // 2. Susun Payload (Data yang dikirim ke GAS)
   const payload = {
     action: "tambah_user",
+    // Data Admin (Untuk Log)
+    admin_nik: adminNik,
+    admin_nama: adminNama,
+    admin_role: adminRole,
+    // Data Kader Baru
     user_nik: document.getElementById("user-nik").value,
     nama: document.getElementById("user-nama").value.toUpperCase(),
     password: document.getElementById("user-password").value,
@@ -283,9 +296,37 @@ function tambahUser() {
     desa: document.getElementById("user-wilayah").value,
     hp: document.getElementById("user-hp").value
   };
-  if (!payload.user_nik || !payload.nama || !payload.kecamatan || !payload.desa) return alert("Wajib diisi!");
-  btn.innerText = "⏳ MENYIMPAN..."; btn.disabled = true;
-  fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) }).then(() => location.reload());
+
+  // 3. Validasi Dasar
+  if (!payload.user_nik || !payload.nama || !payload.kecamatan || !payload.desa) {
+    return alert("⚠️ Nama, NIK, Kecamatan & Desa wajib diisi!");
+  }
+
+  // 4. Proses Kirim
+  btn.innerText = "⏳ MENYIMPAN..."; 
+  btn.disabled = true;
+
+  fetch(API_URL, { 
+    method: "POST", 
+    body: new URLSearchParams(payload) 
+  })
+  .then(res => res.text())
+  .then(res => {
+    if (res.trim() === "success") {
+      alert("✅ User " + payload.nama + " berhasil didaftarkan!");
+      location.reload(); // Segarkan halaman untuk melihat daftar terbaru
+    } else {
+      alert("❌ Gagal: " + res);
+      btn.innerText = "SIMPAN USER BARU";
+      btn.disabled = false;
+    }
+  })
+  .catch(err => {
+    console.error("Error:", err);
+    alert("❌ Koneksi terputus. Cek internet Anda.");
+    btn.innerText = "SIMPAN USER BARU";
+    btn.disabled = false;
+  });
 }
 
 function ubahStatusUser(nik, status) {
@@ -656,6 +697,7 @@ function simpanRenja() {
     target_peserta: `${targetAngka} ${targetSatuan}`,
     indikator: document.getElementById("renja-indikator").value,
     lokasi: document.getElementById("renja-lokasi").value
+    role: localStorage.getItem("role")
   };
 
   fetch(API_URL, {
@@ -1176,6 +1218,7 @@ async function simpanLaporan() {
         tanggal: tanggal,
         realisasi: `${realisasi} ${satuanFinal}`, // Contoh: "15 Orang"
         lokasi: lokasi,
+        role: localStorage.getItem("role"),
         foto_data: base64Foto // Format Base64 yang sudah ada Watermark
       })
     });
@@ -1358,7 +1401,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // --- D. LOGIKA HAPUS LAPORAN ---
 function hapusLaporanKader(id) {
   if (!confirm("Hapus laporan ini? Foto di server juga akan ikut dihapus permanen.")) return;
-  fetch(`${API_URL}?action=hapus_laporan&laporan_id=${id}`)
+  const nik = localStorage.getItem("nik");
+  fetch(`${API_URL}?action=hapus_laporan&laporan_id=${id}&nik=${nik}`)
     .then(res => res.text())
     .then(res => {
       if (res.trim() === "success") {
