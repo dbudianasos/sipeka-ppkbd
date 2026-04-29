@@ -1197,7 +1197,7 @@ async function simpanLaporan() {
 // ============================================================
 // --- A. LOAD RIWAYAT DENGAN FILTER & INTIP FOTO ---
 function loadRiwayatKader() {
-  const container = document.getElementById("list-riwayat");
+  const container = document.getElementById("list-riwayat-kader");
   const nik = localStorage.getItem("nik");
   const filterBulan = document.getElementById("filter-bulan-riwayat") ? document.getElementById("filter-bulan-riwayat").value : "ALL";
   
