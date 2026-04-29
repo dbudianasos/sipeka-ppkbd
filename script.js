@@ -9,6 +9,10 @@ let GLOBAL_WILAYAH = []; 
 let DATA_USERS_ALL = []; // Untuk penampung filter user
 let myChartInstance = null;
 let currentScale = 1;
+let isDragging = false;
+let startX, startY;
+let translateX = 0;
+let translateY = 0;
 
 // ================= 1. LOGIN & SATPAM DIGITAL (FIXED) =================
 function login() {
@@ -1300,14 +1304,6 @@ function prosesZoom(delta) {
   label.innerText = Math.round(currentScale * 100) + "%";
 }
 
-function resetZoom() {
-  currentScale = 1;
-  const container = document.getElementById("zoom-container");
-  const label = document.getElementById("zoom-label");
-  if (container) container.style.transform = `scale(1)`;
-  if (label) label.innerText = "100%";
-}
-
 function tutupIntip() {
   const modal = document.getElementById("modal-foto");
   if (modal) {
@@ -1317,44 +1313,87 @@ function tutupIntip() {
   }
 }
 
-// --- FUNGSI PROSES ZOOM (IN/OUT) ---
+/ --- 1. FUNGSI UNTUK MERESPON ZOOM ---
 function prosesZoom(delta) {
   const container = document.getElementById("zoom-container");
   const label = document.getElementById("zoom-label");
-  
-  if (!container || !label) return;
+  if (!container) return;
 
   currentScale += delta;
-  
-  // Batasi zoom: Minimal 0.5x (setengah) dan Maksimal 3x (tiga kali lipat)
   if (currentScale < 0.5) currentScale = 0.5;
-  if (currentScale > 3) currentScale = 3;
-  
-  // Terapkan perubahan ke CSS
-  container.style.transform = `scale(${currentScale})`;
-  
-  // Update angka persentase di label
-  label.innerText = Math.round(currentScale * 100) + "%";
+  if (currentScale > 4) currentScale = 4; // Maksimal 4x lipat
+
+  updateTransform();
+  if (label) label.innerText = Math.round(currentScale * 100) + "%";
 }
 
-// --- FUNGSI RESET ZOOM KE SEMULA ---
+// --- 2. FUNGSI UPDATE POSISI & SKALA (CSS) ---
+function updateTransform() {
+  const container = document.getElementById("zoom-container");
+  if (container) {
+    // Gabungkan Skala dan Posisi Geser
+    container.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+  }
+}
+
+// --- 3. LOGIKA GESER (MOUSE & TOUCH) ---
+const zoomArea = document.getElementById("modal-foto"); // Area sensitif sentuhan
+
+if (zoomArea) {
+  // START: Saat layar ditekan / Mouse diklik
+  const startAction = (e) => {
+    isDragging = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startX = clientX - translateX;
+    startY = clientY - translateY;
+    document.getElementById("zoom-container").style.transition = "none"; // Matikan animasi pas digeser biar enteng
+  };
+
+  // MOVE: Saat jari/mouse bergerak
+  const moveAction = (e) => {
+    if (!isDragging) return;
+    e.preventDefault(); // Biar layar gak ikut scroll pas geser foto
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    translateX = clientX - startX;
+    translateY = clientY - startY;
+    updateTransform();
+  };
+
+  // END: Saat jari lepas / Mouse lepas
+  const stopAction = () => {
+    isDragging = false;
+    document.getElementById("zoom-container").style.transition = "transform 0.2s ease-out";
+  };
+
+  // Pasang kabel sensor ke layar
+  zoomArea.addEventListener("mousedown", startAction);
+  window.addEventListener("mousemove", moveAction);
+  window.addEventListener("mouseup", stopAction);
+
+  zoomArea.addEventListener("touchstart", startAction, { passive: false });
+  window.addEventListener("touchmove", moveAction, { passive: false });
+  window.addEventListener("touchend", stopAction);
+}
+
+// --- 4. RESET KE POSISI SEMULA ---
 function resetZoom() {
   currentScale = 1;
-  const container = document.getElementById("zoom-container");
-  const label = document.getElementById("zoom-label");
-  
-  if (container) container.style.transform = `scale(1)`;
-  if (label) label.innerText = "100%";
+  translateX = 0;
+  translateY = 0;
+  updateTransform();
+  if (document.getElementById("zoom-label")) document.getElementById("zoom-label").innerText = "100%";
 }
 
-// --- UPDATE FUNGSI TUTUP MODAL ---
-// Pastikan fungsi tutupIntip Bapak memanggil resetZoom agar saat buka foto lain tidak miring
+// --- 5. TUTUP MODAL ---
 function tutupIntip() {
   const modal = document.getElementById("modal-foto");
   if (modal) {
     modal.classList.add("hidden");
     document.body.style.overflow = "auto";
-    resetZoom(); // Reset posisi foto ke 100%
+    resetZoom();
   }
 }
 
