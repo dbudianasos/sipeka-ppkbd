@@ -69,11 +69,14 @@
   </main>
 
   <script src="script.js"></script>
-  <script>
+  <script src="lapbul.js"></script> <script>
     document.addEventListener("DOMContentLoaded", () => {
-      cekLogin(); // Mencegah orang masuk tanpa login
+      cekLogin(); 
+      // Karena lapbul.js sudah dipanggil di atas, fungsi aturTampilanMenu() 
+      // yang ada di dalam lapbul.js akan otomatis jalan.
     });
   </script>
+
   <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 italic px-10 leading-relaxed">
     &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
     Sistem Informasi Pelaporan Kinerja Kabupaten Bekasi
