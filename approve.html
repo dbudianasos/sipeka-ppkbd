@@ -260,6 +260,8 @@
       body: new URLSearchParams({
         action: "process_approval",
         id_laporan: id,
+        admin_nik: adminNik,
+        admin_role: adminRole,
         status_baru: status,
         admin_nama: localStorage.getItem("nama")
       })
