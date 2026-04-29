@@ -78,12 +78,12 @@
 
   <script src="script.js"></script>
   <script>
-    // Panggil fungsi satpam dari script.js
+    // 1. Jalankan Satpam Digital
     cekLogin(); 
 
     let FOTO_DATA = ""; 
 
-    // FUNGSI PREVIEW & KOMPRES (Agar Simpan Cepat)
+    // 2. FUNGSI PREVIEW & KOMPRES
     function previewFoto() {
       const file = document.getElementById('input-foto').files[0];
       if (!file) return;
@@ -107,51 +107,62 @@
       };
     }
 
-    // FUNGSI TARIK DATA (Hanya dijalankan sekali saat halaman buka)
+    // 3. FUNGSI TARIK DATA PROFIL
     function loadProfil() {
       const nik = localStorage.getItem("nik");
       if (!nik) return;
 
-      // Beri tanda sedang memuat di nama
-      document.getElementById("nama-tampil").innerText = "⌛ Menghubungkan...";
+      const namaTampil = document.getElementById("nama-tampil");
+      if (namaTampil) namaTampil.innerText = "⌛ Menghubungkan...";
 
       fetch(`${API_URL}?action=get_profil&nik=${nik}`)
         .then(res => res.json())
         .then(data => {
           if (data.status === "success") {
-            document.getElementById("nama-tampil").innerText = data.nama;
-            document.getElementById("nik-tampil").innerText = nik;
-            document.getElementById("p-hp").value = data.hp || "";
-            document.getElementById("p-alamat").value = data.alamat || "";
-            document.getElementById("p-kecamatan").value = data.kecamatan || "";
-            document.getElementById("p-desa").value = data.desa || "";
+            if (namaTampil) namaTampil.innerText = data.nama;
+            if (document.getElementById("nik-tampil")) document.getElementById("nik-tampil").innerText = nik;
+            if (document.getElementById("p-hp")) document.getElementById("p-hp").value = data.hp || "";
+            if (document.getElementById("p-alamat")) document.getElementById("p-alamat").value = data.alamat || "";
+            if (document.getElementById("p-kecamatan")) document.getElementById("p-kecamatan").value = data.kecamatan || "";
+            if (document.getElementById("p-desa")) document.getElementById("p-desa").value = data.desa || "";
             
             if (data.foto && data.foto !== "" && data.foto !== "-") {
               document.getElementById("img-preview").src = "data:image/jpeg;base64," + data.foto;
               localStorage.setItem("foto", data.foto);
             } else {
-              document.getElementById("img-preview").src = "def-profil.png";
+              document.getElementById("img-preview").src = "logo-sipeka.png"; // Pastikan file ini ada
             }
           }
         })
         .catch(err => {
           console.error(err);
-          document.getElementById("nama-tampil").innerText = "❌ Gagal Memuat Data";
+          if (namaTampil) namaTampil.innerText = "❌ Gagal Memuat Data";
         });
     }
 
-    // FUNGSI SIMPAN
+    // 4. FUNGSI SIMPAN PERUBAHAN
     function updateProfil() {
       const btn = document.getElementById("btn-save");
       const info = document.getElementById("info");
-      const nik = localStorage.getItem("nik");
       
+      // Ambil data untuk LOG dan Payload
+      const nik = localStorage.getItem("nik");
+      const nama = localStorage.getItem("nama");
+      const role = localStorage.getItem("role");
+      
+      const inputHp = document.getElementById("p-hp").value;
+      const inputAlamat = document.getElementById("p-alamat").value;
+      const inputPass = document.getElementById("p-password").value;
+
+      // Susun Payload yang benar
       const payload = {
         action: "update_profil",
         nik: nik,
-        hp: document.getElementById("p-hp").value,
-        alamat: document.getElementById("p-alamat").value,
-        password: document.getElementById("p-password").value,
+        nama: nama, // Untuk log di GAS
+        role: role, // Untuk log di GAS
+        hp: inputHp,
+        alamat: inputAlamat,
+        password: inputPass,
         foto_data: FOTO_DATA
       };
 
@@ -161,34 +172,44 @@
       fetch(API_URL, {
         method: "POST",
         body: new URLSearchParams(payload)
-        action: "update_profil",
-        nik: localStorage.getItem("nik"),
-        nama: localStorage.getItem("nama"),
-        role: localStorage.getItem("role"),
-        hp: hp,
-        password: passwordBaru
       })
       .then(res => res.text())
       .then(res => {
-        if (res === "success") {
-          // Update localStorage agar dashboard langsung berubah fotonya
+        if (res.trim() === "success") {
           if (FOTO_DATA !== "") localStorage.setItem("foto", FOTO_DATA);
           
           info.innerText = "✅ DATA BERHASIL DIPERBARUI";
-          info.className = "text-center text-[10px] font-bold text-green-600 mt-2";
+          info.className = "text-center text-[10px] font-bold text-green-600 mt-2 uppercase";
+          
           setTimeout(() => { 
-            const role = localStorage.getItem("role");
-            window.location.href = role.includes("admin") ? 'dashboard-admin.html' : 'dashboard-kader.html';
+            const currentRole = localStorage.getItem("role");
+            window.location.href = currentRole.includes("admin") ? 'dashboard-admin.html' : 'dashboard-kader.html';
           }, 1500);
         } else {
-          alert("Gagal memperbarui");
+          alert("Gagal memperbarui: " + res);
           btn.disabled = false;
           btn.innerText = "Simpan Perubahan";
         }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Koneksi bermasalah!");
+        btn.disabled = false;
+        btn.innerText = "Simpan Perubahan";
       });
     }
 
-    // JALANKAN LOAD SAAT HALAMAN SELESAI DIMUAT
+    // 5. NAVIGASI KEMBALI PINTAR (Cegah bocor)
+    function navigasiKembali() {
+      const role = localStorage.getItem("role");
+      if (role && role.toLowerCase().includes("admin")) {
+        window.location.href = "dashboard-admin.html";
+      } else {
+        window.location.href = "dashboard-kader.html";
+      }
+    }
+
+    // Jalankan load saat halaman siap
     window.onload = loadProfil;
 </script>
 </body>
