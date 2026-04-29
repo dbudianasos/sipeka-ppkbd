@@ -1434,3 +1434,26 @@ function hapusLaporanKader(id) {
       alert("❌ Terjadi kesalahan koneksi saat menghapus.");
     });
 }
+
+// ============================================================
+// 10. Navigasi Kembali
+// ============================================================
+function navigasiKembali() {
+  const role = localStorage.getItem("role");
+  
+  // Jika role mengandung kata 'admin', arahkan ke dashboard admin
+  if (role && role.toLowerCase().includes("admin")) {
+    window.location.href = "dashboard-admin.html";
+  } else {
+    // Jika selain itu (Kader), arahkan ke dashboard kader
+    window.location.href = "dashboard-kader.html";
+  }
+}
+
+// Tambahan: Jalankan ini di bagian paling atas profil.html 
+// Untuk mencegah orang "nembak" URL tanpa login
+function proteksiHalaman() {
+  if (!localStorage.getItem("nik")) {
+    window.location.href = "index.html"; // Tendang ke login jika tidak ada NIK
+  }
+}
