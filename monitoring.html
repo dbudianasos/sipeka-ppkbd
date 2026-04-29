@@ -60,24 +60,38 @@
     loadRiwayatKader();
   });
 </script>
-  <div id="modal-foto" 
-     onclick="tutupIntip()" 
-     class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md cursor-zoom-out">
   
-  <div class="relative w-full max-w-lg">
-    <p class="absolute -top-8 left-1/2 -translate-x-1/2 text-white/50 text-[10px] font-bold uppercase tracking-widest">
-      Klik di mana saja untuk menutup
-    </p>
-
-    <div class="bg-white p-1.5 rounded-3xl shadow-2xl overflow-hidden transform transition active:scale-95">
-      <img id="img-intip" src="" class="w-full h-auto rounded-2xl shadow-inner">
+  <div id="modal-foto" class="fixed inset-0 z-[100] hidden bg-black/95 backdrop-blur-md flex flex-col">
+  
+  <div class="nav-gradient p-4 flex justify-between items-center shadow-xl">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center text-white">🖼️</div>
+      <div>
+        <h2 class="text-white text-xs font-black uppercase tracking-tight">Detail Foto Visum</h2>
+        <p class="text-[8px] text-blue-200 font-bold uppercase tracking-widest">Preview Mode</p>
+      </div>
     </div>
-    
-    <p class="text-center text-white/40 text-[9px] mt-4 uppercase tracking-[0.2em] font-black">
-      siPeKa Visum Preview
-    </p>
+    <button onclick="tutupIntip()" class="bg-red-500 text-white px-4 py-1.5 rounded-xl text-[10px] font-black shadow-lg active:scale-90 transition">TUTUP</button>
+  </div>
+
+  <div class="flex-1 relative overflow-hidden flex items-center justify-center p-2">
+    <div id="zoom-container" class="relative transition-transform duration-200 ease-out origin-center cursor-move" style="transform: scale(1);">
+      <img id="img-intip" src="" class="max-w-full max-h-[75vh] rounded-lg shadow-2xl border-2 border-white/10">
+    </div>
+
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/10 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/20 shadow-2xl">
+      <button onclick="prosesZoom(-0.2)" class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition text-blue-900 font-black text-xl">−</button>
+      <span id="zoom-label" class="text-white text-[10px] font-black min-w-[40px] text-center">100%</span>
+      <button onclick="prosesZoom(0.2)" class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition text-blue-900 font-black text-xl">+</button>
+      <button onclick="resetZoom()" class="ml-2 text-white/50 text-[8px] font-bold uppercase">Reset</button>
+    </div>
+  </div>
+
+  <div class="p-4 text-center">
+    <p class="text-white/30 text-[8px] font-bold uppercase tracking-[0.3em]">Klik tombol tutup untuk kembali</p>
   </div>
 </div>
+  
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
   &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
   Aplikasi Pelaporan Kinerja PPKBD
