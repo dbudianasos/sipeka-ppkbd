@@ -185,8 +185,9 @@ function loadUsers() {
   const kecAdmin = localStorage.getItem("kecamatan");
   const desaAdmin = localStorage.getItem("desa");
   
-  container.innerHTML = `<p class="text-center text-[10px] text-gray-400 py-10 italic">Sinkronisasi data...</p>`;
+  container.innerHTML = `<p class="text-center text-[10px] text-gray-400 py-10 italic animate-pulse">Sinkronisasi data...</p>`;
   
+  // Memanggil GAS Action 7 (3-Level Authority)
   fetch(`${API_URL}?action=get_users&role_admin=${roleAdmin}&kec_admin=${kecAdmin}&desa_admin=${desaAdmin}`)
     .then(res => res.json())
     .then(data => {
@@ -195,11 +196,9 @@ function loadUsers() {
       if (filterWil) {
         filterWil.innerHTML = '<option value="">Semua Wilayah</option>';
         if (roleAdmin === "super_admin") {
-          // Filter Kecamatan agar tidak ganda
           const listKec = [...new Set(data.map(u => (u.Kecamatan || u.kecamatan || "").trim().toUpperCase()))].sort();
           listKec.forEach(k => { if(k && k !== "") filterWil.innerHTML += `<option value="${k}">${k}</option>`; });
         } else if (roleAdmin === "admin_kec") {
-          // Filter Desa agar tidak ganda (Menyembuhkan Bug Lubangbuaya 2x)
           const listDesa = [...new Set(data.map(u => (u.Desa || u.desa || "").trim().toUpperCase()))].sort();
           listDesa.forEach(d => { if(d && d !== "") filterWil.innerHTML += `<option value="${d}">${d}</option>`; });
         } else { 
@@ -243,100 +242,88 @@ function applyFilters() {
   }
   
   filteredData.forEach(u => {
+    // --- MENGEMBALIKAN VARIABEL VISUAL ASLI BAPAK ---
     const dNama = u.Nama || u.nama || "---";
     const dNik = u.NIK || u.nik || "---";
     const dKec = u.Kecamatan || u.kecamatan || "---";
     const dDesa = u.Desa || u.desa || "---";
     const dRole = u.Role || u.role || "";
     
-    // Perbaikan Bug Tombol Status
     const dStatus = (u.Status || u.status || "aktif").toLowerCase().trim();
     let statusColor = dStatus === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
     let labelTombolStatus = dStatus === "aktif" ? "NONAKTIFKAN" : "AKTIFKAN";
     
+    // Emoji Role Asli Bapak
     let roleLabel = dRole === "super_admin" ? "👑 Super Admin" : (dRole === "admin_kec" ? "🏛️ Admin Kec" : (dRole === "admin_desa" ? "🏠 Admin Desa" : "👤 Kader"));
     
+    // --- LOGIKA TOMBOL OTORITAS (TRIPLE-CHECK) ---
+    // Tombol ini muncul untuk semua admin
+    let aksiTombol = `<button onclick="kelolaOtoritasUser('${dNik}', 'toggle_status')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-bold py-2 rounded-xl active:scale-95 transition">${labelTombolStatus}</button>`;
+    
+    // Tombol ini HANYA muncul untuk Super Admin
+    if (roleAdmin === "super_admin") {
+      aksiTombol += `
+        <button onclick="resetPasswordUser('${dNik}')" class="flex-1 bg-orange-50 text-orange-600 text-[10px] font-bold py-2 rounded-xl active:scale-95 transition">🔄 RESET PASS</button>
+        <button onclick="siapkanEditUser('${dNik}')" class="flex-1 bg-blue-50 text-blue-600 text-[10px] font-bold py-2 rounded-xl active:scale-95 transition">✏️ EDIT</button>
+      `;
+    }
+    
+    // --- RENDER HTML ASLI BAPAK (Dengan Injeksi Tombol Otoritas) ---
     container.innerHTML += `
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-2">
         <div class="flex justify-between items-start mb-2">
-          <div><p class="text-[11px] font-black text-blue-900 uppercase">${dNama}</p><p class="text-[9px] text-slate-400 font-bold">${dNik}</p></div>
+          <div>
+            <p class="text-[11px] font-black text-blue-900 uppercase">${dNama}</p>
+            <p class="text-[9px] text-slate-400 font-bold">${dNik}</p>
+          </div>
           <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase">${dStatus}</span>
         </div>
-        <div class="bg-slate-50 p-2 rounded-lg mb-2"><p class="text-[9px] text-slate-500 font-bold">📍 ${dKec} - ${dDesa}</p><p class="text-[9px] text-blue-700 font-black mt-0.5 uppercase">${roleLabel}</p></div>
+        <div class="bg-slate-50 p-2 rounded-lg mb-2">
+          <p class="text-[9px] text-slate-500 font-bold">📍 ${dKec} - ${dDesa}</p>
+          <p class="text-[9px] text-blue-700 font-black mt-0.5 uppercase">${roleLabel}</p>
+        </div>
         <div class="flex gap-2">
-           <button onclick="ubahStatusUser('${dNik}', '${dStatus === 'aktif' ? 'nonaktif' : 'aktif'}')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-bold py-2 rounded-xl">${labelTombolStatus}</button>
-           <button onclick="hapusUser('${dNik}', '${dNama}')" class="flex-1 bg-red-50 text-red-600 text-[10px] font-bold py-2 rounded-xl">🗑 HAPUS</button>
+           ${aksiTombol}
         </div>
       </div>`;
   });
 }
 
-function tambahUser() {
-  const btn = document.getElementById("btn-tambah-user");
-  const info = document.getElementById("info-user"); // Jika ada elemen info pesan
+// --- FUNGSI EKSEKUSI (SINKRON DENGAN GAS ACTION 8) ---
+function kelolaOtoritasUser(nik, subAction, extraData = {}) {
+  const confirmMsg = subAction === 'toggle_status' ? "Ubah status keaktifan user ini?" : "Proses aksi ini?";
+  if (subAction !== 'update_user' && !confirm(confirmMsg)) return;
 
-  // 1. Ambil Identitas Admin dari LocalStorage
-  const adminNik = localStorage.getItem("nik");
-  const adminNama = localStorage.getItem("nama");
-  const adminRole = localStorage.getItem("role");
-
-  // 2. Susun Payload (Data yang dikirim ke GAS)
   const payload = {
-    action: "tambah_user",
-    // Data Admin (Untuk Log)
-    admin_nik: adminNik,
-    admin_nama: adminNama,
-    admin_role: adminRole,
-    // Data Kader Baru
-    user_nik: document.getElementById("user-nik").value,
-    nama: document.getElementById("user-nama").value.toUpperCase(),
-    password: document.getElementById("user-password").value,
-    role: document.getElementById("user-role").value,
-    kecamatan: document.getElementById("user-kecamatan").value,
-    desa: document.getElementById("user-wilayah").value,
-    hp: document.getElementById("user-hp").value
+    action: "admin_manage_user",
+    sub_action: subAction,
+    target_nik: nik,
+    admin_nik: localStorage.getItem("nik"),
+    admin_nama: localStorage.getItem("nama"),
+    admin_role: localStorage.getItem("role"),
+    ...extraData // Spread parameter jika ada data edit (nama, wilayah, dll)
   };
 
-  // 3. Validasi Dasar
-  if (!payload.user_nik || !payload.nama || !payload.kecamatan || !payload.desa) {
-    return alert("⚠️ Nama, NIK, Kecamatan & Desa wajib diisi!");
-  }
-
-  // 4. Proses Kirim
-  btn.innerText = "⏳ MENYIMPAN..."; 
-  btn.disabled = true;
-
-  fetch(API_URL, { 
-    method: "POST", 
-    body: new URLSearchParams(payload) 
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams(payload)
   })
   .then(res => res.text())
   .then(res => {
     if (res.trim() === "success") {
-      alert("✅ User " + payload.nama + " berhasil didaftarkan!");
-      location.reload(); // Segarkan halaman untuk melihat daftar terbaru
+      alert("✅ Otoritas Berhasil Diperbarui!");
+      loadUsers(); // Refresh daftar user otomatis
     } else {
       alert("❌ Gagal: " + res);
-      btn.innerText = "SIMPAN USER BARU";
-      btn.disabled = false;
     }
-  })
-  .catch(err => {
-    console.error("Error:", err);
-    alert("❌ Koneksi terputus. Cek internet Anda.");
-    btn.innerText = "SIMPAN USER BARU";
-    btn.disabled = false;
   });
 }
 
-function ubahStatusUser(nik, status) {
-  if (!confirm("Ubah status?")) return;
-  fetch(API_URL, { method: "POST", body: new URLSearchParams({ action: "update_status_user", nik_target: nik, status_baru: status }) }).then(() => loadUsers());
-}
-
-function hapusUser(nik, nama) {
-  if (!confirm("Hapus " + nama + "?")) return;
-  fetch(API_URL, { method: "POST", body: new URLSearchParams({ action: "hapus_user", nik_target: nik }) }).then(() => loadUsers());
+// Fungsi Panggilan Khusus Reset Password
+function resetPasswordUser(nik) {
+  if (confirm("Reset password user ini ke standar (123456)?")) {
+    kelolaOtoritasUser(nik, 'reset_password');
+  }
 }
 
 // ================= DASHBOARD & STATISTIK (FUNGSI LAMA) =================
