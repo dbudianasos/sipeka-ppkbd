@@ -156,6 +156,12 @@
       fetch(API_URL, {
         method: "POST",
         body: new URLSearchParams(payload)
+        action: "update_profil",
+        nik: localStorage.getItem("nik"),
+        nama: localStorage.getItem("nama"),
+        role: localStorage.getItem("role"),
+        hp: hp,
+        password: passwordBaru
       })
       .then(res => res.text())
       .then(res => {
