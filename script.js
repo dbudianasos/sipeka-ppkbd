@@ -1587,43 +1587,76 @@ function prosesUpdateUser() {
   });
 }
 // ============================================================
-// 12. FUNGSI TAMBAH USER
+// 12. FUNGSI TAMBAH USER (DENGAN VALIDASI NIK GANDA)
 // ============================================================
 function tambahUser() {
   const btn = document.getElementById("btn-tambah-user");
+  
+  // Pastikan elemen input ada sebelum mengambil nilainya
+  const nikInput = document.getElementById("user-nik");
+  const namaInput = document.getElementById("user-nama");
+  const kecInput = document.getElementById("user-kecamatan");
+  const desaInput = document.getElementById("user-wilayah");
+  const roleInput = document.getElementById("user-role");
+  const hpInput = document.getElementById("user-hp");
+
   const payload = {
     action: "tambah_user",
     admin_nik: localStorage.getItem("nik"),
     admin_nama: localStorage.getItem("nama"),
     admin_role: localStorage.getItem("role"),
-    user_nik: document.getElementById("user-nik").value,
-    nama: document.getElementById("user-nama").value.toUpperCase(),
-    password: "123456", // Default
-    role: document.getElementById("user-role").value,
-    kecamatan: document.getElementById("user-kecamatan").value,
-    desa: document.getElementById("user-wilayah").value,
-    hp: document.getElementById("user-hp").value
+    user_nik: nikInput.value.trim(),
+    nama: namaInput.value.toUpperCase().trim(),
+    password: "123456", // Default password
+    role: roleInput.value,
+    kecamatan: kecInput.value,
+    desa: desaInput.value,
+    hp: hpInput.value
   };
 
+  // 1. Validasi Input di Sisi Client
   if (!payload.user_nik || !payload.nama || !payload.kecamatan || !payload.desa) {
-    return alert("⚠️ Lengkapi NIK, Nama, Kecamatan dan Desa!");
+    return alert("⚠️ Mohon lengkapi NIK, Nama, Kecamatan, dan Desa!");
   }
 
-  btn.innerText = "⏳ MENYIMPAN...";
+  // 2. Persiapan Kirim Data
+  btn.innerText = "⏳ MENGECEK & MENYIMPAN...";
   btn.disabled = true;
 
-  fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
+  fetch(API_URL, { 
+    method: "POST", 
+    body: new URLSearchParams(payload) 
+  })
   .then(res => res.text())
   .then(res => {
-    if (res.trim() === "success") {
-      alert("✅ User Berhasil Didaftarkan!");
-      batalEdit();
-      loadUsers();
-    } else {
+    const responClean = res.trim();
+
+    // A. JIKA BERHASIL
+    if (responClean === "success") {
+      alert("✅ Berhasil!\nUser " + payload.nama + " telah didaftarkan ke sistem.");
+      if (typeof batalEdit === 'function') batalEdit(); // Reset form
+      if (typeof loadUsers === 'function') loadUsers(); // Refresh daftar di bawah
+    } 
+    
+    // B. JIKA NIK SUDAH ADA (DARI GAS TURBO)
+    else if (responClean === "nik_exists") {
+      alert("⚠️ DATA GANDA!\nNIK " + payload.user_nik + " sudah terdaftar di sistem.\n\nSilakan cek kembali NIK atau gunakan fitur EDIT jika ingin memperbarui data user tersebut.");
+      btn.innerText = "SIMPAN DATA PENGGUNA";
+      btn.disabled = false;
+    } 
+    
+    // C. JIKA ADA GAGAL LAINNYA
+    else {
       alert("❌ Gagal: " + res);
       btn.innerText = "SIMPAN DATA PENGGUNA";
       btn.disabled = false;
     }
+  })
+  .catch(err => {
+    console.error("Fetch Error:", err);
+    alert("❌ Terjadi kesalahan koneksi. Silakan coba lagi.");
+    btn.innerText = "SIMPAN DATA PENGGUNA";
+    btn.disabled = false;
   });
 }
 // ============================================================
