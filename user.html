@@ -39,41 +39,55 @@
       <input type="hidden" id="edit-nik-target" value="">
       <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Nama Lengkap</label>
-            <input id="user-nama" type="text" placeholder="Sesuai KTP" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none">
+          <div class="md:col-span-2">
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase tracking-widest">Nama Lengkap Kader</label>
+            <input id="user-nama" type="text" placeholder="Sesuai KTP (Tanpa Gelar)" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 font-bold">
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">NIK (16 Digit)</label>
-            <input id="user-nik" type="number" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none">
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Kecamatan</label>
-            <select id="user-kecamatan" onchange="updateDropdownDesa()" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
-              <option value="">-- Pilih Kecamatan --</option>
-            </select>
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase tracking-widest">NIK (16 Digit)</label>
+            <input id="user-nik" type="number" placeholder="3216..." class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 font-bold">
           </div>
           <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Desa / Wilayah</label>
-            <select id="user-wilayah" onchange="evaluasiRoleOtomatis()" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900">
-              <option value="">-- Pilih Desa --</option>
-            </select>
+            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase tracking-widest">No. WhatsApp (Opsional)</label>
+            <input id="user-hp" type="number" placeholder="0812..." class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 font-bold">
           </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">Jabatan (Role)</label>
-            <select id="user-role" class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-blue-900"></select>
+      
+        <div class="p-5 rounded-[1.5rem] border-2 border-dashed border-blue-200 bg-blue-50/30">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-lg">🛡️</span>
+            <div>
+              <h4 class="text-[11px] font-black text-blue-900 uppercase leading-none">Pengaturan Otoritas User</h4>
+              <p class="text-[8px] text-blue-400 font-bold uppercase mt-1">Tentukan cakupan wilayah kerja (Bukan Alamat Tinggal)</p>
+            </div>
           </div>
-          <div>
-            <label class="text-[10px] font-bold text-slate-400 mb-1 block uppercase">No. WhatsApp</label>
-            <input id="user-hp" type="number" placeholder="0812..." class="w-full p-3 text-sm bg-slate-50 border border-slate-100 rounded-xl outline-none">
+      
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-[10px] font-bold text-blue-800/50 mb-1 block uppercase tracking-widest text-center">Kecamatan Tugas</label>
+              <select id="user-kecamatan" onchange="updateDropdownDesa()" class="w-full p-3 text-sm bg-white border border-blue-100 rounded-xl outline-none font-black text-blue-900 shadow-sm">
+                <option value="">-- Pilih Kecamatan --</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-blue-800/50 mb-1 block uppercase tracking-widest text-center">Wilayah Desa/Kel</label>
+              <select id="user-wilayah" onchange="evaluasiRoleOtomatis()" class="w-full p-3 text-sm bg-white border border-blue-100 rounded-xl outline-none font-black text-blue-900 shadow-sm">
+                <option value="">-- Pilih Desa --</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-[10px] font-bold text-blue-800/50 mb-1 block uppercase tracking-widest text-center">Tingkatan Akses (Role)</label>
+              <select id="user-role" class="w-full p-3 text-sm bg-blue-900 text-white border-none rounded-xl outline-none font-black text-center appearance-none shadow-lg">
+                <option value="">-- Menunggu Pilihan Wilayah --</option>
+              </select>
+            </div>
           </div>
         </div>
+      
         <input id="user-password" type="hidden" value="123456">
-        <button onclick="tambahUser()" id="btn-tambah-user" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-lg mt-4 uppercase tracking-widest text-xs active:scale-95">Simpan Data Pengguna</button>
+        <button onclick="tambahUser()" id="btn-tambah-user" class="w-full bg-blue-900 text-white font-black py-4 rounded-2xl shadow-xl mt-4 uppercase tracking-[0.2em] text-xs active:scale-95 transition-all">
+          Simpan Data Pengguna
+        </button>
         <p id="info-user" class="text-center text-[10px] mt-2 font-bold"></p>
       </div>
     </div>
