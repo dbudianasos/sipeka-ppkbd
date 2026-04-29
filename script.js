@@ -1398,18 +1398,39 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// --- D. LOGIKA HAPUS LAPORAN ---
+// --- D. LOGIKA HAPUS LAPORAN (DENGAN IDENTITAS LENGKAP) ---
 function hapusLaporanKader(id) {
   if (!confirm("Hapus laporan ini? Foto di server juga akan ikut dihapus permanen.")) return;
+
+  // 1. Ambil identitas lengkap untuk dicatat di Log
   const nik = localStorage.getItem("nik");
-  fetch(`${API_URL}?action=hapus_laporan&laporan_id=${id}&nik=${nik}`)
+  const nama = localStorage.getItem("nama");
+  const role = localStorage.getItem("role");
+
+  // 2. Susun parameter kiriman
+  const params = new URLSearchParams({
+    action: "hapus_laporan",
+    laporan_id: id,
+    nik: nik,
+    nama: nama,
+    role: role
+  });
+
+  // 3. Eksekusi ke Server
+  fetch(`${API_URL}?${params.toString()}`)
     .then(res => res.text())
     .then(res => {
       if (res.trim() === "success") {
-        alert("Laporan berhasil dihapus!");
-        loadRiwayatKader();
+        alert("✅ Laporan berhasil dihapus!");
+        loadRiwayatKader(); // Segarkan daftar riwayat
+      } else if (res.trim() === "ditolak") {
+        alert("❌ Gagal! Laporan sudah disetujui Admin dan tidak bisa dihapus.");
       } else {
-        alert("Gagal menghapus: " + res);
+        alert("❌ Gagal menghapus: " + res);
       }
+    })
+    .catch(err => {
+      console.error("Error Hapus:", err);
+      alert("❌ Terjadi kesalahan koneksi saat menghapus.");
     });
 }
