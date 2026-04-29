@@ -1476,3 +1476,118 @@ function proteksiHalaman() {
     window.location.href = "index.html"; // Tendang ke login jika tidak ada NIK
   }
 }
+
+// ============================================================
+// 11. LOGIKA EDIT USER SEPERTI SIGA (TANPA POPUP)
+// ============================================================
+
+// 1. Menyiapkan Form untuk Mode Edit
+function siapkanEditUser(nik) {
+  // Cari data user berdasarkan NIK di variabel global
+  const user = DATA_USERS_ALL.find(u => u.NIK.toString() === nik.toString());
+  if (!user) return alert("Data tidak ditemukan di memori lokal.");
+
+  // Ubah Judul dan Tampilkan Tombol Batal
+  document.getElementById("form-title").innerText = "✏️ EDIT DATA: " + (user.Nama || "").toUpperCase();
+  document.getElementById("btn-batal-edit").classList.remove("hidden");
+
+  // Isi Field Form dengan Data User Lama
+  document.getElementById("edit-nik-target").value = user.NIK; // Simpan NIK asli sebagai referensi
+  document.getElementById("user-nik").value = user.NIK;
+  document.getElementById("user-nik").disabled = true; // NIK sebaiknya tidak boleh diubah untuk integritas data
+  
+  document.getElementById("user-nama").value = user.Nama;
+  document.getElementById("user-hp").value = user.HP || "";
+  
+  // Set Role
+  const roleEl = document.getElementById("user-role");
+  if(roleEl) roleEl.value = user.Role;
+
+  // Set Wilayah (Harus set Kecamatan dulu, lalu trigger update Desa)
+  const kecEl = document.getElementById("user-kecamatan");
+  if (kecEl) {
+    kecEl.value = (user.Kecamatan || "").toUpperCase();
+    updateDropdownDesa(user.Desa); // Kirim parameter desa untuk auto-select
+  }
+
+  // Ubah Tombol Simpan
+  const btnSubmit = document.getElementById("btn-tambah-user");
+  btnSubmit.innerText = "UPDATE DATA PENGGUNA";
+  btnSubmit.classList.replace("bg-blue-900", "bg-orange-500"); // Ganti warna agar terasa bedanya
+  btnSubmit.setAttribute("onclick", "prosesUpdateUser()");
+
+  // Gulir layar ke atas secara halus (Smooth Scroll)
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 2. Mengembalikan Form ke Mode Registrasi
+function batalEdit() {
+  document.getElementById("form-title").innerText = "👤 Registrasi Akun Baru";
+  document.getElementById("btn-batal-edit").classList.add("hidden");
+  
+  // Kosongkan Field
+  document.getElementById("edit-nik-target").value = "";
+  document.getElementById("user-nik").value = "";
+  document.getElementById("user-nik").disabled = false;
+  document.getElementById("user-nama").value = "";
+  document.getElementById("user-hp").value = "";
+  
+  // Kembalikan Tombol Simpan
+  const btnSubmit = document.getElementById("btn-tambah-user");
+  btnSubmit.innerText = "Simpan Data Pengguna";
+  btnSubmit.classList.replace("bg-orange-500", "bg-blue-900");
+  btnSubmit.setAttribute("onclick", "tambahUser()");
+  
+  // Reset Dropdown Wilayah sesuai otorisasi awal
+  initUserPage(); 
+}
+
+// 3. Proses Pengiriman Data Update ke Server
+function prosesUpdateUser() {
+  const btn = document.getElementById("btn-tambah-user");
+  const nikTarget = document.getElementById("edit-nik-target").value; // Ini kunci utamanya
+  
+  // Susun payload untuk dikirim ke GAS (Sesuai action 8)
+  const payload = {
+    action: "admin_manage_user",
+    sub_action: "update_user",
+    target_nik: nikTarget,
+    admin_nik: localStorage.getItem("nik"),
+    admin_nama: localStorage.getItem("nama"),
+    admin_role: localStorage.getItem("role"),
+    nama: document.getElementById("user-nama").value.toUpperCase(),
+    role_target: document.getElementById("user-role").value,
+    kecamatan: document.getElementById("user-kecamatan").value,
+    desa: document.getElementById("user-wilayah").value,
+    hp: document.getElementById("user-hp").value
+  };
+
+  if (!payload.nama || !payload.kecamatan || !payload.desa) {
+    return alert("⚠️ Nama, Kecamatan & Desa tidak boleh kosong!");
+  }
+
+  btn.innerText = "⏳ MEMPROSES UPDATE...";
+  btn.disabled = true;
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams(payload)
+  })
+  .then(res => res.text())
+  .then(res => {
+    if (res.trim() === "success") {
+      alert("✅ Data Pengguna Berhasil Diperbarui!");
+      batalEdit(); // Kembalikan form ke keadaan semula
+      loadUsers(); // Refresh tabel data di bawah
+    } else {
+      alert("❌ Gagal Update: " + res);
+      btn.innerText = "UPDATE DATA PENGGUNA";
+      btn.disabled = false;
+    }
+  })
+  .catch(err => {
+    alert("❌ Kesalahan koneksi jaringan.");
+    btn.innerText = "UPDATE DATA PENGGUNA";
+    btn.disabled = false;
+  });
+}
