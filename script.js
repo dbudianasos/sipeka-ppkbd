@@ -1636,32 +1636,65 @@ function evaluasiRoleOtomatis() {
   const selDesa = document.getElementById("user-wilayah");
   if (!selRole || !selKec || !selDesa) return;
 
-  // Jangan ganggu kalau lagi mode EDIT
-  const isEditing = document.getElementById("edit-nik-target").value !== "";
-  if (isEditing) return;
-
   const kec = selKec.value.toUpperCase();
   const desa = selDesa.value.toUpperCase();
+  const myRole = localStorage.getItem("role");
 
-  // 1. Logika Super Admin
-  if (kec.includes("SEMUA KECAMATAN")) {
-    selRole.innerHTML = `<option value="super_admin">👑 Super Admin</option>`;
+  // 1. Logika Super Admin (Kabupaten)
+  if (kec === "SEMUA KECAMATAN") {
+    selRole.innerHTML = `<option value="super_admin">👑 SUPER ADMINISTRATOR (KABUPATEN)</option>`;
   } 
   // 2. Logika Admin Kecamatan
   else if (kec !== "" && desa === "SEMUA DESA") {
-    selRole.innerHTML = `<option value="admin_kec">🏛️ Admin Kecamatan</option>`;
+    selRole.innerHTML = `<option value="admin_kec">🏛️ ADMIN KECAMATAN ${kec}</option>`;
   } 
   // 3. Logika Admin Desa & Kader
   else if (kec !== "" && desa !== "" && desa !== "SEMUA DESA") {
-    const myRole = localStorage.getItem("role");
     if (myRole === "super_admin" || myRole === "admin_kec") {
       selRole.innerHTML = `
-        <option value="admin_desa">🏠 Admin Desa</option>
-        <option value="kader" selected>👤 Kader PPKBD</option>
+        <option value="admin_desa">🏠 ADMIN DESA ${desa}</option>
+        <option value="kader" selected>👤 KADER PPKBD ${desa}</option>
       `;
     } else {
       // Admin Desa hanya bisa daftarkan Kader
-      selRole.innerHTML = `<option value="kader">👤 Kader PPKBD</option>`;
+      selRole.innerHTML = `<option value="kader">👤 KADER PPKBD ${desa}</option>`;
     }
+  } else {
+    selRole.innerHTML = `<option value="">-- Pilih Wilayah Terlebih Dahulu --</option>`;
   }
+}
+
+// Tambahan sedikit pada fungsi siapkanEditUser agar Role langsung terisi
+function siapkanEditUser(nik) {
+  const user = DATA_USERS_ALL.find(u => u.NIK.toString() === nik.toString());
+  if (!user) return;
+
+  document.getElementById("form-title").innerText = "✏️ EDIT DATA: " + (user.Nama || "").toUpperCase();
+  document.getElementById("btn-batal-edit").classList.remove("hidden");
+  document.getElementById("edit-nik-target").value = user.NIK; 
+  document.getElementById("user-nik").value = user.NIK;
+  document.getElementById("user-nik").disabled = true; 
+  document.getElementById("user-nama").value = user.Nama;
+  document.getElementById("user-hp").value = user.HP || "";
+
+  const kecEl = document.getElementById("user-kecamatan");
+  if (kecEl) {
+    kecEl.value = (user.Kecamatan || "").toUpperCase();
+    // Jalankan update desa dan PAKSA role sesuai database lama dulu
+    updateDropdownDesa(user.Desa); 
+    
+    // Beri jeda sedikit agar dropdown desa selesai render sebelum set Role asli
+    setTimeout(() => {
+      evaluasiRoleOtomatis(); // Jalankan auto-role
+      document.getElementById("user-role").value = user.Role; // Lalu paksa balik ke role aslinya
+    }, 200);
+  }
+
+  const btnSubmit = document.getElementById("btn-tambah-user");
+  btnSubmit.innerText = "UPDATE DATA PENGGUNA";
+  btnSubmit.classList.remove("bg-blue-900");
+  btnSubmit.classList.add("bg-orange-500");
+  btnSubmit.onclick = function() { prosesUpdateUser(); };
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
