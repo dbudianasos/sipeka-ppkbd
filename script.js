@@ -1483,40 +1483,37 @@ function proteksiHalaman() {
 
 // 1. Menyiapkan Form untuk Mode Edit
 function siapkanEditUser(nik) {
-  // Cari data user berdasarkan NIK di variabel global
   const user = DATA_USERS_ALL.find(u => u.NIK.toString() === nik.toString());
   if (!user) return alert("Data tidak ditemukan di memori lokal.");
 
-  // Ubah Judul dan Tampilkan Tombol Batal
   document.getElementById("form-title").innerText = "✏️ EDIT DATA: " + (user.Nama || "").toUpperCase();
   document.getElementById("btn-batal-edit").classList.remove("hidden");
 
-  // Isi Field Form dengan Data User Lama
-  document.getElementById("edit-nik-target").value = user.NIK; // Simpan NIK asli sebagai referensi
+  document.getElementById("edit-nik-target").value = user.NIK; 
   document.getElementById("user-nik").value = user.NIK;
-  document.getElementById("user-nik").disabled = true; // NIK sebaiknya tidak boleh diubah untuk integritas data
+  document.getElementById("user-nik").disabled = true; 
   
   document.getElementById("user-nama").value = user.Nama;
   document.getElementById("user-hp").value = user.HP || "";
   
-  // Set Role
   const roleEl = document.getElementById("user-role");
   if(roleEl) roleEl.value = user.Role;
 
-  // Set Wilayah (Harus set Kecamatan dulu, lalu trigger update Desa)
   const kecEl = document.getElementById("user-kecamatan");
   if (kecEl) {
     kecEl.value = (user.Kecamatan || "").toUpperCase();
-    updateDropdownDesa(user.Desa); // Kirim parameter desa untuk auto-select
+    updateDropdownDesa(user.Desa); 
   }
 
-  // Ubah Tombol Simpan
+  // --- UBAH TOMBOL SECARA PAKSA ---
   const btnSubmit = document.getElementById("btn-tambah-user");
   btnSubmit.innerText = "UPDATE DATA PENGGUNA";
-  btnSubmit.classList.replace("bg-blue-900", "bg-orange-500"); // Ganti warna agar terasa bedanya
-  btnSubmit.setAttribute("onclick", "prosesUpdateUser()");
+  btnSubmit.classList.remove("bg-blue-900");  // Buang biru
+  btnSubmit.classList.add("bg-orange-500");   // Masukkan oranye
+  
+  // Cara paling ampuh untuk ganti fungsi tombol di JS
+  btnSubmit.onclick = function() { prosesUpdateUser(); }; 
 
-  // Gulir layar ke atas secara halus (Smooth Scroll)
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1525,24 +1522,25 @@ function batalEdit() {
   document.getElementById("form-title").innerText = "👤 Registrasi Akun Baru";
   document.getElementById("btn-batal-edit").classList.add("hidden");
   
-  // Kosongkan Field
-  document.getElementById("edit-nik-target").value = "";
+  if (document.getElementById("edit-nik-target")) {
+      document.getElementById("edit-nik-target").value = "";
+  }
   document.getElementById("user-nik").value = "";
   document.getElementById("user-nik").disabled = false;
   document.getElementById("user-nama").value = "";
   document.getElementById("user-hp").value = "";
   
-  // Kembalikan Tombol Simpan
+  // --- KEMBALIKAN TOMBOL SECARA PAKSA ---
   const btnSubmit = document.getElementById("btn-tambah-user");
-  btnSubmit.innerText = "Simpan Data Pengguna";
-  btnSubmit.classList.replace("bg-orange-500", "bg-blue-900");
-  btnSubmit.setAttribute("onclick", "tambahUser()");
+  btnSubmit.innerText = "SIMPAN DATA PENGGUNA"; // Teks kembali semula
+  btnSubmit.classList.remove("bg-orange-500");  // Buang oranye
+  btnSubmit.classList.add("bg-blue-900");       // Kembalikan biru
   
-  // INI OBAT BUG NYA: Aktifkan kembali tombol setelah sukses update!
-  btnSubmit.disabled = false; 
+  // Kembalikan fungsinya ke tambahUser
+  btnSubmit.onclick = function() { tambahUser(); }; 
+  btnSubmit.disabled = false; // Pastikan tombol bisa diklik lagi
   
-  // Reset Dropdown Wilayah sesuai otorisasi awal
-  initUserPage(); 
+  if (typeof initUserPage === "function") initUserPage(); 
 }
 
 // 3. Proses Pengiriman Data Update ke Server
