@@ -1197,7 +1197,7 @@ async function simpanLaporan() {
 // ============================================================
 // --- A. LOAD RIWAYAT DENGAN FILTER & INTIP FOTO ---
 function loadRiwayatKader() {
-  const container = document.getElementById("list-riwayat-kader");
+  const container = document.getElementById("list-riwayat");
   const nik = localStorage.getItem("nik");
   const filterBulan = document.getElementById("filter-bulan-riwayat") ? document.getElementById("filter-bulan-riwayat").value : "ALL";
   
@@ -1239,7 +1239,7 @@ function loadRiwayatKader() {
                  </button>
                 <p class="text-[9px] text-slate-400 font-bold font-mono pt-1">${item.id}</p>
                </div>
-            </div>;
+            </div>
             
             <h3 class="text-xs font-black text-blue-900 uppercase leading-tight mb-1">${item.kegiatan}</h3>
             <p class="text-[9px] text-slate-500 font-medium mb-3 italic">📍 ${item.realisasi} di ${item.tanggal}</p>
