@@ -252,30 +252,45 @@
   }
 
   function prosesApprove(id, status) {
-    const confirmText = status === 'APPROVED' ? "Terima laporan ini?" : "Tolak laporan ini?";
-    if (!confirm(confirmText)) return;
-    document.getElementById("listLaporan").innerHTML = `<div class="text-center py-20 animate-pulse text-blue-900 font-black uppercase text-[10px]">Memproses Validasi...</div>`;
-    fetch(API_URL, {
-      method: "POST",
-      body: new URLSearchParams({
-        action: "process_approval",
-        id_laporan: id,
-        admin_nik: adminNik,
-        admin_role: adminRole,
-        status_baru: status,
-        admin_nama: localStorage.getItem("nama")
-      })
-    })
-    .then(res => res.text())
-    .then(res => {
-      if (res === "success") {
-        loadLaporanDatabase();
-      } else {
-        alert("Gagal: " + res);
-        loadLaporanDatabase();
-      }
-    });
-  }
+  const confirmText = status === 'APPROVED' ? "Terima laporan ini?" : "Tolak laporan ini?";
+  if (!confirm(confirmText)) return;
+
+  // 1. Tampilkan loading agar user tahu proses sedang jalan
+  const listArea = document.getElementById("listLaporan");
+  const originalHTML = listArea.innerHTML;
+  listArea.innerHTML = `<div class="text-center py-20 animate-pulse text-blue-900 font-black uppercase text-[10px]">⏳ Memproses Validasi...</div>`;
+
+  // 2. Ambil identitas admin dari localStorage (PENTING!)
+  const params = new URLSearchParams({
+    action: "process_approval",
+    id_laporan: id,
+    status_baru: status,
+    admin_nik: localStorage.getItem("nik"),  // Ambil langsung dari storage
+    admin_nama: localStorage.getItem("nama"), // Ambil langsung dari storage
+    admin_role: localStorage.getItem("role")   // Ambil langsung dari storage
+  });
+
+  // 3. Kirim ke Server
+  fetch(API_URL, {
+    method: "POST",
+    body: params
+  })
+  .then(res => res.text())
+  .then(res => {
+    if (res.trim() === "success") {
+      alert("✅ Berhasil memvalidasi laporan!");
+      loadLaporanDatabase(); // Refresh list tanpa reload halaman
+    } else {
+      alert("❌ Gagal: " + res);
+      listArea.innerHTML = originalHTML; // Kembalikan tampilan jika gagal
+    }
+  })
+  .catch(err => {
+    console.error("Error Approval:", err);
+    alert("❌ Masalah Koneksi!");
+    listArea.innerHTML = originalHTML;
+  });
+}
 </script>
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4 italic px-10 leading-relaxed">
   &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
