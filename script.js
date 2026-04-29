@@ -1237,7 +1237,7 @@ function loadRiwayatKader() {
                  <button onclick="intipFoto('${item.fotoId}')" class="bg-blue-50 text-blue-600 text-[9px] font-bold px-2 py-1 rounded-md border border-blue-100 transition active:scale-95">
                     🖼️ LIHAT FOTO
                  </button>
-                
+                <p class="text-[9px] text-slate-400 font-bold font-mono pt-1">${item.id}</p>
                </div>
             </div>
             
