@@ -696,8 +696,8 @@ function simpanRenja() {
     target_volume: volume,
     target_peserta: `${targetAngka} ${targetSatuan}`,
     indikator: document.getElementById("renja-indikator").value,
-    lokasi: document.getElementById("renja-lokasi").value
-    role: localStorage.getItem("role")
+    lokasi: document.getElementById("renja-lokasi").value,
+    role: localStorage.getItem("role"),
   };
 
   fetch(API_URL, {
@@ -1219,7 +1219,7 @@ async function simpanLaporan() {
         realisasi: `${realisasi} ${satuanFinal}`, // Contoh: "15 Orang"
         lokasi: lokasi,
         role: localStorage.getItem("role"),
-        foto_data: base64Foto // Format Base64 yang sudah ada Watermark
+        foto_data: base64Foto, // Format Base64 yang sudah ada Watermark
       })
     });
 
