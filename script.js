@@ -1230,16 +1230,16 @@ function loadRiwayatKader() {
         const statusColor = isDraft ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-700";
         
         container.innerHTML += `
-          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-3 relative overflow-hidden">
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-3">
             <div class="flex justify-between items-start mb-3">
                <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase">${item.status}</span>
                <div class="flex gap-2">
-                 <button onclick="intipFoto('${item.fotoId}')" class="bg-blue-50 text-blue-600 text-[9px] font-bold px-2 py-1 rounded-md border border-blue-100 transition active:scale-95">
+                 <button onclick="intipFoto('${item.fotoId}')" class="text-[10px] text-blue-600 font-bold border border-blue-200 px-2 py-1 rounded-lg bg-blue-50">
                     🖼️ LIHAT FOTO
                  </button>
                 <p class="text-[9px] text-slate-400 font-bold font-mono pt-1">${item.id}</p>
                </div>
-            </div>
+            </div>;
             
             <h3 class="text-xs font-black text-blue-900 uppercase leading-tight mb-1">${item.kegiatan}</h3>
             <p class="text-[9px] text-slate-500 font-medium mb-3 italic">📍 ${item.realisasi} di ${item.tanggal}</p>
@@ -1275,7 +1275,7 @@ function intipFoto(id) {
   
   if (modal && img) {
     // Gunakan format thumbnail Google Drive yang lebih cepat dan langsung tampil
-    const directLink = `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
+    const directLink = `https://lh3.googleusercontent.com/d/${id}`;
     
     img.src = directLink;
     modal.classList.remove("hidden");
