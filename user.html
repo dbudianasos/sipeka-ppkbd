@@ -31,7 +31,12 @@
 
   <main class="px-4 pt-6 max-w-5xl mx-auto">
     <div class="bg-white p-6 rounded-[2rem] shadow-sm border-t-4 border-blue-900 mb-8">
-      <h3 class="font-bold text-sm mb-5 text-slate-800">👤 Registrasi Akun Baru</h3>
+      <div class="flex justify-between items-center mb-5">
+        <h3 id="form-title" class="font-bold text-sm text-slate-800">👤 Registrasi Akun Baru</h3>
+        <button id="btn-batal-edit" onclick="batalEdit()" class="hidden bg-slate-100 text-slate-600 px-3 py-1 text-[9px] font-bold rounded-lg border border-slate-200 active:scale-95">BATAL EDIT</button>
+      </div>
+      
+      <input type="hidden" id="edit-nik-target" value="">
       <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
