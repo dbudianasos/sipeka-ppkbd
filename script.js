@@ -1733,8 +1733,10 @@ function siapkanEditUser(nik) {
 }
 
 // ==========================================
-// 14. LOGIKA HALAMAN LOG AKTIVITAS (AUDIT)
+// 14. LOGIKA HALAMAN LOG AKTIVITAS (AUDIT HYBRID)
 // ==========================================
+let DATA_LOG_GLOBAL = []; // Variabel untuk menyimpan log agar bisa difilter/didownload
+
 function loadLogAktivitas() {
   const container = document.getElementById("container-log");
   if (!container) return;
@@ -1745,50 +1747,151 @@ function loadLogAktivitas() {
   fetch(`${API_URL}?action=get_logs&role=${role}&kec=${kec}`)
     .then(res => res.json())
     .then(data => {
-      container.innerHTML = "";
-      if (data.length === 0) {
-        container.innerHTML = "<p class='pl-6 text-xs text-slate-400 italic'>Belum ada rekaman aktivitas.</p>";
-        return;
+      // Data sekarang berbentuk { logs: [...], total_database: X }
+      DATA_LOG_GLOBAL = data.logs; 
+      
+      // Tampilkan info total log di sub-title atau elemen baru
+      const infoTotal = document.getElementById("info-total-log");
+      if (infoTotal) {
+        infoTotal.innerText = `Kapasitas Database: ${data.total_database} / 2000 Baris`;
       }
 
-      data.forEach(log => {
-        // Format Waktu
-        const tgl = new Date(log.timestamp);
-        const waktuStr = tgl.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        const tglStr = tgl.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
-
-        // Warna Badge Aksi
-        let colorAksi = "bg-slate-100 text-slate-600";
-        if (log.aksi.includes("HAPUS")) colorAksi = "bg-red-100 text-red-600";
-        if (log.aksi.includes("TAMBAH")) colorAksi = "bg-green-100 text-green-600";
-        if (log.aksi.includes("LOGIN")) colorAksi = "bg-blue-100 text-blue-600";
-        if (log.aksi.includes("APPROVAL")) colorAksi = "bg-orange-100 text-orange-600";
-
-        container.innerHTML += `
-          <div class="relative pl-8">
-            <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-4 border-slate-300"></div>
-            
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-              <div class="flex justify-between items-start mb-2">
-                <span class="text-[8px] font-black px-2 py-0.5 rounded-md uppercase ${colorAksi}">${log.aksi}</span>
-                <span class="text-[9px] font-bold text-slate-400">${tglStr} | ${waktuStr}</span>
-              </div>
-              
-              <p class="text-[11px] font-bold text-slate-800 leading-tight mb-1 uppercase">${log.keterangan}</p>
-              
-              <div class="flex items-center gap-2 mt-3 pt-2 border-t border-dashed border-slate-100">
-                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px]">👤</div>
-                <div class="leading-none">
-                  <p class="text-[10px] font-black text-blue-900 uppercase">${log.nama}</p>
-                  <p class="text-[8px] text-slate-400 font-bold uppercase">${log.role}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      });
+      if (role === "super_admin") {
+        document.getElementById("btn-backup-log").classList.remove("hidden");
+        document.getElementById("panel-filter-log").classList.remove("hidden");
+      }
+      
+      renderLogSesuaiOtoritas();
     })
     .catch(err => {
-      container.innerHTML = "<p class='pl-6 text-xs text-red-500'>Gagal sinkronisasi log audit.</p>";
+      container.innerHTML = "<p class='text-center text-xs text-red-500 py-10'>Gagal sinkronisasi data.</p>";
     });
+}
+
+// Fungsi Render Dinamis (Tabel untuk Super, Timeline untuk yang lain)
+function renderLogSesuaiOtoritas() {
+  const container = document.getElementById("container-log");
+  const roleAdmin = localStorage.getItem("role");
+  
+  // Ambil Nilai Filter
+  const filterAksi = document.getElementById("filter-aksi-log") ? document.getElementById("filter-aksi-log").value.toUpperCase() : "";
+  const keyword = document.getElementById("search-log") ? document.getElementById("search-log").value.toUpperCase() : "";
+
+  // Saring Data
+  const dataTerfilter = DATA_LOG_GLOBAL.filter(log => {
+    const matchAksi = filterAksi === "" || (log.aksi || "").toUpperCase().includes(filterAksi);
+    const matchKey = (log.nama || "").toUpperCase().includes(keyword) || (log.nik || "").toString().includes(keyword);
+    return matchAksi && matchKey;
+  });
+
+  if (dataTerfilter.length === 0) {
+    container.innerHTML = "<p class='text-center text-xs text-slate-400 py-10'>Tidak ada aktivitas ditemukan.</p>";
+    return;
+  }
+
+  // JIKA SUPER ADMIN: TAMPILKAN TABEL MODERN
+  if (roleAdmin === "super_admin") {
+    let htmlTabel = `
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-[9px] text-slate-400 uppercase tracking-widest">
+                <th class="p-4 border-b font-black">Waktu</th>
+                <th class="p-4 border-b font-black">Pengguna</th>
+                <th class="p-4 border-b font-black text-center">Aksi</th>
+                <th class="p-4 border-b font-black">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody class="text-[10px] font-bold text-slate-700">
+    `;
+
+    dataTerfilter.forEach(log => {
+      const tgl = new Date(log.timestamp);
+      const strWaktu = `${tgl.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})} ${tgl.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})}`;
+      
+      let badgeWarna = "bg-slate-100 text-slate-600";
+      if (log.aksi.includes("HAPUS")) badgeWarna = "bg-red-100 text-red-600";
+      if (log.aksi.includes("TAMBAH")) badgeWarna = "bg-green-100 text-green-600";
+      if (log.aksi.includes("LOGIN")) badgeWarna = "bg-blue-100 text-blue-600";
+
+      htmlTabel += `
+        <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+          <td class="p-4 whitespace-nowrap text-[9px] text-slate-400">${strWaktu}</td>
+          <td class="p-4 uppercase leading-tight"><span class="text-blue-900">${log.nama}</span><br><span class="text-[8px] text-slate-400">${log.role}</span></td>
+          <td class="p-4 text-center"><span class="px-2 py-1 rounded-md uppercase text-[8px] font-black ${badgeWarna}">${log.aksi}</span></td>
+          <td class="p-4 uppercase text-[9px]">${log.keterangan || "-"}</td>
+        </tr>
+      `;
+    });
+
+    htmlTabel += `</tbody></table></div></div>`;
+    container.innerHTML = htmlTabel;
+  } 
+  
+  // JIKA ADMIN BIASA: TAMPILKAN TIMELINE
+  else {
+    let htmlTimeline = `<div class="relative border-l-2 border-slate-200 ml-3 space-y-6 pb-10">`;
+    dataTerfilter.forEach(log => {
+      const tgl = new Date(log.timestamp);
+      const waktuStr = tgl.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      
+      htmlTimeline += `
+        <div class="relative pl-6">
+          <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-4 border-blue-400 shadow-sm"></div>
+          <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
+            <div class="flex justify-between items-start mb-1">
+              <span class="text-[8px] font-black uppercase text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">${log.aksi}</span>
+              <span class="text-[8px] font-bold text-slate-400">${waktuStr}</span>
+            </div>
+            <p class="text-[10px] font-bold text-slate-700 uppercase leading-tight mb-2">${log.keterangan}</p>
+            <p class="text-[8px] font-bold text-slate-400 uppercase">👤 ${log.nama}</p>
+          </div>
+        </div>
+      `;
+    });
+    htmlTimeline += `</div>`;
+    container.innerHTML = htmlTimeline;
+  }
+}
+
+// ==========================================
+// FUNGSI BACKUP LOG KE CSV (Tanpa Bebani Server)
+// ==========================================
+function backupLogKeCSV() {
+  if (DATA_LOG_GLOBAL.length === 0) return alert("⚠️ Tidak ada data untuk di-backup!");
+
+  // Siapkan Header
+  let csvContent = "TIMESTAMP,NIK,NAMA_USER,ROLE,AKSI,ID_TERKAIT,KETERANGAN\n";
+
+  // Looping Data
+  DATA_LOG_GLOBAL.forEach(log => {
+    // Format tanggal ke string standar
+    const tgl = new Date(log.timestamp).toISOString();
+    
+    // Gabungkan kolom dengan pemisah koma, teks diapit kutip agar koma di dalam teks aman
+    const row = [
+      `"${tgl}"`,
+      `"${log.nik || ""}"`,
+      `"${log.nama || ""}"`,
+      `"${log.role || ""}"`,
+      `"${log.aksi || ""}"`,
+      `"${log.id_data || ""}"`,
+      `"${(log.keterangan || "").replace(/"/g, '""')}"` // Escape double quotes
+    ].join(",");
+    
+    csvContent += row + "\n";
+  });
+
+  // Buat File CSV di browser
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  
+  // Panggil proses download otomatis
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `Backup_Log_siPeKa_${new Date().getTime()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
