@@ -1538,6 +1538,9 @@ function batalEdit() {
   btnSubmit.classList.replace("bg-orange-500", "bg-blue-900");
   btnSubmit.setAttribute("onclick", "tambahUser()");
   
+  // INI OBAT BUG NYA: Aktifkan kembali tombol setelah sukses update!
+  btnSubmit.disabled = false; 
+  
   // Reset Dropdown Wilayah sesuai otorisasi awal
   initUserPage(); 
 }
