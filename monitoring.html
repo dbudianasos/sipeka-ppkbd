@@ -60,17 +60,24 @@
     loadRiwayatKader();
   });
 </script>
-  <div id="modal-foto" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-    <div class="relative w-full max-w-lg">
-      <button onclick="tutupIntip()" class="absolute -top-12 right-0 bg-white/20 hover:bg-white/40 text-white px-4 py-2 rounded-xl font-bold transition">
-        ✕ TUTUP
-      </button>
-      <div class="bg-white p-2 rounded-3xl shadow-2xl overflow-hidden">
-        <img id="img-intip" src="" class="w-full h-auto rounded-2xl shadow-inner">
-      </div>
-      <p class="text-center text-white/50 text-[10px] mt-4 uppercase tracking-widest font-bold">Preview Visum siPeKa</p>
+  <div id="modal-foto" 
+     onclick="tutupIntip()" 
+     class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md cursor-zoom-out">
+  
+  <div class="relative w-full max-w-lg">
+    <p class="absolute -top-8 left-1/2 -translate-x-1/2 text-white/50 text-[10px] font-bold uppercase tracking-widest">
+      Klik di mana saja untuk menutup
+    </p>
+
+    <div class="bg-white p-1.5 rounded-3xl shadow-2xl overflow-hidden transform transition active:scale-95">
+      <img id="img-intip" src="" class="w-full h-auto rounded-2xl shadow-inner">
     </div>
+    
+    <p class="text-center text-white/40 text-[9px] mt-4 uppercase tracking-[0.2em] font-black">
+      siPeKa Visum Preview
+    </p>
   </div>
+</div>
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
   &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
   Aplikasi Pelaporan Kinerja PPKBD
