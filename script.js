@@ -1243,7 +1243,7 @@ async function simpanLaporan() {
 // ============================================================
 // 9. LOGIKA RIWAYAT LAPORAN MANDIRI (KADER)
 // ============================================================
-// --- A. LOAD RIWAYAT DENGAN FILTER & INTIP FOTO ---
+// --- A. LOAD RIWAYAT DENGAN LOGIKA REJECT & ALASAN (VERSI FIX BUG 3) ---
 function loadRiwayatKader() {
   const container = document.getElementById("list-riwayat-kader");
   const nik = localStorage.getItem("nik");
@@ -1266,34 +1266,66 @@ function loadRiwayatKader() {
       }
 
       data.reverse().forEach(item => {
+        // --- 1. Logika Filter Bulan ---
         const tglObj = new Date(item.tanggal);
         const bulanIndex = tglObj.getMonth().toString(); 
         if (filterBulan !== "ALL" && bulanIndex !== filterBulan) return;
 
-        const isDraft = item.status.toLowerCase() === "draft";
-        if (!isDraft) countApproved++; else countPending++;
+        // --- 2. Tentukan Status & Warna ---
+        const status = (item.status || "PENDING").toUpperCase();
+        let statusColor = "bg-orange-100 text-orange-600"; // Default Pending
+        let labelStatus = "DRAFT / PENDING";
+        let aksiKader = "";
+        let alasanHTML = "";
 
-        const statusColor = isDraft ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-700";
+        if (status === "APPROVED") {
+          statusColor = "bg-green-100 text-green-700";
+          labelStatus = "DISETUJUI";
+          countApproved++;
+          aksiKader = `<span class="text-[10px] text-green-500 font-black">Disetujui ✅</span>`;
+        } 
+        else if (status === "REJECT") {
+          statusColor = "bg-red-100 text-red-700"; // Merah untuk Reject
+          labelStatus = "DITOLAK";
+          countPending++; // Masuk hitungan antrian karena harus diperbaiki
+          
+          // Munculkan Alasan Penolakan
+          alasanHTML = `
+            <div class="mt-3 p-3 bg-red-50 rounded-xl border border-red-100">
+              <p class="text-[8px] font-black text-red-600 uppercase mb-1">Catatan Admin:</p>
+              <p class="text-[10px] font-bold text-slate-700 leading-tight">${item.alasan || "Foto/Data tidak sesuai"}</p>
+            </div>`;
+          
+          // Tombol Hapus khusus Reject
+          aksiKader = `<button onclick="hapusLaporanKader('${item.id}')" class="bg-red-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg shadow-lg active:scale-95 transition">🗑️ HAPUS & REVISI</button>`;
+        } 
+        else {
+          countPending++;
+          aksiKader = `<button onclick="hapusLaporanKader('${item.id}')" class="text-red-500 text-[10px] font-bold px-2 py-1 transition active:text-red-700">🗑️ HAPUS</button>`;
+        }
         
+        // --- 3. Render Card ---
         container.innerHTML += `
-          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-3">
+          <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
             <div class="flex justify-between items-start mb-3">
-               <span class="text-[8px] font-black ${statusColor} px-2 py-0.5 rounded-md uppercase">${item.status}</span>
-               <div class="flex gap-2">
-                 <button onclick="intipFoto('${item.fotoId}')" class="text-[10px] text-blue-600 font-black border border-blue-200 px-2 py-1 rounded-lg bg-blue-50 active:scale-95 transition">
+                <span class="text-[8px] font-black ${statusColor} px-2.5 py-1 rounded-full uppercase tracking-widest border border-current opacity-80">${labelStatus}</span>
+                <div class="flex gap-2">
+                  <button onclick="intipFoto('${item.fotoId}')" class="text-[9px] text-blue-600 font-black border border-blue-100 px-2.5 py-1 rounded-xl bg-blue-50 active:scale-95 transition">
                     🖼️ LIHAT FOTO
-                 </button>
-                 <p class="text-[9px] text-slate-400 font-bold font-mono pt-1">${item.id}</p>
-               </div>
+                  </button>
+                  <p class="text-[9px] text-slate-300 font-bold font-mono pt-1.5">ID: ${item.id}</p>
+                </div>
             </div>
+
             <h3 class="text-xs font-black text-blue-900 uppercase leading-tight mb-1">${item.kegiatan}</h3>
-            <p class="text-[9px] text-slate-500 font-medium mb-3 italic">📍 ${item.realisasi} di ${item.tanggal}</p>
+            <p class="text-[9px] text-slate-500 font-medium mb-1">📍 ${item.realisasi}</p>
+            <p class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">${item.tanggal}</p>
+
+            ${alasanHTML}
+
             <div class="flex items-center justify-between border-t border-dashed border-slate-100 pt-3 mt-3">
-               <p class="text-[9px] text-slate-400 font-bold">Verifikator: <span class="text-blue-700">${item.verifikator || '-'}</span></p>
-               ${isDraft ? 
-                 `<button onclick="hapusLaporanKader('${item.id}')" class="text-red-500 text-[10px] font-bold px-2 py-1 transition active:text-red-700">🗑️ HAPUS</button>` 
-                 : `<span class="text-[10px] text-green-500 font-black">Disetujui ✅</span>`
-               }
+               <p class="text-[9px] text-slate-400 font-bold">Verifikator: <span class="text-blue-700 uppercase">${item.verifikator || '-'}</span></p>
+               ${aksiKader}
             </div>
           </div>`;
       });
@@ -1303,7 +1335,7 @@ function loadRiwayatKader() {
     })
     .catch(err => {
       console.error(err);
-      container.innerHTML = `<p class="text-center text-red-500 text-xs py-10">Gagal mengambil riwayat. Cek koneksi.</p>`;
+      container.innerHTML = `<p class="text-center text-red-500 text-xs py-10 font-bold">❌ GAGAL SYNC ARSIP</p>`;
     });
 }
 
