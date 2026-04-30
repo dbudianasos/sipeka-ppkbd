@@ -593,6 +593,19 @@ function renderLaciDesa() {
                 <p class="text-[9px] font-black text-slate-800 mb-2 border-b pb-1">TARGET DESA (PPM)</p>
                 <div class="grid grid-cols-4 md:grid-cols-7 gap-2">
                     ${ALKON_LIST.map(alkon => `
+
+                        // Hitung rekomendasi bayangan (hanya untuk ditampilkan sebagai info)
+                        let totalPUS = DATA_DESA_TEMP.reduce((sum, v) => sum + v.pus, 0);
+                        let totalUnmet = DATA_DESA_TEMP.reduce((sum, v) => sum + v.unmet_need, 0);
+                        let rec = 0;
+                        if(totalPUS > 0 && totalUnmet > 0) {
+                            let pPUS = d.pus / totalPUS;
+                            let pUnmet = d.unmet_need / totalUnmet;
+                            rec = Math.round((0.5 * TARGET_KECAMATAN[alkon] * pPUS) + (0.5 * TARGET_KECAMATAN[alkon] * pUnmet));
+                        }
+                    
+                        return `
+                        
                     <div>
                         <label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase text-center">${alkon}</label>
                         <input type="number" id="laci-${alkon}-${index}" value="${d.ppm[alkon]}" oninput="simpanDataLaci(${index})" ${state} class="w-full p-2 border rounded-lg text-xs font-bold text-center ${cssInput}">
