@@ -690,7 +690,7 @@ function simpanSemuaReferensi() {
 }
 
 // ============================================================
-// F. LOGIKA REGISTER AB (ADVANCED - SISTEM OTORISASI & DISTRIBUSI)
+// F. LOGIKA REGISTER AB (FIXED: REKAP & DYNAMIC PKM)
 // ============================================================
 
 let DATA_AB_TEMP = []; 
@@ -700,23 +700,22 @@ let IS_EDIT_MODE_AB = false;
 // --- 1. HITUNG TREN TARGET BULANAN (%) ---
 function getPersentaseBulan(bulan) {
     const tren = {
-        "JANUARI": 0.075, "FEBRUARI": 0.075, "MARET": 0.075, "APRIL": 0.075, // Stok Rendah
-        "MEI": 0.10, "JUNI": 0.10,       // Lonjakan 1: Bakti IBI
+        "JANUARI": 0.075, "FEBRUARI": 0.075, "MARET": 0.075, "APRIL": 0.075,
+        "MEI": 0.10, "JUNI": 0.10,
         "JULI": 0.08, "AGUSTUS": 0.08,
-        "SEPTEMBER": 0.12,               // Lonjakan 2: Hari Kontrasepsi
+        "SEPTEMBER": 0.12,
         "OKTOBER": 0.08, "NOVEMBER": 0.08, "DESEMBER": 0.09 
     };
     return tren[bulan.toUpperCase()] || 0.083;
 }
-// --- 2. INISIALISASI HALAMAN (BERTINGKAT) ---
+
+// --- 2. INISIALISASI HALAMAN ---
 function initKhususAB() {
     const selectKec = document.getElementById("ab-kecamatan");
     const selectThn = document.getElementById("ab-tahun");
     const selectBln = document.getElementById("ab-bulan");
-
     if (!selectKec || !selectThn) return;
 
-    // Setup Tahun & Bulan Berjalan
     const thnSkg = new Date().getFullYear();
     let optTahun = "";
     for(let y = thnSkg - 1; y <= thnSkg + 2; y++) { 
@@ -727,117 +726,32 @@ function initKhususAB() {
     const daftarBulan = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
     selectBln.value = daftarBulan[new Date().getMonth()];
 
-    const rawRole = localStorage.getItem("role") || "";
-    const role = rawRole.toLowerCase().trim().replace(".", "_");
-    const kecUser = (localStorage.getItem("kecamatan") || "").toUpperCase().trim();
-
     fetch(`${API_URL}?action=get_semua_kecamatan`)
-    .then(res => res.json())
-    .then(listKecamatan => {
+    .then(res => res.json()).then(listKecamatan => {
         let opsiKec = `<option value="">-- PILIH KECAMATAN --</option>`;
         listKecamatan.forEach(k => { opsiKec += `<option value="${k}">${k}</option>`; });
         selectKec.innerHTML = opsiKec;
 
-        if (role === "admin_kec" || role === "admin_kecamatan" || role === "admin_desa") {
-            selectKec.value = kecUser;
+        const role = (localStorage.getItem("role") || "").toLowerCase();
+        if (role.includes("admin_kec") || role.includes("admin_desa")) {
+            selectKec.value = (localStorage.getItem("kecamatan") || "").toUpperCase();
             selectKec.disabled = true;
-            selectKec.classList.add("bg-slate-200", "cursor-not-allowed");
+            selectKec.classList.add("bg-slate-200");
             initDataAB();
         }
     });
 }
 
-// --- 3. ATUR TOMBOL AKSI (DRAFT, REALIST, LOCK) ---
-// a. SETUP TOMBOL UTAMA (SINGLE BUTTON STYLE)
-function setupTombolAksiAB() {
-    const wadah = document.getElementById("wadah-tombol-ab");
-    if (!wadah) return;
-
-    if (IS_EDIT_MODE_AB) {
-        // Hanya satu tombol Simpan
-        wadah.innerHTML = `
-            <button onclick="bukaModalSimpan()" class="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black px-6 py-2 rounded-xl border border-white/20 transition active:scale-95 uppercase tracking-widest flex items-center gap-2">
-                <span>💾</span> Simpan
-            </button>
-        `;
-    } else {
-        // Tombol Buka Akses yang lebih sleek
-        wadah.innerHTML = `
-            <button onclick="mintaAksesEditAB()" class="bg-orange-500 hover:bg-orange-400 text-white text-[10px] font-black px-5 py-2 rounded-xl shadow-lg shadow-orange-900/20 transition active:scale-95 flex items-center gap-2 uppercase tracking-tighter">
-                <span>🔒</span> Buka Akses
-            </button>
-        `;
-    }
-}
-
-// b. KONTROL MODAL PILIHAN SIMPAN
-function bukaModalSimpan() {
-    const modal = document.getElementById("modal-pilihan-simpan");
-    const content = document.getElementById("content-modal-simpan");
-    
-    modal.classList.remove("hidden");
-    setTimeout(() => {
-        content.classList.remove("scale-95", "opacity-0");
-        content.classList.add("scale-100", "opacity-100");
-    }, 10);
-}
-
-function tutupModalSimpan() {
-    const modal = document.getElementById("modal-pilihan-simpan");
-    const content = document.getElementById("content-modal-simpan");
-    
-    content.classList.remove("scale-100", "opacity-100");
-    content.classList.add("scale-95", "opacity-0");
-    setTimeout(() => {
-        modal.classList.add("hidden");
-    }, 300);
-}
-
-// c. EKSEKUSI FINAL
-function eksekusiSimpan(status) {
-    tutupModalSimpan();
-    // Memanggil fungsi simpan yang sudah Bapak buat/miliki
-    if (typeof prosesSimpanAB === "function") {
-        prosesSimpanAB(status);
-    } else {
-        console.error("Fungsi prosesSimpanAB belum didefinisikan.");
-    }
-}
-
-// --- 4. PROSES MINTA KODE AKSES ---
-function mintaAksesEditAB() {
-    const kec = document.getElementById("ab-kecamatan").value;
-    if (!kec) return alert("Pilih Kecamatan terlebih dahulu!");
-
-    const kodeAsli = getKodeRahasia(kec); 
-    let input = prompt(`Masukkan Kode Otorisasi Edit AB Kecamatan ${kec} untuk hari ini:`);
-    
-    if (input === null) return;
-    
-    if (input.toUpperCase().trim() === kodeAsli) {
-        alert("✅ Akses Diberikan! Gembok data telah dibuka.");
-        IS_EDIT_MODE_AB = true;
-        setupTombolAksiAB();
-        ; 
-    } else {
-        alert("❌ Kode Salah! Akses ditolak.");
-    }
-}
-
-// --- 5. TARIK DATA DARI SERVER ---
+// --- 3. TARIK DATA DARI SERVER ---
 function initDataAB() {
     const thn = document.getElementById("ab-tahun").value;
     const bln = document.getElementById("ab-bulan").value;
     const kec = document.getElementById("ab-kecamatan").value;
-
     if (!thn || !bln || !kec) return;
 
-    const container = document.getElementById("container-laci-ab");
-    container.innerHTML = "";
     document.getElementById("loader-ab").classList.remove("hidden");
-    document.getElementById("status-bar-ab").classList.add("hidden");
+    document.getElementById("container-laci-ab").innerHTML = "";
 
-    // Reset Gembok (Super Admin otomatis terbuka)
     IS_EDIT_MODE_AB = (localStorage.getItem("role") === "super_admin");
     setupTombolAksiAB();
 
@@ -849,15 +763,17 @@ function initDataAB() {
         TARGET_PPM_VILLAGE = allTargets.filter(t => t.kecamatan.toUpperCase() === kec.toUpperCase() && t.tahun.toString() === thn.toString());
 
         if (TARGET_PPM_VILLAGE.length === 0) {
-            alert(`⚠️ Target PPM Tahun ${thn} belum tersedia. Selesaikan di menu Setting.`);
+            alert(`⚠️ Target PPM Tahun ${thn} belum tersedia.`);
             document.getElementById("loader-ab").classList.add("hidden");
             return;
         }
 
         DATA_AB_TEMP = TARGET_PPM_VILLAGE.map(target => {
             let exist = savedData.find(s => s.desa.toUpperCase() === target.desa.toUpperCase()) || {};
-            let obj = { desa: target.desa, target_ori: target.ppm, pkm: target.pkm, pus: target.pus, target_global: Object.values(target.ppm).reduce((a,b)=>a+b, 0) };
-
+            let obj = { 
+                desa: target.desa, target_ori: target.ppm, pkm: target.pkm, pus: target.pus, 
+                status: exist.status || "Draft", kumulatif_lalu: exist.kumulatif_lalu || 0 
+            };
             METODE_KB.forEach(m => {
                 let key = m.toLowerCase();
                 obj[`${key}_p`] = exist[`${key}_p`] || 0;
@@ -867,36 +783,32 @@ function initDataAB() {
         });
 
         document.getElementById("loader-ab").classList.add("hidden");
-        document.getElementById("status-bar-ab").classList.remove("hidden");
-        ;
+        updateStatusBarAB(); // Munculkan Dashboard PKM
+        renderLaciAB();      // Munculkan Laci Desa
     });
 }
 
-// --- 6. RENDER LACI DESA DENGAN PROTEKSI STATUS FINAL ---
+// --- 4. RENDER LACI DESA ---
 function renderLaciAB() {
     const container = document.getElementById("container-laci-ab");
     const thn = document.getElementById("ab-tahun").value;
     const bln = document.getElementById("ab-bulan").value;
     container.innerHTML = "";
+    const role = (localStorage.getItem("role") || "").toLowerCase();
 
     DATA_AB_TEMP.forEach((d, idx) => {
-        // 1. Kalkulasi Rekap Sederhana
         let totalAB_Bulan = 0;
-        METODE_KB.forEach(m => {
-            let k = m.toLowerCase();
-            totalAB_Bulan += (parseInt(d[k+'_p']) || 0) + (parseInt(d[k+'_s']) || 0);
-        });
+        METODE_KB.forEach(m => totalAB_Bulan += (parseInt(d[m.toLowerCase()+'_p']) || 0) + (parseInt(d[m.toLowerCase()+'_s']) || 0));
 
-        // Simulasi Kumulatif Jan-Bln (Nanti ditarik dari fetch tahunan)
-        let totalAB_JanBulan = totalAB_Bulan + (d.kumulatif_lalu || 0); 
+        let totalAB_JanBulan = totalAB_Bulan + (d.kumulatif_lalu || 0);
         let ppmTahunan = Object.values(d.target_ori).reduce((a,b) => a+b, 0);
         let targetBulanIni = Math.round(ppmTahunan * getPersentaseBulan(bln));
-        
         let capBulan = targetBulanIni > 0 ? ((totalAB_Bulan / targetBulanIni) * 100).toFixed(1) : 0;
         let progresTahun = ppmTahunan > 0 ? ((totalAB_JanBulan / ppmTahunan) * 100).toFixed(1) : 0;
 
         const isFinal = d.status === "Final";
-        const dot = `<span class="inline-block w-1.5 h-1.5 rounded-full mx-1 bg-slate-300"></span>`;
+        const isLocked = isFinal && (role !== "super_admin" || !IS_EDIT_MODE_AB);
+        const dot = `<span class="inline-block w-1 h-1 rounded-full mx-1.5 bg-slate-300"></span>`;
 
         container.innerHTML += `
         <div class="bg-white rounded-[2rem] border ${isFinal ? 'border-emerald-100' : 'border-slate-100'} overflow-hidden shadow-sm mb-4">
@@ -906,7 +818,6 @@ function renderLaciAB() {
                         <h3 class="font-black text-slate-800 text-sm uppercase">${d.desa}</h3>
                         <span class="text-[7px] px-2 py-0.5 rounded-full font-black border ${isFinal ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'} uppercase">${d.status || 'DRAFT'}</span>
                     </div>
-                    <!-- REKAP SEDERHANA -->
                     <div class="flex flex-wrap items-center mt-1.5 text-[8.5px] font-bold text-slate-400 uppercase tracking-tighter">
                         <span class="text-blue-600">PPM ${thn}: ${ppmTahunan}</span> ${dot}
                         <span>AB ${bln}: ${totalAB_Bulan}</span> ${bln !== 'JANUARI' ? `${dot} <span>Jan-${bln}: ${totalAB_JanBulan}</span>` : ''} ${dot}
@@ -916,71 +827,41 @@ function renderLaciAB() {
                 </div>
                 <div id="icon-laci-ab-${idx}" class="w-9 h-9 flex items-center justify-center rounded-2xl bg-slate-50 text-blue-300">🔽</div>
             </div>
-            
             <div id="isi-laci-ab-${idx}" class="hidden p-5 border-t border-slate-50 bg-slate-50/10">
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     ${METODE_KB.map(m => {
                         let k = m.toLowerCase();
                         let tBln = Math.round((d.target_ori[k] || 0) * getPersentaseBulan(bln));
-                        return renderKotakAlkon(m, k, d, tBln, idx); // Fungsi kotak alkon yang sudah kita buat
+                        return renderKotakAlkon(m, k, d, tBln, idx, isLocked); //
                     }).join('')}
                 </div>
             </div>
         </div>`;
     });
 }
-// KONTROL MODAL PREVIEW
-function bukaModalPreview() {
-    document.getElementById("modal-preview-ab").classList.remove("hidden");
-    // Di sini nanti panggil fungsi render table baku
-    if(typeof renderTableBakuAB === "function") renderTableBakuAB();
+
+// --- 5. HELPER: RENDER KOTAK ALKON ---
+function renderKotakAlkon(m, k, d, tBln, idx, isLocked) {
+    const isSpec = (m === "MOW" || m === "MOP");
+    const cssInput = isLocked ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed" : "bg-white border-slate-100 text-blue-900";
+    return `
+    <div class="bg-white p-3 rounded-2xl border ${isSpec ? 'border-orange-100 bg-orange-50/5' : 'border-slate-100'} shadow-sm">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-[9px] font-black ${isSpec ? 'text-orange-600' : 'text-slate-800'} uppercase">${m}</span>
+            <span class="text-[8px] font-bold text-blue-500">T: ${tBln}</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <input type="number" id="p-${k}-${idx}" value="${d[k+'_p']}" oninput="updatePS_AB('${k}', ${idx})" ${isLocked ? 'disabled' : ''} class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${cssInput}" placeholder="P">
+            <input type="number" id="s-${k}-${idx}" value="${d[k+'_s']}" oninput="updatePS_AB('${k}', ${idx})" ${isLocked ? 'disabled' : ''} class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${cssInput}" placeholder="S">
+        </div>
+    </div>`;
 }
 
-function tutupModalPreview() {
-    document.getElementById("modal-preview-ab").classList.add("hidden");
-}
-// --- 7. LOGIKA DOMINO EFFECT ---
-function updatePS_AB(key, idx) {
-    const bulan = document.getElementById("ab-bulan").value;
-    const targetSetahun = DATA_AB_TEMP[idx].target_ori[key];
-    let tBulan = Math.round(targetSetahun * getPersentaseBulan(bulan));
-    
-    let valP = parseInt(document.getElementById(`p-${key}-${idx}`).value) || 0;
-    let valS = tBulan - valP;
-    if (valS < 0) valS = 0; 
-
-    document.getElementById(`s-${key}-${idx}`).value = valS;
-    DATA_AB_TEMP[idx][`${key}_p`] = valP;
-    DATA_AB_TEMP[idx][`${key}_s`] = valS;
-}
-
-// --- 8. FUNGSI ENGSEL LACI (OPEN/CLOSE) ---
-function toggleLaciAB(idx) {
-    const isi = document.getElementById(`isi-laci-ab-${idx}`);
-    const icon = document.getElementById(`icon-laci-ab-${idx}`);
-    
-    if (!isi || !icon) return;
-
-    // Toggle class hidden
-    isi.classList.toggle("hidden");
-
-    // Ubah icon dan gaya visual saat laci terbuka/tertutup
-    if (isi.classList.contains("hidden")) {
-        icon.innerText = "🔽";
-        icon.classList.remove("bg-blue-50", "text-blue-500");
-    } else {
-        icon.innerText = "🔼";
-        icon.classList.add("bg-blue-50", "text-blue-500");
-    }
-}
-
-// --- 9. RENDER STATUS AKUMULASI (DI BAWAH FILTER) ---
+// --- 6. UPDATE DASHBOARD (PKM & KECAMATAN) ---
 function updateStatusBarAB() {
     const wadah = document.getElementById("indikator-target-bulan");
     const bln = document.getElementById("ab-bulan").value;
     const kec = document.getElementById("ab-kecamatan").value;
-    
-    // Grouping by PKM
     let rekapPKM = {};
     let totalKec = { capaian: 0, target: 0 };
 
@@ -990,19 +871,15 @@ function updateStatusBarAB() {
         let abBln = 0;
         METODE_KB.forEach(m => abBln += (parseInt(d[m.toLowerCase()+'_p']) || 0) + (parseInt(d[m.toLowerCase()+'_s']) || 0));
 
-        // Total Kec
         totalKec.capaian += abBln;
         totalKec.target += tBln;
 
-        // Per PKM
         if(!rekapPKM[d.pkm]) rekapPKM[d.pkm] = { capaian: 0, target: 0 };
         rekapPKM[d.pkm].capaian += abBln;
         rekapPKM[d.pkm].target += tBln;
     });
 
-    // Render ke UI
     let html = `
-    <!-- TOTAL KECAMATAN -->
     <div class="col-span-full mb-2 p-4 bg-blue-900 rounded-3xl text-white shadow-lg shadow-blue-200">
         <p class="text-[8px] font-black uppercase opacity-60 mb-1">Seluruh Kecamatan ${kec}</p>
         <div class="flex justify-between items-end">
@@ -1011,7 +888,6 @@ function updateStatusBarAB() {
         </div>
     </div>`;
 
-    // TOTAL PER PKM (Otomatis Muncul Berapapun Jumlahnya)
     Object.keys(rekapPKM).forEach(pkm => {
         let p = rekapPKM[pkm];
         let persen = p.target > 0 ? ((p.capaian / p.target) * 100).toFixed(1) : 0;
@@ -1024,7 +900,6 @@ function updateStatusBarAB() {
             </div>
         </div>`;
     });
-
     wadah.innerHTML = html;
     document.getElementById("status-bar-ab").classList.remove("hidden");
 }
