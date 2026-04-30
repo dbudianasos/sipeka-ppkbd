@@ -982,3 +982,25 @@ function updateStatusBarAB() {
     wadah.innerHTML = html;
     document.getElementById("status-bar-ab").classList.remove("hidden");
 }
+
+// ---7. FUNGSI UNTUK MEMBUKA & MENUTUP LACI ---
+function toggleLaciAB(idx) {
+    const isi = document.getElementById(`isi-laci-ab-${idx}`);
+    const icon = document.getElementById(`icon-laci-ab-${idx}`);
+    
+    if (!isi) return; // Jika elemen tidak ditemukan, berhenti agar tidak error
+
+    // 1. Toggle (Buka/Tutup) konten laci
+    isi.classList.toggle("hidden");
+
+    // 2. Ubah icon dan gaya visual jika elemen icon ada
+    if (icon) {
+        if (isi.classList.contains("hidden")) {
+            icon.innerText = "🔽";
+            icon.classList.remove("bg-blue-50", "text-blue-500");
+        } else {
+            icon.innerText = "🔼";
+            icon.classList.add("bg-blue-50", "text-blue-500");
+        }
+    }
+}
