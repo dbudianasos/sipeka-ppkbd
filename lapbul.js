@@ -301,28 +301,44 @@ const ALKON_LIST = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
 
 let IS_EDIT_MODE = false; // Status apakah gembok sedang terbuka
 
-// 1. INISIALISASI SAAT HALAMAN DIMUAT (CEK HAK AKSES)
+// 1. INISIALISASI SAAT HALAMAN DIMUAT (CEK HAK AKSES & TARIK KECAMATAN)
 function initSettingTarget() {
-    // --- TAMBAHAN: BIKIN TAHUN DINAMIS ---
+    // --- BIKIN TAHUN DINAMIS ---
     const thnSkg = new Date().getFullYear();
     let optTahun = `<option value="">-- TAHUN --</option>`;
     for(let y = thnSkg - 1; y <= thnSkg + 2; y++) { optTahun += `<option value="${y}">${y}</option>`; }
     document.getElementById("filter-tahun").innerHTML = optTahun;
-    // --------------------------------------
+
     const role = localStorage.getItem("role") || "";
     const kecUser = (localStorage.getItem("kecamatan") || "").toUpperCase();
     const selectKec = document.getElementById("filter-kecamatan");
 
-    // Jika yang login Admin Kecamatan, kunci dropdown ke kecamatannya sendiri
-    if (role === "admin_kecamatan") {
-        selectKec.value = kecUser;
-        selectKec.disabled = true; 
-        selectKec.classList.add("bg-slate-200", "cursor-not-allowed");
-    } else if (role === "super_admin") {
-        // Tampilkan Kode Rahasia untuk Super Admin
-        document.getElementById("panel-kode-rahasia").classList.remove("hidden");
-        selectKec.addEventListener("change", updateTampilanKodeRahasia);
-    }
+    // --- TARIK DAFTAR KECAMATAN OTOMATIS DARI SPREADSHEET ---
+    fetch(`${API_URL}?action=get_semua_kecamatan`)
+    .then(res => res.json())
+    .then(listKecamatan => {
+        let opsiKec = `<option value="">-- PILIH KECAMATAN --</option>`;
+        listKecamatan.forEach(k => {
+            opsiKec += `<option value="${k}">${k}</option>`;
+        });
+        selectKec.innerHTML = opsiKec;
+
+        // Terapkan Logika Hak Akses setelah dropdown terisi penuh
+        if (role === "admin_kecamatan") {
+            // Langsung kunci ke kecamatannya sendiri
+            selectKec.value = kecUser;
+            selectKec.disabled = true; 
+            selectKec.classList.add("bg-slate-200", "cursor-not-allowed");
+        } else if (role === "super_admin") {
+            // Bebas pilih, tampilkan panel kode rahasia
+            document.getElementById("panel-kode-rahasia").classList.remove("hidden");
+            selectKec.addEventListener("change", updateTampilanKodeRahasia);
+        }
+    })
+    .catch(err => {
+        selectKec.innerHTML = `<option value="">-- GAGAL MEMUAT --</option>`;
+        console.error("Gagal menarik data kecamatan:", err);
+    });
 }
 
 // 2. GENERATOR KODE RAHASIA (TANGGAL + TAHUN + KEC + HASH)
