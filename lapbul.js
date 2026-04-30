@@ -909,3 +909,23 @@ function updatePS_AB(key, idx) {
     DATA_AB_TEMP[idx][`${key}_p`] = valP;
     DATA_AB_TEMP[idx][`${key}_s`] = valS;
 }
+
+// --- 8. FUNGSI ENGSEL LACI (OPEN/CLOSE) ---
+function toggleLaciAB(idx) {
+    const isi = document.getElementById(`isi-laci-ab-${idx}`);
+    const icon = document.getElementById(`icon-laci-ab-${idx}`);
+    
+    if (!isi || !icon) return;
+
+    // Toggle class hidden
+    isi.classList.toggle("hidden");
+
+    // Ubah icon dan gaya visual saat laci terbuka/tertutup
+    if (isi.classList.contains("hidden")) {
+        icon.innerText = "🔽";
+        icon.classList.remove("bg-blue-50", "text-blue-500");
+    } else {
+        icon.innerText = "🔼";
+        icon.classList.add("bg-blue-50", "text-blue-500");
+    }
+}
