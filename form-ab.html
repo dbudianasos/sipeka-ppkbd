@@ -32,38 +32,45 @@
 
   <main class="px-4 pt-6 max-w-5xl mx-auto space-y-4">
 
-    <!-- PANEL FILTER: TAHUN, BULAN, KECAMATAN -->
-    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">1. Tahun</label>
-        <select id="ab-tahun" onchange="initDataAB()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase">
-          <!-- Dinamis via JS -->
-        </select>
-      </div>
-      <div>
-        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">2. Bulan Laporan</label>
-        <select id="ab-bulan" onchange="initDataAB()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase">
-          <option value="JANUARI">JANUARI</option>
-          <option value="FEBRUARI">FEBRUARI</option>
-          <option value="MARET">MARET</option>
-          <option value="APRIL">APRIL</option>
-          <option value="MEI">MEI</option>
-          <option value="JUNI">JUNI</option>
-          <option value="JULI">JULI</option>
-          <option value="AGUSTUS">AGUSTUS</option>
-          <option value="SEPTEMBER">SEPTEMBER</option>
-          <option value="OKTOBER">OKTOBER</option>
-          <option value="NOVEMBER">NOVEMBER</option>
-          <option value="DESEMBER">DESEMBER</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">3. Kecamatan</label>
-        <select id="ab-kecamatan" onchange="initDataAB()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase">
-          <option value="">-- MEMUAT... --</option>
-        </select>
-      </div>
+    <!-- PANEL FILTER: TAHUN & BULAN BERDAMPINGAN, KECAMATAN DI BAWAH -->
+<div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+  
+  <!-- Baris 1: Tahun dan Bulan -->
+  <div class="flex gap-3">
+    <div class="w-1/3">
+      <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">1. Tahun</label>
+      <select id="ab-tahun" onchange="initDataAB()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase text-xs">
+        <!-- Dinamis via JS -->
+      </select>
     </div>
+    <div class="w-2/3">
+      <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">2. Bulan Laporan</label>
+      <select id="ab-bulan" onchange="initDataAB()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase text-xs">
+        <option value="JANUARI">JANUARI</option>
+        <option value="FEBRUARI">FEBRUARI</option>
+        <option value="MARET">MARET</option>
+        <option value="APRIL">APRIL</option>
+        <option value="MEI">MEI</option>
+        <option value="JUNI">JUNI</option>
+        <option value="JULI">JULI</option>
+        <option value="AGUSTUS">AGUSTUS</option>
+        <option value="SEPTEMBER">SEPTEMBER</option>
+        <option value="OKTOBER">OKTOBER</option>
+        <option value="NOVEMBER">NOVEMBER</option>
+        <option value="DESEMBER">DESEMBER</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Baris 2: Kecamatan -->
+  <div>
+    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">3. Kecamatan</label>
+    <select id="ab-kecamatan" onchange="initDataAB()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase text-xs">
+      <option value="">-- PILIH KECAMATAN --</option>
+    </select>
+  </div>
+
+</div>
 
     <!-- STATUS BAR: RINGKASAN TARGET KECAMATAN -->
     <div id="status-bar-ab" class="hidden bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
