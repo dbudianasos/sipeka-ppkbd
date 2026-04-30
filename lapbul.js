@@ -303,6 +303,12 @@ let IS_EDIT_MODE = false; // Status apakah gembok sedang terbuka
 
 // 1. INISIALISASI SAAT HALAMAN DIMUAT (CEK HAK AKSES)
 function initSettingTarget() {
+    // --- TAMBAHAN: BIKIN TAHUN DINAMIS ---
+    const thnSkg = new Date().getFullYear();
+    let optTahun = `<option value="">-- TAHUN --</option>`;
+    for(let y = thnSkg - 1; y <= thnSkg + 2; y++) { optTahun += `<option value="${y}">${y}</option>`; }
+    document.getElementById("filter-tahun").innerHTML = optTahun;
+    // --------------------------------------
     const role = localStorage.getItem("role") || "";
     const kecUser = (localStorage.getItem("kecamatan") || "").toUpperCase();
     const selectKec = document.getElementById("filter-kecamatan");
@@ -460,6 +466,10 @@ function tambahPKMBaru() {
     if(!pkmBaru || pkmBaru.trim() === "") return;
     pkmBaru = pkmBaru.toUpperCase().trim();
 
+    const btn = document.getElementById("btn-tambah-pkm");
+    btn.innerText = "⏳ Menyimpan...";
+    btn.disabled = true;
+
     const payload = { action: "save_pkm", kecamatan: kec, pkm: pkmBaru };
     
     fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
@@ -471,6 +481,8 @@ function tambahPKMBaru() {
             renderLaciDesa(); // Update dropdown di laci
             alert(`✅ PKM ${pkmBaru} berhasil ditambahkan!`);
         }
+        btn.innerText = "➕ Tambah PKM";
+        btn.disabled = false;
     });
 }
 
