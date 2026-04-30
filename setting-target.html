@@ -11,58 +11,109 @@
 </head>
 <body class="bg-slate-50 min-h-screen pb-20">
 
-  <header class="sticky top-0 z-50 bg-slate-900 py-4 px-5 rounded-b-[1.5rem] shadow-lg text-white">
-    <div class="flex items-center justify-between max-w-5xl mx-auto">
-      <div class="flex items-center gap-3">
-        <button onclick="window.location.href='menu-lapbul.html'" class="bg-white/10 p-2 rounded-xl active:scale-95">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-        </button>
-        <div class="leading-tight">
-          <h1 class="font-bold text-base uppercase">Master Target</h1>
-          <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Auto-Breakdown 50:50</p>
-        </div>
-      </div>
-      <button onclick="simpanSemuaReferensi()" id="btn-save-ref" class="hidden bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 py-2 rounded-xl shadow-lg active:scale-95 transition uppercase tracking-widest">
-        💾 Simpan
+  <header class="sticky top-0 z-50 bg-slate-900 py-4 px-5 rounded-b-[1.5rem] shadow-lg text-white flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <button onclick="window.location.href='menu-lapbul.html'" class="bg-white/10 p-2 rounded-xl active:scale-95 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
       </button>
+      <div class="leading-tight">
+        <h1 class="font-bold text-base uppercase">Master Target</h1>
+        <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Sistem Manajemen Enterprise</p>
+      </div>
+    </div>
+    
+    <!-- TOMBOL AKSI UTAMA (Dinamis via JS) -->
+    <div id="wadah-tombol-aksi" class="hidden">
+      <!-- Tombol Simpan / Minta Akses akan muncul di sini -->
     </div>
   </header>
 
-  <main class="px-4 pt-6 max-w-4xl mx-auto">
-    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 mb-4">
-      <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">1. Pilih Kecamatan</label>
-      <select id="filter-kecamatan" onchange="tarikTargetPerKecamatan()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase">
-        <option value="">-- PILIH KECAMATAN --</option>
-        <option value="SETU">Kecamatan SETU</option>
-      </select>
+  <main class="px-4 pt-6 max-w-4xl mx-auto space-y-4">
+    
+    <!-- PANEL KODE RAHASIA (KHUSUS SUPER ADMIN) -->
+    <div id="panel-kode-rahasia" class="hidden bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-2xl shadow-sm mb-4">
+      <p class="text-[10px] font-bold text-orange-800 uppercase tracking-widest mb-1">KODE OTORISASI EDIT HARI INI:</p>
+      <h2 id="teks-kode-rahasia" class="text-2xl font-black text-orange-600 tracking-wider">------</h2>
+      <p class="text-[9px] text-orange-700 mt-1 italic">*Berikan kode ini kepada Admin Kecamatan jika mereka meminta akses ubah data.</p>
     </div>
 
-    <div id="panel-target-kecamatan" class="hidden bg-white p-5 rounded-3xl shadow-sm border border-slate-100 mb-4">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-[10px] font-black text-slate-800 uppercase tracking-widest">2. Input Target Dinas (PPM Kecamatan)</h3>
-        <button onclick="hitungAutoDistribusi()" class="bg-slate-800 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg active:scale-95 uppercase tracking-wider">⚡ Hitung Auto</button>
+    <!-- PANEL 1: FILTER TAHUN & KECAMATAN -->
+    <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4">
+      <div class="w-full md:w-1/3">
+        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">1. Pilih Tahun</label>
+        <select id="filter-tahun" onchange="tarikTargetPerKecamatan()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase">
+          <option value="">-- TAHUN --</option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+          <option value="2027">2027</option>
+        </select>
       </div>
-      <div class="grid grid-cols-4 md:grid-cols-7 gap-2" id="input-target-dinas">
-        </div>
-    </div>
-
-    <div id="panel-indikator" class="hidden bg-white p-4 rounded-3xl shadow-sm border border-slate-100 mb-4">
-      <h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Status Distribusi Target (Selisih)</h3>
-      <div class="grid grid-cols-4 md:grid-cols-7 gap-2" id="wadah-indikator">
-        </div>
-    </div>
-
-    <div id="panel-desa" class="hidden space-y-3">
+      <div class="w-full md:w-2/3">
+        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">2. Pilih Kecamatan</label>
+        <select id="filter-kecamatan" onchange="tarikTargetPerKecamatan()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase">
+          <option value="">-- PILIH KECAMATAN --</option>
+          <option value="SETU">Kecamatan SETU</option>
+          <option value="CIBITUNG">Kecamatan CIBITUNG</option>
+          <!-- Tambahkan kecamatan lain jika perlu -->
+        </select>
       </div>
+    </div>
 
+    <!-- LOADING INDIKATOR -->
     <div id="loading-pesan" class="hidden text-center py-10">
       <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div>
-      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Menyiapkan Data...</p>
+      <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Sinkronisasi Data...</p>
     </div>
+
+    <div id="wadah-utama" class="hidden space-y-4">
+      
+      <!-- PANEL PKM (MANAJEMEN PKM) -->
+      <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex justify-between items-center">
+        <div>
+          <h3 class="text-[10px] font-black text-slate-800 uppercase tracking-widest">Daftar PKM Terdaftar</h3>
+          <p id="info-pkm-terdaftar" class="text-[9px] font-bold text-slate-400 uppercase">Belum ada PKM</p>
+        </div>
+        <button id="btn-tambah-pkm" onclick="tambahPKMBaru()" class="bg-green-100 text-green-700 hover:bg-green-200 px-3 py-2 rounded-xl text-[10px] font-black uppercase active:scale-95 transition hidden">
+          ➕ Tambah PKM
+        </button>
+      </div>
+
+      <!-- PANEL TARGET DINAS (PPM KECAMATAN) -->
+      <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-[10px] font-black text-slate-800 uppercase tracking-widest">3. Input Target Dinas</h3>
+          <button id="btn-hitung-auto" onclick="hitungAutoDistribusi()" class="bg-slate-800 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg active:scale-95 uppercase tracking-wider hidden">⚡ Hitung Auto 50:50</button>
+        </div>
+        <div class="grid grid-cols-4 md:grid-cols-7 gap-2" id="input-target-dinas">
+          <!-- Input Generate via JS -->
+        </div>
+      </div>
+
+      <!-- PANEL INDIKATOR SELISIH -->
+      <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
+        <h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Status Distribusi (Selisih Target)</h3>
+        <div class="grid grid-cols-4 md:grid-cols-7 gap-2" id="wadah-indikator">
+          <!-- Indikator Generate via JS -->
+        </div>
+      </div>
+
+      <!-- PANEL DAFTAR DESA (ACCORDION) -->
+      <div id="panel-desa" class="space-y-3 pb-10">
+        <!-- Laci Desa Generate via JS -->
+      </div>
+
+    </div>
+
   </main>
 
   <script src="script.js"></script>
   <script src="lapbul.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      cekLogin();
+      setTimeout(initSettingTarget, 500); // Inisialisasi Hak Akses & Dropdown
+    });
+  </script>
 
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
   &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
