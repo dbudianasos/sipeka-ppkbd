@@ -51,10 +51,7 @@
       <div class="w-full md:w-2/3">
         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">2. Pilih Kecamatan</label>
         <select id="filter-kecamatan" onchange="tarikTargetPerKecamatan()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-blue-900 uppercase">
-          <option value="">-- PILIH KECAMATAN --</option>
-          <option value="SETU">Kecamatan SETU</option>
-          <option value="CIBITUNG">Kecamatan CIBITUNG</option>
-          <!-- Tambahkan kecamatan lain jika perlu -->
+          <option value="">-- MEMUAT KECAMATAN... --</option>
         </select>
       </div>
     </div>
@@ -82,7 +79,7 @@
       <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-[10px] font-black text-slate-800 uppercase tracking-widest">3. Input Target Dinas</h3>
-          <button id="btn-hitung-auto" onclick="hitungAutoDistribusi()" class="bg-slate-800 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg active:scale-95 uppercase tracking-wider hidden">⚡ Hitung Auto 50:50</button>
+          <button id="btn-hitung-auto" onclick="hitungAutoDistribusi()" class="bg-slate-800 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg active:scale-95 uppercase tracking-wider hidden">⚡ Distribusi Otomatis</button>
         </div>
         <div class="grid grid-cols-4 md:grid-cols-7 gap-2" id="input-target-dinas">
           <!-- Input Generate via JS -->
