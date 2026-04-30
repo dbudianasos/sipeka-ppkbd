@@ -748,21 +748,59 @@ function initKhususAB() {
 }
 
 // --- 3. ATUR TOMBOL AKSI (DRAFT, REALIST, LOCK) ---
+// a. SETUP TOMBOL UTAMA (SINGLE BUTTON STYLE)
 function setupTombolAksiAB() {
     const wadah = document.getElementById("wadah-tombol-ab");
     if (!wadah) return;
 
     if (IS_EDIT_MODE_AB) {
+        // Hanya satu tombol Simpan
         wadah.innerHTML = `
-            <button onclick="prosesSimpanAB('Draft')" class="bg-slate-700 text-white text-[10px] font-black px-4 py-2.5 rounded-xl active:scale-95 transition uppercase tracking-widest">💾 Simpan Draft</button>
-            <button onclick="prosesSimpanAB('Final')" class="bg-blue-600 text-white text-[10px] font-black px-4 py-2.5 rounded-xl active:scale-95 transition uppercase shadow-lg shadow-blue-200 tracking-widest">✅ Realisasi</button>
-        `;
-    } else {
-        wadah.innerHTML = `
-            <button onclick="mintaAksesEditAB()" class="bg-orange-500 text-white text-[10px] font-black px-4 py-2.5 rounded-xl active:scale-95 transition uppercase flex items-center gap-2 shadow-lg shadow-orange-100 tracking-widest">
-                <span>🔒</span> Minta Akses Edit
+            <button onclick="bukaModalSimpan()" class="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black px-6 py-2 rounded-xl border border-white/20 transition active:scale-95 uppercase tracking-widest flex items-center gap-2">
+                <span>💾</span> Simpan
             </button>
         `;
+    } else {
+        // Tombol Buka Akses yang lebih sleek
+        wadah.innerHTML = `
+            <button onclick="mintaAksesEditAB()" class="bg-orange-500 hover:bg-orange-400 text-white text-[10px] font-black px-5 py-2 rounded-xl shadow-lg shadow-orange-900/20 transition active:scale-95 flex items-center gap-2 uppercase tracking-tighter">
+                <span>🔒</span> Buka Akses
+            </button>
+        `;
+    }
+}
+
+// b. KONTROL MODAL PILIHAN SIMPAN
+function bukaModalSimpan() {
+    const modal = document.getElementById("modal-pilihan-simpan");
+    const content = document.getElementById("content-modal-simpan");
+    
+    modal.classList.remove("hidden");
+    setTimeout(() => {
+        content.classList.remove("scale-95", "opacity-0");
+        content.classList.add("scale-100", "opacity-100");
+    }, 10);
+}
+
+function tutupModalSimpan() {
+    const modal = document.getElementById("modal-pilihan-simpan");
+    const content = document.getElementById("content-modal-simpan");
+    
+    content.classList.remove("scale-100", "opacity-100");
+    content.classList.add("scale-95", "opacity-0");
+    setTimeout(() => {
+        modal.classList.add("hidden");
+    }, 300);
+}
+
+// c. EKSEKUSI FINAL
+function eksekusiSimpan(status) {
+    tutupModalSimpan();
+    // Memanggil fungsi simpan yang sudah Bapak buat/miliki
+    if (typeof prosesSimpanAB === "function") {
+        prosesSimpanAB(status);
+    } else {
+        console.error("Fungsi prosesSimpanAB belum didefinisikan.");
     }
 }
 
@@ -839,53 +877,47 @@ function renderLaciAB() {
     const container = document.getElementById("container-laci-ab");
     const bulan = document.getElementById("ab-bulan").value;
     container.innerHTML = "";
-    
     const role = (localStorage.getItem("role") || "").toLowerCase().trim();
 
     DATA_AB_TEMP.forEach((d, idx) => {
         const isFinal = d.status === "Final";
-        // Gembok HANYA untuk input, bukan untuk toggle laci
         const isInputLocked = isFinal && (role !== "super_admin" || !IS_EDIT_MODE_AB);
         
-        const state = isInputLocked ? "disabled" : "";
-        const cssInput = isInputLocked ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-white border-slate-200 text-blue-900";
+        // Warna Badge Status
+        const badgeClass = isFinal ? "bg-emerald-100 text-emerald-600 border-emerald-200" : "bg-slate-100 text-slate-400 border-slate-200";
 
         container.innerHTML += `
-        <div class="bg-white rounded-3xl border ${isFinal ? 'border-emerald-200' : 'border-slate-100'} overflow-hidden shadow-sm mb-3">
-            <!-- Header: Tetap bisa di-klik untuk buka/tutup -->
-            <div onclick="toggleLaciAB(${idx})" class="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition">
-                <div>
-                    <div class="flex items-center gap-2">
+        <div class="bg-white rounded-[2rem] border ${isFinal ? 'border-emerald-100' : 'border-slate-100'} overflow-hidden shadow-sm mb-4">
+            <div onclick="toggleLaciAB(${idx})" class="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50/50 transition">
+                <div class="flex items-center gap-3">
+                    <div class="flex flex-col">
                         <h3 class="font-black text-slate-800 text-sm uppercase">${d.desa}</h3>
-                        ${isFinal ? '<span class="bg-emerald-100 text-emerald-600 text-[8px] px-2 py-0.5 rounded-lg font-black uppercase">Final</span>' : ''}
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[8px] px-2 py-0.5 rounded-full font-black border ${badgeClass} uppercase">${d.status || 'DRAFT'}</span>
+                            <p class="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">PUS: ${d.pus} | PKM: ${d.pkm}</p>
+                        </div>
                     </div>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">PUS: ${d.pus} | PKM: ${d.pkm}</p>
                 </div>
-                <div id="icon-laci-ab-${idx}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-[10px] shadow-inner text-blue-300">🔽</div>
+                <div id="icon-laci-ab-${idx}" class="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-50 text-blue-300 shadow-inner">🔽</div>
             </div>
             
-            <div id="isi-laci-ab-${idx}" class="hidden p-4 border-t border-slate-50 bg-slate-50/20">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div id="isi-laci-ab-${idx}" class="hidden p-5 border-t border-slate-50 bg-slate-50/20">
+                <!-- GRID DIUBAH MENJADI 2 KOLOM (MD) DAN 3 KOLOM (LG) -->
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     ${METODE_KB.map(m => {
-                        let key = m.toLowerCase();
-                        let tBulan = Math.round(d.target_ori[key] * getPersentaseBulan(bulan));
+                        let k = m.toLowerCase();
                         let isSpec = (m === "MOW" || m === "MOP");
+                        let tBulan = Math.round((d.target_ori[k] || 0) * getPersentaseBulan(bulan));
                         
                         return `
-                        <div class="bg-white p-3 rounded-2xl border ${isSpec ? 'border-orange-100 bg-orange-50/10' : 'border-slate-100'}">
+                        <div class="bg-white p-3 rounded-2xl border ${isSpec ? 'border-orange-100 bg-orange-50/5' : 'border-slate-100'} shadow-sm">
                             <div class="flex justify-between items-center mb-2">
                                 <span class="text-[9px] font-black ${isSpec ? 'text-orange-600' : 'text-slate-800'} uppercase">${m}</span>
-                                <span class="text-[8px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-lg">Target: ${tBulan}</span>
+                                <span class="text-[8px] font-bold text-blue-500">T: ${tBulan}</span>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="text-[7px] font-bold text-slate-300 block text-center uppercase mb-1">P</label>
-                                    <input type="number" id="p-${key}-${idx}" value="${d[key+'_p']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-xl text-xs font-black text-center outline-none ${cssInput}">
-                                </div>
-                                <div>
-                                    <label class="text-[7px] font-bold text-slate-300 block text-center uppercase mb-1">S</label>
-                                    <input type="number" id="s-${key}-${idx}" value="${d[key+'_s']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-xl text-xs font-black text-center outline-none ${cssInput}">
-                                </div>
+                                <input type="number" id="p-${k}-${idx}" value="${d[k+'_p'] || 0}" oninput="updatePS_AB('${k}', ${idx})" ${isInputLocked ? 'disabled' : ''} placeholder="P" class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${isInputLocked ? 'bg-slate-50 text-slate-300' : 'bg-white border-slate-100 text-blue-900'}">
+                                <input type="number" id="s-${k}-${idx}" value="${d[k+'_s'] || 0}" oninput="updatePS_AB('${k}', ${idx})" ${isInputLocked ? 'disabled' : ''} placeholder="S" class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${isInputLocked ? 'bg-slate-50 text-slate-300' : 'bg-white border-slate-100 text-blue-900'}">
                             </div>
                         </div>`;
                     }).join('')}
@@ -894,7 +926,16 @@ function renderLaciAB() {
         </div>`;
     });
 }
+// KONTROL MODAL PREVIEW
+function bukaModalPreview() {
+    document.getElementById("modal-preview-ab").classList.remove("hidden");
+    // Di sini nanti panggil fungsi render table baku
+    if(typeof renderTableBakuAB === "function") renderTableBakuAB();
+}
 
+function tutupModalPreview() {
+    document.getElementById("modal-preview-ab").classList.add("hidden");
+}
 // --- 7. LOGIKA DOMINO EFFECT ---
 function updatePS_AB(key, idx) {
     const bulan = document.getElementById("ab-bulan").value;
