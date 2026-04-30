@@ -291,72 +291,205 @@ function simpanDataCU() {
 
 
 // ============================================================
-// E. LOGIKA MASTER REFERENSI (SETTING TARGET)
+// E. LOGIKA MASTER REFERENSI (AUTO BREAKDOWN 50:50 & LACI) - SETTING TARGET
 // ============================================================
-function loadMasterReferensi() {
-    const tbody = document.getElementById("body-referensi");
-    fetch(`${API_URL}?action=get_master_referensi`)
-    .then(res => res.json())
-    .then(data => {
-        tbody.innerHTML = "";
-        if(data.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='11' class='p-5 text-center'>Data Kosong.</td></tr>";
-            return;
-        }
 
-        data.forEach((r, index) => {
-            tbody.innerHTML += `
-            <tr class="border-b border-slate-50 hover:bg-slate-50">
-                <td class="p-2 font-black text-slate-700 uppercase">${r.desa}</td>
-                <td class="p-2"><input type="text" value="${r.pkm}" class="w-24 p-1 bg-white border rounded text-center font-bold" id="ref-pkm-${index}"></td>
-                <td class="p-2"><input type="number" value="${r.pus}" class="w-16 p-1 bg-white border rounded text-center font-bold" id="ref-pus-${index}"></td>
-                <td class="p-2"><input type="number" value="${r.ppm.iud}" class="w-10 p-1 bg-blue-50 border border-blue-100 rounded text-center font-bold" id="ref-iud-${index}"></td>
-                <td class="p-2"><input type="number" value="${r.ppm.mow}" class="w-10 p-1 bg-blue-50 border border-blue-100 rounded text-center font-bold" id="ref-mow-${index}"></td>
-                <td class="p-2"><input type="number" value="${r.ppm.mop}" class="w-10 p-1 bg-blue-50 border border-blue-100 rounded text-center font-bold" id="ref-mop-${index}"></td>
-                <td class="p-2"><input type="number" value="${r.ppm.kdm}" class="w-10 p-1 bg-blue-50 border border-blue-100 rounded text-center font-bold" id="ref-kdm-${index}"></td>
-                <td class="p-2"><input type="number" value="${r.ppm.imp}" class="w-10 p-1 bg-blue-50 border border-blue-100 rounded text-center font-bold" id="ref-imp-${index}"></td>
-                <td class="p-2"><input type="number" value="${r.ppm.stk}" class="w-10 p-1 bg-blue-50 border border-blue-100 rounded text-center font-bold" id="ref-stk-${index}"></td>
-                <td class="p-2"><input type="number" value="${r.ppm.pil}" class="w-10 p-1 bg-blue-50 border border-blue-100 rounded text-center font-bold" id="ref-pil-${index}"></td>
-                <td class="p-2"><input type="number" value="${r.jml_ppkbd}" class="w-10 p-1 bg-slate-100 border rounded text-center font-bold" id="ref-ppkbd-${index}"></td>
-                <input type="hidden" id="ref-desa-${index}" value="${r.desa}">
-            </tr>`;
+let DATA_DESA_TEMP = [];
+let TARGET_KECAMATAN = { iud: 0, mow: 0, mop: 0, kdm: 0, imp: 0, stk: 0, pil: 0 };
+const ALKON_LIST = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
+
+function tarikTargetPerKecamatan() {
+    const kec = document.getElementById("filter-kecamatan").value;
+    if(!kec) {
+        document.getElementById("panel-target-kecamatan").classList.add("hidden");
+        document.getElementById("panel-indikator").classList.add("hidden");
+        document.getElementById("panel-desa").classList.add("hidden");
+        document.getElementById("btn-save-ref").classList.add("hidden");
+        return;
+    }
+
+    document.getElementById("loading-pesan").classList.remove("hidden");
+    
+    Promise.all([
+        fetch(`${API_URL}?action=get_master_referensi`).then(res => res.json()),
+        fetch(`${API_URL}?action=get_desa_by_kecamatan&kecamatan=${kec}`).then(res => res.json())
+    ])
+    .then(([dataRefLama, listDesaWilayah]) => {
+        document.getElementById("loading-pesan").classList.add("hidden");
+        if(listDesaWilayah.length === 0) return alert("Desa di kecamatan ini kosong!");
+
+        // Buat Template Input Target Dinas
+        renderInputTargetKecamatan();
+
+        // 1. Gabungkan data baru dengan data lama
+        DATA_DESA_TEMP = listDesaWilayah.map(namaDesa => {
+            let existing = dataRefLama.find(x => x.desa.toUpperCase() === namaDesa && x.kecamatan.toUpperCase() === kec) || {};
+            return {
+                kecamatan: kec,
+                desa: namaDesa,
+                pkm: existing.pkm || "",
+                pus: parseInt(existing.pus) || 0,
+                unmet_need: parseInt(existing.unmet_need) || 0,
+                ppm: existing.ppm || { iud: 0, mow: 0, mop: 0, kdm: 0, imp: 0, stk: 0, pil: 0 },
+                jml_ppkbd: parseInt(existing.jml_ppkbd) || 2
+            };
         });
-        localStorage.setItem("count_ref", data.length);
-    })
-    .catch(err => {
-        tbody.innerHTML = "<tr><td colspan='11' class='p-5 text-center text-red-500'>Koneksi Gagal.</td></tr>";
+
+        // Tampilkan Panel
+        document.getElementById("panel-target-kecamatan").classList.remove("hidden");
+        document.getElementById("panel-indikator").classList.remove("hidden");
+        document.getElementById("panel-desa").classList.remove("hidden");
+        document.getElementById("btn-save-ref").classList.remove("hidden");
+
+        renderLaciDesa();
+        hitungSelisihTarget();
+    });
+}
+
+function renderInputTargetKecamatan() {
+    let html = "";
+    ALKON_LIST.forEach(alkon => {
+        html += `
+        <div>
+            <label class="text-[8px] font-bold text-slate-400 uppercase block mb-1">${alkon}</label>
+            <input type="number" id="kec-${alkon}" value="${TARGET_KECAMATAN[alkon]}" oninput="updateTargetKecGlobal('${alkon}')" class="w-full p-2 bg-blue-50 border border-blue-100 rounded-lg text-center font-black text-blue-900 outline-none focus:border-blue-500">
+        </div>`;
+    });
+    document.getElementById("input-target-dinas").innerHTML = html;
+}
+
+function updateTargetKecGlobal(alkon) {
+    TARGET_KECAMATAN[alkon] = parseInt(document.getElementById(`kec-${alkon}`).value) || 0;
+    hitungSelisihTarget();
+}
+
+// RUMUS 50:50 (PUS & UNMET NEED)
+function hitungAutoDistribusi() {
+    let totalPUS = DATA_DESA_TEMP.reduce((sum, d) => sum + d.pus, 0);
+    let totalUnmet = DATA_DESA_TEMP.reduce((sum, d) => sum + d.unmet_need, 0);
+
+    if (totalPUS === 0 || totalUnmet === 0) {
+        return alert("⚠️ Gagal: Harap isi Total PUS dan Unmet Need untuk setiap desa terlebih dahulu dengan membuka laci desa.");
+    }
+
+    DATA_DESA_TEMP.forEach(d => {
+        let proporsiPUS = d.pus / totalPUS;
+        let proporsiUnmet = d.unmet_need / totalUnmet;
+
+        ALKON_LIST.forEach(alkon => {
+            let target = TARGET_KECAMATAN[alkon];
+            // Bobot: 50% dari PUS, 50% dari Unmet Need
+            let hasilKalkulasi = (0.5 * target * proporsiPUS) + (0.5 * target * proporsiUnmet);
+            d.ppm[alkon] = Math.round(hasilKalkulasi);
+        });
+    });
+
+    renderLaciDesa();
+    hitungSelisihTarget();
+    alert("✅ Distribusi Otomatis Berhasil Diterapkan!\nMohon periksa Indikator Selisih untuk membulatkan sisa angka.");
+}
+
+function renderLaciDesa() {
+    const container = document.getElementById("panel-desa");
+    container.innerHTML = "";
+
+    DATA_DESA_TEMP.forEach((d, index) => {
+        container.innerHTML += `
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div onclick="toggleLaci(${index})" class="bg-slate-50 p-4 flex justify-between items-center cursor-pointer hover:bg-blue-50 transition">
+                <div>
+                    <h3 class="font-black text-slate-800 uppercase text-sm">${d.desa}</h3>
+                    <p class="text-[9px] font-bold text-slate-400 mt-0.5">PUS: ${d.pus} | Unmet: ${d.unmet_need} | PKM: ${d.pkm || '-'}</p>
+                </div>
+                <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-sm text-lg" id="icon-laci-${index}">✏️</div>
+            </div>
+            
+            <div id="isi-laci-${index}" class="hidden p-4 border-t border-slate-100 bg-white">
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 block mb-1">PUSKESMAS</label>
+                        <input type="text" id="laci-pkm-${index}" value="${d.pkm}" oninput="simpanDataLaci(${index})" class="w-full p-2 bg-slate-50 border rounded-lg text-xs font-bold uppercase text-center">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 block mb-1">TOTAL PUS</label>
+                        <input type="number" id="laci-pus-${index}" value="${d.pus}" oninput="simpanDataLaci(${index})" class="w-full p-2 bg-blue-50 border border-blue-100 rounded-lg text-xs font-black text-blue-900 text-center">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-orange-500 block mb-1">UNMET NEED</label>
+                        <input type="number" id="laci-unmet-${index}" value="${d.unmet_need}" oninput="simpanDataLaci(${index})" class="w-full p-2 bg-orange-50 border border-orange-100 rounded-lg text-xs font-black text-orange-900 text-center">
+                    </div>
+                </div>
+
+                <p class="text-[9px] font-black text-slate-800 mb-2 border-b pb-1">TARGET DESA (BISA DIEDIT)</p>
+                <div class="grid grid-cols-4 md:grid-cols-7 gap-2">
+                    ${ALKON_LIST.map(alkon => `
+                    <div>
+                        <label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase text-center">${alkon}</label>
+                        <input type="number" id="laci-${alkon}-${index}" value="${d.ppm[alkon]}" oninput="simpanDataLaci(${index})" class="w-full p-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-center">
+                    </div>`).join('')}
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
+                    <label class="text-[9px] font-bold text-slate-400 w-full">JUMLAH PPKBD (PEMBAGI CETAK):</label>
+                    <input type="number" id="laci-ppkbd-${index}" value="${d.jml_ppkbd}" oninput="simpanDataLaci(${index})" class="w-20 p-2 bg-slate-100 border rounded-lg text-xs font-bold text-center">
+                </div>
+            </div>
+        </div>`;
+    });
+}
+
+function toggleLaci(index) {
+    const laci = document.getElementById(`isi-laci-${index}`);
+    const icon = document.getElementById(`icon-laci-${index}`);
+    if (laci.classList.contains("hidden")) {
+        laci.classList.remove("hidden");
+        icon.innerText = "🔼";
+    } else {
+        laci.classList.add("hidden");
+        icon.innerText = "✏️";
+    }
+}
+
+// Simpan angka sementara dari input laci ke memori, lalu hitung selisih
+function simpanDataLaci(index) {
+    DATA_DESA_TEMP[index].pkm = document.getElementById(`laci-pkm-${index}`).value.toUpperCase();
+    DATA_DESA_TEMP[index].pus = parseInt(document.getElementById(`laci-pus-${index}`).value) || 0;
+    DATA_DESA_TEMP[index].unmet_need = parseInt(document.getElementById(`laci-unmet-${index}`).value) || 0;
+    DATA_DESA_TEMP[index].jml_ppkbd = parseInt(document.getElementById(`laci-ppkbd-${index}`).value) || 1;
+
+    ALKON_LIST.forEach(alkon => {
+        DATA_DESA_TEMP[index].ppm[alkon] = parseInt(document.getElementById(`laci-${alkon}-${index}`).value) || 0;
+    });
+
+    hitungSelisihTarget();
+}
+
+function hitungSelisihTarget() {
+    const wadah = document.getElementById("wadah-indikator");
+    wadah.innerHTML = "";
+
+    ALKON_LIST.forEach(alkon => {
+        let targetAwal = TARGET_KECAMATAN[alkon];
+        let totalDidistribusikan = DATA_DESA_TEMP.reduce((sum, d) => sum + d.ppm[alkon], 0);
+        let selisih = targetAwal - totalDidistribusikan;
+
+        // Warna Hijau (Pas), Kuning (Masih ada sisa), Merah (Kelebihan kuota)
+        let warnaBg = selisih === 0 ? "bg-green-100" : (selisih > 0 ? "bg-yellow-100" : "bg-red-100");
+        let warnaTeks = selisih === 0 ? "text-green-800" : (selisih > 0 ? "text-yellow-800" : "text-red-800");
+
+        wadah.innerHTML += `
+        <div class="flex flex-col items-center justify-center p-2 rounded-xl ${warnaBg}">
+            <span class="text-[8px] font-black uppercase tracking-widest ${warnaTeks}">${alkon}</span>
+            <span class="text-sm font-black ${warnaTeks}">${selisih > 0 ? '+' : ''}${selisih}</span>
+        </div>`;
     });
 }
 
 function simpanSemuaReferensi() {
     const btn = document.getElementById("btn-save-ref");
-    const count = localStorage.getItem("count_ref");
-    let dataKirim = [];
-
-    for(let i=0; i<count; i++) {
-        dataKirim.push({
-            desa: document.getElementById(`ref-desa-${i}`).value,
-            pkm: document.getElementById(`ref-pkm-${i}`).value.toUpperCase(),
-            pus: document.getElementById(`ref-pus-${i}`).value || 0,
-            ppm: {
-                iud: document.getElementById(`ref-iud-${i}`).value || 0,
-                mow: document.getElementById(`ref-mow-${i}`).value || 0,
-                mop: document.getElementById(`ref-mop-${i}`).value || 0,
-                kdm: document.getElementById(`ref-kdm-${i}`).value || 0,
-                imp: document.getElementById(`ref-imp-${i}`).value || 0,
-                stk: document.getElementById(`ref-stk-${i}`).value || 0,
-                pil: document.getElementById(`ref-pil-${i}`).value || 0
-            },
-            jml_ppkbd: document.getElementById(`ref-ppkbd-${i}`).value || 1
-        });
-    }
-
     const payload = {
         action: "save_master_referensi",
-        admin_nik: localStorage.getItem("nik"),
-        admin_nama: localStorage.getItem("nama"),
-        admin_role: localStorage.getItem("role"),
-        data_json: JSON.stringify(dataKirim)
+        data_json: JSON.stringify(DATA_DESA_TEMP)
     };
 
     btn.innerText = "⏳ MENYIMPAN...";
@@ -366,12 +499,12 @@ function simpanSemuaReferensi() {
     .then(res => res.text())
     .then(res => {
         if(res.trim() === "success") {
-            alert("✅ Target & Referensi Berhasil Diperbarui!");
-            loadMasterReferensi();
+            alert("✅ DATA TARGET BERHASIL DISIMPAN!");
+            tarikTargetPerKecamatan(); // Refresh
         } else {
-            alert("❌ Gagal: " + res);
+            alert("❌ Gagal menyimpan.");
+            btn.innerText = "💾 SIMPAN";
+            btn.disabled = false;
         }
-        btn.innerText = "Simpan Perubahan";
-        btn.disabled = false;
     });
 }
