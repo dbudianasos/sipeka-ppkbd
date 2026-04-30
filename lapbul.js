@@ -834,45 +834,58 @@ function initDataAB() {
     });
 }
 
-// --- 6. RENDER LACI DESA & LOGIKA P-S AUTOMATION ---
+// --- 6. RENDER LACI DESA DENGAN PROTEKSI STATUS FINAL ---
 function renderLaciAB() {
     const container = document.getElementById("container-laci-ab");
     const bulan = document.getElementById("ab-bulan").value;
     container.innerHTML = "";
     
-    let state = IS_EDIT_MODE_AB ? "" : "disabled";
-    let cssInput = IS_EDIT_MODE_AB ? "bg-white border-slate-200" : "bg-slate-100 text-slate-400 cursor-not-allowed";
+    const role = (localStorage.getItem("role") || "").toLowerCase();
+    const isAdminKec = role.includes("admin_kec");
 
     DATA_AB_TEMP.forEach((d, idx) => {
+        const isFinal = d.status === "Final"; //
+        // Kunci jika Final DAN bukan Super Admin yang sedang mode Edit
+        const isLocked = isFinal && (isAdminKec || !IS_EDIT_MODE_AB); 
+        
+        const state = isLocked ? "disabled" : "";
+        const cssInput = isLocked ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-white border-slate-200";
+        const themeColor = isFinal ? "border-emerald-200 bg-emerald-50/30" : "border-slate-100 bg-white";
+
         container.innerHTML += `
-        <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm mb-3">
-            <div onclick="toggleLaciAB(${idx})" class="p-4 flex justify-between items-center cursor-pointer hover:bg-blue-50 transition">
+        <div class="rounded-3xl border ${themeColor} overflow-hidden shadow-sm mb-3">
+            <div onclick="toggleLaciAB(${idx})" class="p-4 flex justify-between items-center cursor-pointer">
                 <div>
-                    <h3 class="font-black text-blue-900 text-sm uppercase">${d.desa}</h3>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase">PUS: ${d.pus} | TARGET PPM: ${d.target_global}</p>
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-black text-blue-900 text-sm uppercase">${d.desa}</h3>
+                        ${isFinal ? '<span class="bg-emerald-500 text-white text-[8px] px-2 py-0.5 rounded-full font-black uppercase">FINAL</span>' : ''}
+                    </div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">PUS: ${d.pus} | PKM: ${d.pkm}</p>
                 </div>
-                <div id="icon-laci-ab-${idx}" class="text-[10px] font-black text-blue-300 border-2 border-blue-50 px-2 py-1 rounded-lg">BUKA 🔓</div>
+                <div id="icon-laci-ab-${idx}" class="text-[10px] font-black ${isFinal ? 'text-emerald-500' : 'text-blue-300'}">${isFinal ? 'TERKUNCI 🔒' : 'BUKA 🔓'}</div>
             </div>
             
-            <div id="isi-laci-ab-${idx}" class="hidden p-4 border-t border-slate-50 bg-slate-50/30">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div id="isi-laci-ab-${idx}" class="hidden p-4 border-t border-slate-100 bg-white/50">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     ${METODE_KB.map(m => {
                         let key = m.toLowerCase();
                         let tBulan = Math.round(d.target_ori[key] * getPersentaseBulan(bulan));
+                        let isSpecial = (m === "MOW" || m === "MOP"); //
+                        
                         return `
-                        <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="p-3 rounded-2xl border ${isSpecial ? 'border-orange-100 bg-orange-50/20' : 'border-slate-100 bg-white'}">
                             <div class="flex justify-between items-center mb-2">
-                                <span class="text-[10px] font-black text-slate-800 uppercase">${m}</span>
-                                <span class="text-[9px] font-bold text-blue-500">Target ${bulan}: ${tBulan}</span>
+                                <span class="text-[9px] font-black ${isSpecial ? 'text-orange-600' : 'text-slate-800'} uppercase">${m}</span>
+                                <span class="text-[8px] font-bold text-blue-400">TARGET: ${tBulan}</span>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase text-center">Pemerintah (P)</label>
-                                    <input type="number" id="p-${key}-${idx}" value="${d[key+'_p']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-lg text-xs font-black text-center ${cssInput}">
+                                <div class="text-center">
+                                    <span class="text-[7px] font-bold text-slate-300 uppercase">Pemerintah</span>
+                                    <input type="number" id="p-${key}-${idx}" value="${d[key+'_p']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-xl text-xs font-black text-center ${cssInput}">
                                 </div>
-                                <div>
-                                    <label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase text-center">Swasta (S)</label>
-                                    <input type="number" id="s-${key}-${idx}" value="${d[key+'_s']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-lg text-xs font-black text-center ${cssInput}">
+                                <div class="text-center">
+                                    <span class="text-[7px] font-bold text-slate-300 uppercase">Swasta</span>
+                                    <input type="number" id="s-${key}-${idx}" value="${d[key+'_s']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-xl text-xs font-black text-center ${cssInput}">
                                 </div>
                             </div>
                         </div>`;
@@ -881,25 +894,27 @@ function renderLaciAB() {
             </div>
         </div>`;
     });
+    renderPreviewTableAB(); // Jalankan fungsi slider tabel
 }
 
-function toggleLaciAB(idx) {
-    const isi = document.getElementById(`isi-laci-ab-${idx}`);
-    const icon = document.getElementById(`icon-laci-ab-${idx}`);
-    isi.classList.toggle("hidden");
-    icon.innerText = isi.classList.contains("hidden") ? "BUKA 🔓" : "TUTUP 🔒";
-}
-
+// --- 7. LOGIKA DOMINO EFFECT & AUTO-DISTRIBUSI ---
 function updatePS_AB(key, idx) {
     const bulan = document.getElementById("ab-bulan").value;
-    let tBulan = Math.round(DATA_AB_TEMP[idx].target_ori[key] * getPersentaseBulan(bulan));
+    const targetSetahun = DATA_AB_TEMP[idx].target_ori[key];
+    const bobotBln = getPersentaseBulan(bulan);
+    let tBulan = Math.round(targetSetahun * bobotBln);
+    
     let valP = parseInt(document.getElementById(`p-${key}-${idx}`).value) || 0;
     
-    // Logika S otomatis sisa dari target bulan tersebut
+    // Logika S otomatis: Jika P diisi, S menyesuaikan agar total = target bulan ini
     let valS = tBulan - valP;
     if (valS < 0) valS = 0; 
 
     document.getElementById(`s-${key}-${idx}`).value = valS;
+    
+    // Simpan ke memori sementara untuk dikirim nanti
     DATA_AB_TEMP[idx][`${key}_p`] = valP;
     DATA_AB_TEMP[idx][`${key}_s`] = valS;
+    
+    renderPreviewTableAB(); // Update tabel preview secara real-time
 }
