@@ -594,7 +594,7 @@ function renderLaciDesa() {
                     </div>
                 </div>
 
-                <p class="text-[9px] font-black text-slate-800 mb-2 border-b pb-1">TARGET DESA (PPM)</p>
+                <p class="text-[9px] font-black text-slate-800 mb-2 border-b pb-1">TARGET DESA (PPM) - OTOMATIS PAKAI RUMUS </p>
                 <div class="grid grid-cols-4 md:grid-cols-7 gap-2">
                     ${ALKON_LIST.map(alkon => `
                     <div>
