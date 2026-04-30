@@ -1004,3 +1004,69 @@ function toggleLaciAB(idx) {
         }
     }
 }
+
+// --- KONTROL MODAL PREVIEW ---
+function bukaModalPreview() {
+    const modal = document.getElementById("modal-preview-ab");
+    if (!modal) return console.error("ID modal-preview-ab tidak ditemukan di HTML!");
+
+    modal.classList.remove("hidden");
+    
+    // Jalankan render tabel agar data yang muncul adalah yang paling update
+    renderTableBakuAB();
+}
+
+function tutupModalPreview() {
+    const modal = document.getElementById("modal-preview-ab");
+    if (modal) modal.classList.add("hidden");
+}
+
+// --- RENDER ISI TABEL BAKU (DI DALAM MODAL) ---
+function renderTableBakuAB() {
+    const table = document.getElementById("tabel-baku-ab");
+    const bln = document.getElementById("ab-bulan").value;
+    const thn = document.getElementById("ab-tahun").value;
+    if (!table) return;
+
+    // 1. Header Tabel Baku (Format Standar BKKBN)
+    let html = `
+    <thead class="bg-slate-800 text-white sticky top-0 z-10">
+        <tr class="text-[9px] uppercase tracking-tighter">
+            <th rowspan="2" class="border border-slate-700 p-2">NO</th>
+            <th rowspan="2" class="border border-slate-700 p-2 min-w-[150px]">DESA / KELURAHAN</th>
+            <th rowspan="2" class="border border-slate-700 p-2">PUS</th>
+            ${METODE_KB.map(m => `<th colspan="3" class="border border-slate-700 p-1">${m}</th>`).join('')}
+        </tr>
+        <tr class="text-[8px] uppercase">
+            ${METODE_KB.map(() => `
+                <th class="border border-slate-700 p-1 bg-slate-700 text-slate-400">T</th>
+                <th class="border border-slate-700 p-1 bg-blue-700">P</th>
+                <th class="border border-slate-700 p-1 bg-blue-700">S</th>
+            `).join('')}
+        </tr>
+    </thead>
+    <tbody class="text-slate-700">`;
+
+    // 2. Isi Data per Desa
+    DATA_AB_TEMP.forEach((d, idx) => {
+        html += `
+        <tr class="hover:bg-blue-50/50 transition border-b border-slate-100">
+            <td class="p-2 text-center font-bold text-slate-400 border-x border-slate-100">${idx + 1}</td>
+            <td class="p-2 font-black uppercase border-x border-slate-100">${d.desa}</td>
+            <td class="p-2 text-center font-bold border-x border-slate-100 text-slate-500">${d.pus}</td>
+            ${METODE_KB.map(m => {
+                let k = m.toLowerCase();
+                // Hitung target bulanan untuk preview
+                let tBln = Math.round((d.target_ori[k] || 0) * getPersentaseBulan(bln));
+                return `
+                <td class="p-1 text-center bg-slate-50/30 border-x border-slate-100">${tBln}</td>
+                <td class="p-1 text-center font-bold text-blue-900 border-x border-slate-100">${d[k+'_p'] || 0}</td>
+                <td class="p-1 text-center font-bold text-blue-900 border-x border-slate-100">${d[k+'_s'] || 0}</td>
+                `;
+            }).join('')}
+        </tr>`;
+    });
+
+    html += `</tbody>`;
+    table.innerHTML = html;
+}
