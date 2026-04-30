@@ -53,11 +53,9 @@ document.addEventListener("DOMContentLoaded", () => {
 // A. LOGIKA MENU AKSES (ANTI-ERROR)
 // ============================================================
 function aturTampilanMenu() {
-    // Tarik data role, bersihkan spasi, paksa jadi huruf kecil semua
     const rawRole = localStorage.getItem("role") || "";
     const role = rawRole.toLowerCase().trim();
     
-    // Tampilkan di konsol buat ngecek kalau masih bandel
     console.log("Sistem mendeteksi akses sebagai:", role);
 
     const menuSetting = document.getElementById("menu-setting-target");
@@ -71,14 +69,18 @@ function aturTampilanMenu() {
         if (menuAB) menuAB.classList.remove("hidden");
         if (menuCU) menuCU.classList.remove("hidden");
     } 
-    // 2. Logika Admin Biasa (Buka AB & CU saja)
-    else if (role === "admin_kec" || role === "admin_desa") {
+    // 2. Logika Admin Kecamatan (Buka Setting, AB, & CU)
+    else if (role === "admin_kec" || role === "admin_kecamatan") {
+        if (menuSetting) menuSetting.classList.remove("hidden"); // Pintu Setting Dibuka
         if (menuAB) menuAB.classList.remove("hidden");
         if (menuCU) menuCU.classList.remove("hidden");
     }
-    // 3. Kalau Kader, otomatis yang if di atas dicuekin (tetap hidden)
+    // 3. Logika Admin Desa (Hanya AB & CU)
+    else if (role === "admin_desa") {
+        if (menuAB) menuAB.classList.remove("hidden");
+        if (menuCU) menuCU.classList.remove("hidden");
+    }
 
-    // Pastikan Cetak selalu kelihatan buat siapa saja
     if (menuCetak) menuCetak.classList.remove("hidden");
 }
 
