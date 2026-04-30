@@ -742,6 +742,85 @@ function initKhususAB() {
     });
 }
 
+// --- 3a. SETUP TOMBOL UTAMA (SINGLE BUTTON STYLE) ---
+function setupTombolAksiAB() {
+    const wadah = document.getElementById("wadah-tombol-ab");
+    if (!wadah) return;
+
+    if (IS_EDIT_MODE_AB) {
+        // Hanya satu tombol Simpan sesuai arahan Bapak
+        wadah.innerHTML = `
+            <button onclick="bukaModalSimpan()" class="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black px-6 py-2 rounded-xl border border-white/20 transition active:scale-95 uppercase tracking-widest flex items-center gap-2">
+                <span>💾</span> Simpan
+            </button>
+        `;
+    } else {
+        // Tombol Buka Akses yang lebih sleek
+        wadah.innerHTML = `
+            <button onclick="mintaAksesEditAB()" class="bg-orange-500 hover:bg-orange-400 text-white text-[10px] font-black px-5 py-2 rounded-xl shadow-lg shadow-orange-900/20 transition active:scale-95 flex items-center gap-2 uppercase tracking-tighter">
+                <span>🔒</span> Buka Akses
+            </button>
+        `;
+    }
+}
+
+// --- 3b. KONTROL MODAL PILIHAN SIMPAN ---
+function bukaModalSimpan() {
+    const modal = document.getElementById("modal-pilihan-simpan");
+    const content = document.getElementById("content-modal-simpan");
+    if(!modal) return;
+
+    modal.classList.remove("hidden");
+    setTimeout(() => {
+        content.classList.remove("scale-95", "opacity-0");
+        content.classList.add("scale-100", "opacity-100");
+    }, 10);
+}
+
+function tutupModalSimpan() {
+    const modal = document.getElementById("modal-pilihan-simpan");
+    const content = document.getElementById("content-modal-simpan");
+    if(!modal) return;
+
+    content.classList.remove("scale-100", "opacity-100");
+    content.classList.add("scale-95", "opacity-0");
+    setTimeout(() => {
+        modal.classList.add("hidden");
+    }, 300);
+}
+
+// --- 3c. EKSEKUSI SIMPAN DARI MODAL ---
+function eksekusiSimpan(status) {
+    tutupModalSimpan();
+    // Pastikan Bapak sudah punya fungsi prosesSimpanAB di lapbul.js
+    if (typeof prosesSimpanAB === "function") {
+        prosesSimpanAB(status);
+    } else {
+        alert("Fungsi prosesSimpanAB belum siap!");
+    }
+}
+
+// --- 4. PROSES MINTA KODE AKSES ---
+function mintaAksesEditAB() {
+    const kec = document.getElementById("ab-kecamatan").value;
+    if (!kec) return alert("Pilih Kecamatan terlebih dahulu!");
+
+    // Pastikan fungsi getKodeRahasia(kec) sudah ada di script.js Bapak
+    const kodeAsli = (typeof getKodeRahasia === "function") ? getKodeRahasia(kec) : "1234"; 
+    
+    let input = prompt(`Masukkan Kode Otorisasi Edit AB Kecamatan ${kec}:`);
+    if (input === null) return;
+    
+    if (input.toUpperCase().trim() === kodeAsli) {
+        alert("✅ Akses Diberikan! Gembok data telah dibuka.");
+        IS_EDIT_MODE_AB = true;
+        setupTombolAksiAB();
+        renderLaciAB(); // Render ulang agar inputan tidak disabled
+    } else {
+        alert("❌ Kode Salah! Akses ditolak.");
+    }
+}
+
 // --- 3. TARIK DATA DARI SERVER ---
 function initDataAB() {
     const thn = document.getElementById("ab-tahun").value;
