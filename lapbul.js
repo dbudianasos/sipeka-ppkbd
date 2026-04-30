@@ -308,7 +308,12 @@ function tarikTargetPerKecamatan() {
         return;
     }
 
+    // Munculkan Loading, sembunyikan panel lain
     document.getElementById("loading-pesan").classList.remove("hidden");
+    document.getElementById("panel-target-kecamatan").classList.add("hidden");
+    document.getElementById("panel-indikator").classList.add("hidden");
+    document.getElementById("panel-desa").classList.add("hidden");
+    document.getElementById("btn-save-ref").classList.add("hidden");
     
     Promise.all([
         fetch(`${API_URL}?action=get_master_referensi`).then(res => res.json()),
@@ -316,12 +321,13 @@ function tarikTargetPerKecamatan() {
     ])
     .then(([dataRefLama, listDesaWilayah]) => {
         document.getElementById("loading-pesan").classList.add("hidden");
-        if(listDesaWilayah.length === 0) return alert("Desa di kecamatan ini kosong!");
+        
+        if(listDesaWilayah.length === 0) {
+            return alert(`❌ Desa di Kecamatan ${kec} tidak ditemukan!\nPastikan nama Kecamatan di Sheet "Wilayah" sama persis (misal: "SETU").`);
+        }
 
-        // Buat Template Input Target Dinas
         renderInputTargetKecamatan();
 
-        // 1. Gabungkan data baru dengan data lama
         DATA_DESA_TEMP = listDesaWilayah.map(namaDesa => {
             let existing = dataRefLama.find(x => x.desa.toUpperCase() === namaDesa && x.kecamatan.toUpperCase() === kec) || {};
             return {
@@ -335,7 +341,6 @@ function tarikTargetPerKecamatan() {
             };
         });
 
-        // Tampilkan Panel
         document.getElementById("panel-target-kecamatan").classList.remove("hidden");
         document.getElementById("panel-indikator").classList.remove("hidden");
         document.getElementById("panel-desa").classList.remove("hidden");
@@ -343,6 +348,12 @@ function tarikTargetPerKecamatan() {
 
         renderLaciDesa();
         hitungSelisihTarget();
+    })
+    .catch(err => {
+        // PENGAMAN JIKA ERROR
+        document.getElementById("loading-pesan").classList.add("hidden");
+        alert("❌ GAGAL MENGAMBIL DATA DARI SERVER!\n\nKemungkinan:\n1. Belum melakukan 'New Deployment' di GAS.\n2. URL API salah.\n3. Cek console (F12) untuk detail error.");
+        console.error("Detail Error API:", err);
     });
 }
 
