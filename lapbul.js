@@ -305,24 +305,27 @@ let IS_EDIT_MODE = false; // Status apakah gembok sedang terbuka
 
 // 1. INISIALISASI SAAT HALAMAN DIMUAT (CEK HAK AKSES & TARIK KECAMATAN)
 function initSettingTarget() {
+    const selectKec = document.getElementById("filter-kecamatan");
+    const selectThn = document.getElementById("filter-tahun");
+
+    // PAGAR KEAMANAN: Jika elemen ini tidak ada, berarti kita bukan di halaman Setting. STOP!
+    if (!selectKec || !selectThn) return;
+    
     // --- BIKIN TAHUN DINAMIS ---
     const thnSkg = new Date().getFullYear();
     let optTahun = `<option value="">-- TAHUN --</option>`;
     for(let y = thnSkg - 1; y <= thnSkg + 2; y++) { optTahun += `<option value="${y}">${y}</option>`; }
-    document.getElementById("filter-tahun").innerHTML = optTahun;
+    selectThn.innerHTML = optTahun;
 
     const role = localStorage.getItem("role") || "";
     const kecUser = (localStorage.getItem("kecamatan") || "").toUpperCase();
-    const selectKec = document.getElementById("filter-kecamatan");
 
     // --- TARIK DAFTAR KECAMATAN OTOMATIS DARI SPREADSHEET ---
     fetch(`${API_URL}?action=get_semua_kecamatan`)
     .then(res => res.json())
     .then(listKecamatan => {
         let opsiKec = `<option value="">-- PILIH KECAMATAN --</option>`;
-        listKecamatan.forEach(k => {
-            opsiKec += `<option value="${k}">${k}</option>`;
-        });
+        listKecamatan.forEach(k => { opsiKec += `<option value="${k}">${k}</option>`;});
         selectKec.innerHTML = opsiKec;
 
         // Terapkan Logika Hak Akses setelah dropdown terisi penuh
@@ -335,7 +338,8 @@ function initSettingTarget() {
             tarikTargetPerKecamatan();
         } else if (role === "super_admin") {
             // Bebas pilih, tampilkan panel kode rahasia
-            document.getElementById("panel-kode-rahasia").classList.remove("hidden");
+            const panelKode = document.getElementById("panel-kode-rahasia");
+            if (panelKode) panelKode.classList.remove("hidden");
             selectKec.addEventListener("change", updateTampilanKodeRahasia);
         }
     })
