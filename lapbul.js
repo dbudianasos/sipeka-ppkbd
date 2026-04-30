@@ -700,14 +700,14 @@ let IS_EDIT_MODE_AB = false;
 // --- 1. HITUNG TREN TARGET BULANAN (%) ---
 function getPersentaseBulan(bulan) {
     const tren = {
-        "JANUARI": 0.075, "FEBRUARI": 0.075, "MARET": 0.075, // Awal tahun 7.5%
-        "APRIL": 0.083, "MEI": 0.083, "JUNI": 0.083,       // Menengah 8.3%
-        "JULI": 0.083, "AGUSTUS": 0.083, "SEPTEMBER": 0.083,
-        "OKTOBER": 0.092, "NOVEMBER": 0.092, "DESEMBER": 0.092 // Akhir tahun 9.2%
+        "JANUARI": 0.075, "FEBRUARI": 0.075, "MARET": 0.075, "APRIL": 0.075, // Stok Rendah
+        "MEI": 0.10, "JUNI": 0.10,       // Lonjakan 1: Bakti IBI
+        "JULI": 0.08, "AGUSTUS": 0.08,
+        "SEPTEMBER": 0.12,               // Lonjakan 2: Hari Kontrasepsi
+        "OKTOBER": 0.08, "NOVEMBER": 0.08, "DESEMBER": 0.09 
     };
-    return tren[bulan] || 0.083;
+    return tren[bulan.toUpperCase()] || 0.083;
 }
-
 // --- 2. INISIALISASI HALAMAN (BERTINGKAT) ---
 function initKhususAB() {
     const selectKec = document.getElementById("ab-kecamatan");
@@ -840,52 +840,51 @@ function renderLaciAB() {
     const bulan = document.getElementById("ab-bulan").value;
     container.innerHTML = "";
     
-    const role = (localStorage.getItem("role") || "").toLowerCase();
-    const isAdminKec = role.includes("admin_kec");
+    const role = (localStorage.getItem("role") || "").toLowerCase().trim();
 
     DATA_AB_TEMP.forEach((d, idx) => {
-        const isFinal = d.status === "Final"; //
-        // Kunci jika Final DAN bukan Super Admin yang sedang mode Edit
-        const isLocked = isFinal && (isAdminKec || !IS_EDIT_MODE_AB); 
+        const isFinal = d.status === "Final";
+        // Gembok HANYA untuk input, bukan untuk toggle laci
+        const isInputLocked = isFinal && (role !== "super_admin" || !IS_EDIT_MODE_AB);
         
-        const state = isLocked ? "disabled" : "";
-        const cssInput = isLocked ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-white border-slate-200";
-        const themeColor = isFinal ? "border-emerald-200 bg-emerald-50/30" : "border-slate-100 bg-white";
+        const state = isInputLocked ? "disabled" : "";
+        const cssInput = isInputLocked ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed" : "bg-white border-slate-200 text-blue-900";
 
         container.innerHTML += `
-        <div class="rounded-3xl border ${themeColor} overflow-hidden shadow-sm mb-3">
-            <div onclick="toggleLaciAB(${idx})" class="p-4 flex justify-between items-center cursor-pointer">
+        <div class="bg-white rounded-3xl border ${isFinal ? 'border-emerald-200' : 'border-slate-100'} overflow-hidden shadow-sm mb-3">
+            <!-- Header: Tetap bisa di-klik untuk buka/tutup -->
+            <div onclick="toggleLaciAB(${idx})" class="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition">
                 <div>
                     <div class="flex items-center gap-2">
-                        <h3 class="font-black text-blue-900 text-sm uppercase">${d.desa}</h3>
-                        ${isFinal ? '<span class="bg-emerald-500 text-white text-[8px] px-2 py-0.5 rounded-full font-black uppercase">FINAL</span>' : ''}
+                        <h3 class="font-black text-slate-800 text-sm uppercase">${d.desa}</h3>
+                        ${isFinal ? '<span class="bg-emerald-100 text-emerald-600 text-[8px] px-2 py-0.5 rounded-lg font-black uppercase">Final</span>' : ''}
                     </div>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase">PUS: ${d.pus} | PKM: ${d.pkm}</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">PUS: ${d.pus} | PKM: ${d.pkm}</p>
                 </div>
-                <div id="icon-laci-ab-${idx}" class="text-[10px] font-black ${isFinal ? 'text-emerald-500' : 'text-blue-300'}">${isFinal ? 'TERKUNCI 🔒' : 'BUKA 🔓'}</div>
+                <div id="icon-laci-ab-${idx}" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-[10px] shadow-inner text-blue-300">🔽</div>
             </div>
             
-            <div id="isi-laci-ab-${idx}" class="hidden p-4 border-t border-slate-100 bg-white/50">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div id="isi-laci-ab-${idx}" class="hidden p-4 border-t border-slate-50 bg-slate-50/20">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     ${METODE_KB.map(m => {
                         let key = m.toLowerCase();
                         let tBulan = Math.round(d.target_ori[key] * getPersentaseBulan(bulan));
-                        let isSpecial = (m === "MOW" || m === "MOP"); //
+                        let isSpec = (m === "MOW" || m === "MOP");
                         
                         return `
-                        <div class="p-3 rounded-2xl border ${isSpecial ? 'border-orange-100 bg-orange-50/20' : 'border-slate-100 bg-white'}">
+                        <div class="bg-white p-3 rounded-2xl border ${isSpec ? 'border-orange-100 bg-orange-50/10' : 'border-slate-100'}">
                             <div class="flex justify-between items-center mb-2">
-                                <span class="text-[9px] font-black ${isSpecial ? 'text-orange-600' : 'text-slate-800'} uppercase">${m}</span>
-                                <span class="text-[8px] font-bold text-blue-400">TARGET: ${tBulan}</span>
+                                <span class="text-[9px] font-black ${isSpec ? 'text-orange-600' : 'text-slate-800'} uppercase">${m}</span>
+                                <span class="text-[8px] font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded-lg">Target: ${tBulan}</span>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
-                                <div class="text-center">
-                                    <span class="text-[7px] font-bold text-slate-300 uppercase">Pemerintah</span>
-                                    <input type="number" id="p-${key}-${idx}" value="${d[key+'_p']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-xl text-xs font-black text-center ${cssInput}">
+                                <div>
+                                    <label class="text-[7px] font-bold text-slate-300 block text-center uppercase mb-1">P</label>
+                                    <input type="number" id="p-${key}-${idx}" value="${d[key+'_p']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-xl text-xs font-black text-center outline-none ${cssInput}">
                                 </div>
-                                <div class="text-center">
-                                    <span class="text-[7px] font-bold text-slate-300 uppercase">Swasta</span>
-                                    <input type="number" id="s-${key}-${idx}" value="${d[key+'_s']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-xl text-xs font-black text-center ${cssInput}">
+                                <div>
+                                    <label class="text-[7px] font-bold text-slate-300 block text-center uppercase mb-1">S</label>
+                                    <input type="number" id="s-${key}-${idx}" value="${d[key+'_s']}" oninput="updatePS_AB('${key}', ${idx})" ${state} class="w-full p-2 border rounded-xl text-xs font-black text-center outline-none ${cssInput}">
                                 </div>
                             </div>
                         </div>`;
@@ -894,27 +893,19 @@ function renderLaciAB() {
             </div>
         </div>`;
     });
-    renderPreviewTableAB(); // Jalankan fungsi slider tabel
 }
 
-// --- 7. LOGIKA DOMINO EFFECT & AUTO-DISTRIBUSI ---
+// --- 7. LOGIKA DOMINO EFFECT ---
 function updatePS_AB(key, idx) {
     const bulan = document.getElementById("ab-bulan").value;
     const targetSetahun = DATA_AB_TEMP[idx].target_ori[key];
-    const bobotBln = getPersentaseBulan(bulan);
-    let tBulan = Math.round(targetSetahun * bobotBln);
+    let tBulan = Math.round(targetSetahun * getPersentaseBulan(bulan));
     
     let valP = parseInt(document.getElementById(`p-${key}-${idx}`).value) || 0;
-    
-    // Logika S otomatis: Jika P diisi, S menyesuaikan agar total = target bulan ini
     let valS = tBulan - valP;
     if (valS < 0) valS = 0; 
 
     document.getElementById(`s-${key}-${idx}`).value = valS;
-    
-    // Simpan ke memori sementara untuk dikirim nanti
     DATA_AB_TEMP[idx][`${key}_p`] = valP;
     DATA_AB_TEMP[idx][`${key}_s`] = valS;
-    
-    renderPreviewTableAB(); // Update tabel preview secara real-time
 }
