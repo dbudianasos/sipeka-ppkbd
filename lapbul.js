@@ -688,3 +688,126 @@ function simpanSemuaReferensi() {
         }
     });
 }
+
+// ============================================================
+// F. LOGIKA REGISTER AB (ADVANCED - SISTEM BERTIKAT)
+// ============================================================
+
+let DATA_AB_TEMP = []; // Menampung data capaian bulanan
+let IS_EDIT_MODE_AB = false; // Status gembok halaman AB
+
+// 1. INISIALISASI HALAMAN AB
+function initKhususAB() {
+    const selectKec = document.getElementById("ab-kecamatan");
+    const selectThn = document.getElementById("ab-tahun");
+    const selectBln = document.getElementById("ab-bulan");
+
+    if (!selectKec || !selectThn) return;
+
+    // --- SETUP TAHUN DINAMIS ---
+    const thnSkg = new Date().getFullYear();
+    let optTahun = `<option value="">-- TAHUN --</option>`;
+    for(let y = thnSkg - 1; y <= thnSkg + 2; y++) { 
+        let sel = (y === thnSkg) ? "selected" : "";
+        optTahun += `<option value="${y}" ${sel}>${y}</option>`; 
+    }
+    selectThn.innerHTML = optTahun;
+
+    // --- SETUP BULAN OTOMATIS (Bulan Berjalan) ---
+    const daftarBulan = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+    selectBln.value = daftarBulan[new Date().getMonth()];
+
+    const role = localStorage.getItem("role") || "";
+    const kecUser = (localStorage.getItem("kecamatan") || "").toUpperCase().trim();
+
+    // --- TARIK DAFTAR KECAMATAN (Hanya jika belum ada di cache atau tarik baru) ---
+    fetch(`${API_URL}?action=get_semua_kecamatan`)
+    .then(res => res.json())
+    .then(listKecamatan => {
+        let opsiKec = `<option value="">-- PILIH KECAMATAN --</option>`;
+        listKecamatan.forEach(k => { opsiKec += `<option value="${k}">${k}</option>`; });
+        selectKec.innerHTML = opsiKec;
+
+        // LOGIKA ADMIN BERTINGKAT
+        if (role === "admin_kec" || role === "admin_kecamatan" || role === "admin_desa") {
+            selectKec.value = kecUser;
+            selectKec.disabled = true; // Kunci Kecamatan
+            selectKec.classList.add("bg-slate-200", "cursor-not-allowed");
+            initDataAB(); // Langsung jalankan penarikan data
+        } else if (role === "super_admin") {
+            // Super Admin bebas pilih, dan bisa melihat kode rahasia di console jika perlu
+            console.log("Mode Super Admin: Silakan pilih kecamatan.");
+        }
+    });
+}
+
+// 2. ATUR TOMBOL AKSI AB (DRAFT & REALIST)
+function setupTombolAksiAB() {
+    const wadah = document.getElementById("wadah-tombol-ab");
+    if (!wadah) return;
+
+    if (IS_EDIT_MODE_AB) {
+        // Jika Gembok Terbuka
+        wadah.innerHTML = `
+            <button onclick="prosesSimpanAB('Draft')" class="bg-slate-700 text-white text-[10px] font-black px-4 py-2 rounded-xl active:scale-95 transition uppercase">💾 Simpan Draft</button>
+            <button onclick="prosesSimpanAB('Final')" class="bg-blue-600 text-white text-[10px] font-black px-4 py-2 rounded-xl active:scale-95 transition uppercase shadow-lg shadow-blue-200">✅ Realisasi</button>
+        `;
+    } else {
+        // Jika Gembok Terkunci
+        wadah.innerHTML = `
+            <button onclick="mintaAksesEditAB()" class="bg-orange-500 text-white text-[10px] font-black px-4 py-2 rounded-xl active:scale-95 transition uppercase flex items-center gap-2">
+                <span>🔒</span> Minta Akses Edit
+            </button>
+        `;
+    }
+}
+
+// 3. PROSES MINTA AKSES (Sama dengan logic Setting)
+function mintaAksesEditAB() {
+    const kec = document.getElementById("ab-kecamatan").value;
+    if (!kec) return alert("Pilih Kecamatan terlebih dahulu!");
+
+    const kodeAsli = getKodeRahasia(kec); // Menggunakan generator kode yang sudah ada di lapbul.js
+    let input = prompt(`Minta Kode Akses Edit AB Kecamatan ${kec} kepada Super Admin untuk hari ini.\n\nMasukkan Kode:`);
+    
+    if (input === null) return;
+    
+    if (input.toUpperCase().trim() === kodeAsli) {
+        alert("✅ Akses Diberikan! Anda sekarang bisa mengisi data AB.");
+        IS_EDIT_MODE_AB = true;
+        setupTombolAksiAB();
+        renderLaciAB(); // Fungsi ini akan kita buat di tahap berikutnya
+    } else {
+        alert("❌ Kode Salah! Akses ditolak.");
+    }
+}
+
+// 4. FUNGSI UTAMA PENARIKAN DATA (Triggered by change filters)
+function initDataAB() {
+    const thn = document.getElementById("ab-tahun").value;
+    const bln = document.getElementById("ab-bulan").value;
+    const kec = document.getElementById("ab-kecamatan").value;
+
+    if (!thn || !bln || !kec) return;
+
+    // Sembunyikan container lama jika ada
+    const container = document.getElementById("container-laci-ab");
+    if(container) container.innerHTML = "";
+    
+    document.getElementById("loader-ab").classList.remove("hidden");
+    document.getElementById("status-bar-ab").classList.add("hidden");
+
+    // Reset Gembok setiap ganti filter agar aman
+    IS_EDIT_MODE_AB = (localStorage.getItem("role") === "super_admin");
+    setupTombolAksiAB();
+
+    // Jalankan penarikan data (Akan kita bahas di langkah distribusi nanti)
+    console.log(`Menyiapkan data AB untuk ${kec} - ${bln} ${thn}`);
+    
+    // Tunda sedikit untuk simulasi loading
+    setTimeout(() => {
+        // Di sini nanti kita panggil fungsi untuk tarik target PPM & data AB yang sudah tersimpan
+        // Untuk sekarang, kita pastikan filter & gembok jalan dulu.
+        document.getElementById("loader-ab").classList.add("hidden");
+    }, 1000);
+}
