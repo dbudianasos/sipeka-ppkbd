@@ -818,7 +818,7 @@ function mintaAksesEditAB() {
         alert("✅ Akses Diberikan! Gembok data telah dibuka.");
         IS_EDIT_MODE_AB = true;
         setupTombolAksiAB();
-        renderLaciAB(); 
+        ; 
     } else {
         alert("❌ Kode Salah! Akses ditolak.");
     }
@@ -868,58 +868,61 @@ function initDataAB() {
 
         document.getElementById("loader-ab").classList.add("hidden");
         document.getElementById("status-bar-ab").classList.remove("hidden");
-        renderLaciAB();
+        ;
     });
 }
 
 // --- 6. RENDER LACI DESA DENGAN PROTEKSI STATUS FINAL ---
 function renderLaciAB() {
     const container = document.getElementById("container-laci-ab");
-    const bulan = document.getElementById("ab-bulan").value;
+    const thn = document.getElementById("ab-tahun").value;
+    const bln = document.getElementById("ab-bulan").value;
     container.innerHTML = "";
-    const role = (localStorage.getItem("role") || "").toLowerCase().trim();
 
     DATA_AB_TEMP.forEach((d, idx) => {
-        const isFinal = d.status === "Final";
-        const isInputLocked = isFinal && (role !== "super_admin" || !IS_EDIT_MODE_AB);
+        // 1. Kalkulasi Rekap Sederhana
+        let totalAB_Bulan = 0;
+        METODE_KB.forEach(m => {
+            let k = m.toLowerCase();
+            totalAB_Bulan += (parseInt(d[k+'_p']) || 0) + (parseInt(d[k+'_s']) || 0);
+        });
+
+        // Simulasi Kumulatif Jan-Bln (Nanti ditarik dari fetch tahunan)
+        let totalAB_JanBulan = totalAB_Bulan + (d.kumulatif_lalu || 0); 
+        let ppmTahunan = Object.values(d.target_ori).reduce((a,b) => a+b, 0);
+        let targetBulanIni = Math.round(ppmTahunan * getPersentaseBulan(bln));
         
-        // Warna Badge Status
-        const badgeClass = isFinal ? "bg-emerald-100 text-emerald-600 border-emerald-200" : "bg-slate-100 text-slate-400 border-slate-200";
+        let capBulan = targetBulanIni > 0 ? ((totalAB_Bulan / targetBulanIni) * 100).toFixed(1) : 0;
+        let progresTahun = ppmTahunan > 0 ? ((totalAB_JanBulan / ppmTahunan) * 100).toFixed(1) : 0;
+
+        const isFinal = d.status === "Final";
+        const dot = `<span class="inline-block w-1.5 h-1.5 rounded-full mx-1 bg-slate-300"></span>`;
 
         container.innerHTML += `
         <div class="bg-white rounded-[2rem] border ${isFinal ? 'border-emerald-100' : 'border-slate-100'} overflow-hidden shadow-sm mb-4">
-            <div onclick="toggleLaciAB(${idx})" class="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50/50 transition">
-                <div class="flex items-center gap-3">
-                    <div class="flex flex-col">
+            <div onclick="toggleLaciAB(${idx})" class="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50/50">
+                <div class="flex flex-col">
+                    <div class="flex items-center gap-2">
                         <h3 class="font-black text-slate-800 text-sm uppercase">${d.desa}</h3>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="text-[8px] px-2 py-0.5 rounded-full font-black border ${badgeClass} uppercase">${d.status || 'DRAFT'}</span>
-                            <p class="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">PUS: ${d.pus} | PKM: ${d.pkm}</p>
-                        </div>
+                        <span class="text-[7px] px-2 py-0.5 rounded-full font-black border ${isFinal ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'} uppercase">${d.status || 'DRAFT'}</span>
+                    </div>
+                    <!-- REKAP SEDERHANA -->
+                    <div class="flex flex-wrap items-center mt-1.5 text-[8.5px] font-bold text-slate-400 uppercase tracking-tighter">
+                        <span class="text-blue-600">PPM ${thn}: ${ppmTahunan}</span> ${dot}
+                        <span>AB ${bln}: ${totalAB_Bulan}</span> ${bln !== 'JANUARI' ? `${dot} <span>Jan-${bln}: ${totalAB_JanBulan}</span>` : ''} ${dot}
+                        <span class="${capBulan >= 100 ? 'text-emerald-500' : 'text-orange-500'}">Cap: ${capBulan}%</span> ${dot}
+                        <span class="text-slate-800">Prog: ${progresTahun}%</span>
                     </div>
                 </div>
-                <div id="icon-laci-ab-${idx}" class="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-50 text-blue-300 shadow-inner">🔽</div>
+                <div id="icon-laci-ab-${idx}" class="w-9 h-9 flex items-center justify-center rounded-2xl bg-slate-50 text-blue-300">🔽</div>
             </div>
             
-            <div id="isi-laci-ab-${idx}" class="hidden p-5 border-t border-slate-50 bg-slate-50/20">
-                <!-- GRID DIUBAH MENJADI 2 KOLOM (MD) DAN 3 KOLOM (LG) -->
-                <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div id="isi-laci-ab-${idx}" class="hidden p-5 border-t border-slate-50 bg-slate-50/10">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     ${METODE_KB.map(m => {
                         let k = m.toLowerCase();
-                        let isSpec = (m === "MOW" || m === "MOP");
-                        let tBulan = Math.round((d.target_ori[k] || 0) * getPersentaseBulan(bulan));
-                        
-                        return `
-                        <div class="bg-white p-3 rounded-2xl border ${isSpec ? 'border-orange-100 bg-orange-50/5' : 'border-slate-100'} shadow-sm">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="text-[9px] font-black ${isSpec ? 'text-orange-600' : 'text-slate-800'} uppercase">${m}</span>
-                                <span class="text-[8px] font-bold text-blue-500">T: ${tBulan}</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="number" id="p-${k}-${idx}" value="${d[k+'_p'] || 0}" oninput="updatePS_AB('${k}', ${idx})" ${isInputLocked ? 'disabled' : ''} placeholder="P" class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${isInputLocked ? 'bg-slate-50 text-slate-300' : 'bg-white border-slate-100 text-blue-900'}">
-                                <input type="number" id="s-${k}-${idx}" value="${d[k+'_s'] || 0}" oninput="updatePS_AB('${k}', ${idx})" ${isInputLocked ? 'disabled' : ''} placeholder="S" class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${isInputLocked ? 'bg-slate-50 text-slate-300' : 'bg-white border-slate-100 text-blue-900'}">
-                            </div>
-                        </div>`;
+                        let tBln = Math.round((d.target_ori[k] || 0) * getPersentaseBulan(bln));
+                        return renderKotakAlkon(m, k, d, tBln, idx); // Fungsi kotak alkon yang sudah kita buat
                     }).join('')}
                 </div>
             </div>
@@ -969,4 +972,59 @@ function toggleLaciAB(idx) {
         icon.innerText = "🔼";
         icon.classList.add("bg-blue-50", "text-blue-500");
     }
+}
+
+// --- 9. RENDER STATUS AKUMULASI (DI BAWAH FILTER) ---
+function updateStatusBarAB() {
+    const wadah = document.getElementById("indikator-target-bulan");
+    const bln = document.getElementById("ab-bulan").value;
+    const kec = document.getElementById("ab-kecamatan").value;
+    
+    // Grouping by PKM
+    let rekapPKM = {};
+    let totalKec = { capaian: 0, target: 0 };
+
+    DATA_AB_TEMP.forEach(d => {
+        let ppmTahunan = Object.values(d.target_ori).reduce((a,b) => a+b, 0);
+        let tBln = Math.round(ppmTahunan * getPersentaseBulan(bln));
+        let abBln = 0;
+        METODE_KB.forEach(m => abBln += (parseInt(d[m.toLowerCase()+'_p']) || 0) + (parseInt(d[m.toLowerCase()+'_s']) || 0));
+
+        // Total Kec
+        totalKec.capaian += abBln;
+        totalKec.target += tBln;
+
+        // Per PKM
+        if(!rekapPKM[d.pkm]) rekapPKM[d.pkm] = { capaian: 0, target: 0 };
+        rekapPKM[d.pkm].capaian += abBln;
+        rekapPKM[d.pkm].target += tBln;
+    });
+
+    // Render ke UI
+    let html = `
+    <!-- TOTAL KECAMATAN -->
+    <div class="col-span-full mb-2 p-4 bg-blue-900 rounded-3xl text-white shadow-lg shadow-blue-200">
+        <p class="text-[8px] font-black uppercase opacity-60 mb-1">Seluruh Kecamatan ${kec}</p>
+        <div class="flex justify-between items-end">
+            <h4 class="text-xl font-black">${totalKec.capaian} <span class="text-[10px] opacity-50">/ ${totalKec.target} AB</span></h4>
+            <span class="text-xs font-black bg-white/20 px-3 py-1 rounded-full">${totalKec.target > 0 ? ((totalKec.capaian/totalKec.target)*100).toFixed(1) : 0}%</span>
+        </div>
+    </div>`;
+
+    // TOTAL PER PKM (Otomatis Muncul Berapapun Jumlahnya)
+    Object.keys(rekapPKM).forEach(pkm => {
+        let p = rekapPKM[pkm];
+        let persen = p.target > 0 ? ((p.capaian / p.target) * 100).toFixed(1) : 0;
+        html += `
+        <div class="col-span-2 md:col-span-1 p-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+            <p class="text-[7px] font-black text-slate-400 uppercase mb-1 truncate">${pkm}</p>
+            <div class="flex justify-between items-center">
+                <span class="text-sm font-black text-slate-800">${p.capaian}</span>
+                <span class="text-[9px] font-black text-blue-600">${persen}%</span>
+            </div>
+        </div>`;
+    });
+
+    wadah.innerHTML = html;
+    document.getElementById("status-bar-ab").classList.remove("hidden");
 }
