@@ -326,11 +326,13 @@ function initSettingTarget() {
         selectKec.innerHTML = opsiKec;
 
         // Terapkan Logika Hak Akses setelah dropdown terisi penuh
-        if (role === "admin_kecamatan") {
+        if (role === "admin_kec" || role === "admin_kecamatan") {
             // Langsung kunci ke kecamatannya sendiri
             selectKec.value = kecUser;
             selectKec.disabled = true; 
             selectKec.classList.add("bg-slate-200", "cursor-not-allowed");
+
+            tarikTargetPerKecamatan();
         } else if (role === "super_admin") {
             // Bebas pilih, tampilkan panel kode rahasia
             document.getElementById("panel-kode-rahasia").classList.remove("hidden");
