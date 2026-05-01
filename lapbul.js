@@ -914,12 +914,43 @@ function renderLaciAB() {
                         return renderKotakAlkon(m, k, d, tBln, idx, isLocked); //
                     }).join('')}
                 </div>
+                
+                <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100 flex justify-between items-center shadow-inner">
+                    <span class="text-[9px] font-black text-blue-800 uppercase tracking-widest">Total AB Bulan Ini (Live):</span>
+                    <span class="text-lg font-black text-blue-600 bg-white px-4 py-1 rounded-lg shadow-sm" id="live-sum-${idx}">${totalAB_Bulan}</span>
+                </div>
+                
             </div>
         </div>`;
     });
 }
 
-// --- 5. HELPER: RENDER KOTAK ALKON ---
+// ---5. LOGIKA DOMINO & AUTO-SUM ---
+function updatePS_AB(key, idx) {
+    const bulan = document.getElementById("ab-bulan").value;
+    const targetSetahun = DATA_AB_TEMP[idx].target_ori[key];
+    let tBulan = Math.round(targetSetahun * getPersentaseBulan(bulan));
+    
+    let valP = parseInt(document.getElementById(`p-${key}-${idx}`).value) || 0;
+    let valS = tBulan - valP;
+    if (valS < 0) valS = 0; 
+
+    document.getElementById(`s-${key}-${idx}`).value = valS;
+    DATA_AB_TEMP[idx][`${key}_p`] = valP;
+    DATA_AB_TEMP[idx][`${key}_s`] = valS;
+
+    // AUTO SUM LACI
+    let sumTotal = 0;
+    METODE_KB.forEach(m => {
+        let k = m.toLowerCase();
+        sumTotal += (parseInt(document.getElementById(`p-${k}-${idx}`).value) || 0) + 
+                    (parseInt(document.getElementById(`s-${k}-${idx}`).value) || 0);
+    });
+    const sumEl = document.getElementById(`live-sum-${idx}`);
+    if(sumEl) sumEl.innerText = sumTotal;
+}
+
+// ---6. HELPER: RENDER KOTAK ALKON ---
 function renderKotakAlkon(m, k, d, tBln, idx, isLocked) {
     const isSpec = (m === "MOW" || m === "MOP");
     const cssInput = isLocked ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed" : "bg-white border-slate-100 text-blue-900";
@@ -936,7 +967,7 @@ function renderKotakAlkon(m, k, d, tBln, idx, isLocked) {
     </div>`;
 }
 
-// --- 6. UPDATE DASHBOARD (PKM & KECAMATAN) ---
+// --- 7. UPDATE DASHBOARD (PKM & KECAMATAN) ---
 function updateStatusBarAB() {
     const wadah = document.getElementById("indikator-target-bulan");
     const bln = document.getElementById("ab-bulan").value;
@@ -983,7 +1014,7 @@ function updateStatusBarAB() {
     document.getElementById("status-bar-ab").classList.remove("hidden");
 }
 
-// ---7. FUNGSI UNTUK MEMBUKA & MENUTUP LACI ---
+// ---8. FUNGSI UNTUK MEMBUKA & MENUTUP LACI ---
 function toggleLaciAB(idx) {
     const isi = document.getElementById(`isi-laci-ab-${idx}`);
     const icon = document.getElementById(`icon-laci-ab-${idx}`);
@@ -1005,68 +1036,166 @@ function toggleLaciAB(idx) {
     }
 }
 
-// --- KONTROL MODAL PREVIEW ---
-function bukaModalPreview() {
-    const modal = document.getElementById("modal-preview-ab");
-    if (!modal) return console.error("ID modal-preview-ab tidak ditemukan di HTML!");
+// ---9. KONTROL LIVE PREVIEW ---
+let PREVIEW_DATA_YEAR = []; // Simpanan data setahun
+const DAFTAR_BULAN = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+let idxBulanPreview = 0;
 
-    modal.classList.remove("hidden");
+function bukaModalPreview() {
+    document.getElementById("modal-preview-ab").classList.remove("hidden");
+    const blnSekarang = document.getElementById("ab-bulan").value;
+    idxBulanPreview = DAFTAR_BULAN.indexOf(blnSekarang);
     
-    // Jalankan render tabel agar data yang muncul adalah yang paling update
-    renderTableBakuAB();
+    tarikDataPreviewTahunan(); // Tarik data live
 }
 
 function tutupModalPreview() {
-    const modal = document.getElementById("modal-preview-ab");
-    if (modal) modal.classList.add("hidden");
+    document.getElementById("modal-preview-ab").classList.add("hidden");
 }
 
-// --- RENDER ISI TABEL BAKU (DI DALAM MODAL) ---
+function geserBulanPreview(arah) {
+    idxBulanPreview += arah;
+    if(idxBulanPreview < 0) idxBulanPreview = 0;
+    if(idxBulanPreview > 11) idxBulanPreview = 11;
+    renderTableBakuAB();
+}
+
+function tarikDataPreviewTahunan() {
+    const kec = document.getElementById("ab-kecamatan").value;
+    const thn = document.getElementById("ab-tahun").value;
+    
+    document.getElementById("label-kec-preview").innerText = `Kecamatan ${kec} - Tahun ${thn}`;
+    document.getElementById("loader-preview").classList.remove("hidden");
+    document.getElementById("tabel-baku-ab").innerHTML = "";
+
+    // Panggil get_register_ab tanpa parameter bulan untuk menarik 12 bulan sekaligus
+    fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}`)
+    .then(res => res.json())
+    .then(data => {
+        PREVIEW_DATA_YEAR = data;
+        document.getElementById("loader-preview").classList.add("hidden");
+        renderTableBakuAB();
+    });
+}
+
 function renderTableBakuAB() {
     const table = document.getElementById("tabel-baku-ab");
-    const bln = document.getElementById("ab-bulan").value;
-    const thn = document.getElementById("ab-tahun").value;
-    if (!table) return;
+    const namaBulan = DAFTAR_BULAN[idxBulanPreview];
+    document.getElementById("label-bulan-preview").innerText = namaBulan;
 
-    // 1. Header Tabel Baku (Format Standar BKKBN)
+    // Filter "Hasil Bulan Ini"
+    const dataBulanIni = PREVIEW_DATA_YEAR.filter(d => d.bulan === namaBulan);
+    
+    // Header Format BKKBN
     let html = `
-    <thead class="bg-slate-800 text-white sticky top-0 z-10">
-        <tr class="text-[9px] uppercase tracking-tighter">
-            <th rowspan="2" class="border border-slate-700 p-2">NO</th>
-            <th rowspan="2" class="border border-slate-700 p-2 min-w-[150px]">DESA / KELURAHAN</th>
-            <th rowspan="2" class="border border-slate-700 p-2">PUS</th>
-            ${METODE_KB.map(m => `<th colspan="3" class="border border-slate-700 p-1">${m}</th>`).join('')}
+    <thead class="bg-slate-800 text-white sticky top-0 z-50 shadow-md">
+        <tr class="text-[9px] uppercase tracking-tighter text-center">
+            <th rowspan="3" class="border border-slate-600 p-2 sticky left-0 bg-slate-900 z-50">NO</th>
+            <th rowspan="3" class="border border-slate-600 p-2 sticky left-8 bg-slate-900 z-50 min-w-[150px]">DESA</th>
+            <th rowspan="3" class="border border-slate-600 p-2">PPM<br>TAHUN<br>INI</th>
+            <th colspan="15" class="border border-slate-600 p-2 bg-blue-900">HASIL PESERTA KB BARU BULAN INI</th>
+            <th colspan="15" class="border border-slate-600 p-2 bg-emerald-900">PENCAPAIAN PESERTA KB BARU S/D BULAN INI</th>
+            <th rowspan="3" class="border border-slate-600 p-2">PERSENTASE<br>DARI<br>PPM</th>
         </tr>
         <tr class="text-[8px] uppercase">
-            ${METODE_KB.map(() => `
-                <th class="border border-slate-700 p-1 bg-slate-700 text-slate-400">T</th>
-                <th class="border border-slate-700 p-1 bg-blue-700">P</th>
-                <th class="border border-slate-700 p-1 bg-blue-700">S</th>
-            `).join('')}
+            ${[...Array(2)].map(() => METODE_KB.map(m => `<th colspan="2" class="border border-slate-600 p-1 bg-slate-700">${m}</th>`).join('') + `<th rowspan="2" class="border border-slate-600 p-1 bg-slate-600">JMLH</th>`).join('')}
+        </tr>
+        <tr class="text-[8px] uppercase">
+            ${[...Array(2)].map(() => METODE_KB.map(m => `<th class="border border-slate-600 px-2 py-1 bg-blue-700">P</th><th class="border border-slate-600 px-2 py-1 bg-blue-700">S</th>`).join('')).join('')}
         </tr>
     </thead>
-    <tbody class="text-slate-700">`;
+    <tbody class="text-slate-700 bg-white">`;
 
-    // 2. Isi Data per Desa
-    DATA_AB_TEMP.forEach((d, idx) => {
+    // Looping Desa dari Master (Agar urutan rapi)
+    DATA_AB_TEMP.forEach((desaOri, idx) => {
+        let dThis = dataBulanIni.find(d => d.desa === desaOri.desa) || {};
+        
+        // Hitung Kumulatif S/D Bulan Ini
+        let dKumulatif = { iud_p:0, iud_s:0, mow_p:0, mow_s:0, mop_p:0, mop_s:0, kdm_p:0, kdm_s:0, imp_p:0, imp_s:0, stk_p:0, stk_s:0, pil_p:0, pil_s:0 };
+        for(let i=0; i<=idxBulanPreview; i++) {
+            let dataBulanLalu = PREVIEW_DATA_YEAR.find(d => d.desa === desaOri.desa && d.bulan === DAFTAR_BULAN[i]);
+            if(dataBulanLalu) {
+                METODE_KB.forEach(m => {
+                    let k = m.toLowerCase();
+                    dKumulatif[`${k}_p`] += parseInt(dataBulanLalu[`${k}_p`]) || 0;
+                    dKumulatif[`${k}_s`] += parseInt(dataBulanLalu[`${k}_s`]) || 0;
+                });
+            }
+        }
+
+        let ppmTahun = Object.values(desaOri.target_ori).reduce((a,b)=>a+b,0);
+        let jmlBulanIni = 0; let jmlKumulatif = 0;
+
+        METODE_KB.forEach(m => {
+            let k = m.toLowerCase();
+            jmlBulanIni += (parseInt(dThis[`${k}_p`]) || 0) + (parseInt(dThis[`${k}_s`]) || 0);
+            jmlKumulatif += dKumulatif[`${k}_p`] + dKumulatif[`${k}_s`];
+        });
+
+        let persen = ppmTahun > 0 ? ((jmlKumulatif / ppmTahun) * 100).toFixed(2) : 0;
+
         html += `
-        <tr class="hover:bg-blue-50/50 transition border-b border-slate-100">
-            <td class="p-2 text-center font-bold text-slate-400 border-x border-slate-100">${idx + 1}</td>
-            <td class="p-2 font-black uppercase border-x border-slate-100">${d.desa}</td>
-            <td class="p-2 text-center font-bold border-x border-slate-100 text-slate-500">${d.pus}</td>
+        <tr class="hover:bg-blue-50 transition border-b border-slate-200">
+            <td class="p-2 text-center font-bold text-slate-400 sticky left-0 bg-white border-r">${idx + 1}</td>
+            <td class="p-2 font-black uppercase sticky left-8 bg-white border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${desaOri.desa}</td>
+            <td class="p-2 text-center font-bold text-blue-900 bg-blue-50/50">${ppmTahun}</td>
+            
+            <!-- HASIL BULAN INI -->
             ${METODE_KB.map(m => {
                 let k = m.toLowerCase();
-                // Hitung target bulanan untuk preview
-                let tBln = Math.round((d.target_ori[k] || 0) * getPersentaseBulan(bln));
-                return `
-                <td class="p-1 text-center bg-slate-50/30 border-x border-slate-100">${tBln}</td>
-                <td class="p-1 text-center font-bold text-blue-900 border-x border-slate-100">${d[k+'_p'] || 0}</td>
-                <td class="p-1 text-center font-bold text-blue-900 border-x border-slate-100">${d[k+'_s'] || 0}</td>
-                `;
+                return `<td class="p-1 text-center border-x border-slate-100">${dThis[`${k}_p`] || 0}</td><td class="p-1 text-center border-x border-slate-100">${dThis[`${k}_s`] || 0}</td>`;
             }).join('')}
+            <td class="p-1 text-center font-black text-blue-800 bg-blue-50">${jmlBulanIni}</td>
+
+            <!-- S/D BULAN INI -->
+            ${METODE_KB.map(m => {
+                let k = m.toLowerCase();
+                return `<td class="p-1 text-center border-x border-slate-100">${dKumulatif[`${k}_p`]}</td><td class="p-1 text-center border-x border-slate-100">${dKumulatif[`${k}_s`]}</td>`;
+            }).join('')}
+            <td class="p-1 text-center font-black text-emerald-800 bg-emerald-50">${jmlKumulatif}</td>
+            
+            <td class="p-2 text-center font-black ${persen >= 100 ? 'text-emerald-600' : 'text-slate-700'}">${persen}%</td>
         </tr>`;
     });
 
     html += `</tbody>`;
     table.innerHTML = html;
+}
+
+// ---10. EKSEKUSI SIMPAN AB ---
+function prosesSimpanAB(statusFinal) {
+    const thn = document.getElementById("ab-tahun").value;
+    const bln = document.getElementById("ab-bulan").value;
+    const kec = document.getElementById("ab-kecamatan").value;
+
+    document.getElementById("loader-ab").classList.remove("hidden");
+    
+    const payload = {
+        action: "save_register_ab",
+        tahun: thn,
+        bulan: bln,
+        kecamatan: kec,
+        status: statusFinal,
+        admin_nama: localStorage.getItem("nama") || "Admin",
+        admin_nik: localStorage.getItem("nik") || "-",
+        admin_role: localStorage.getItem("role") || "-",
+        data_json: JSON.stringify(DATA_AB_TEMP)
+    };
+
+    fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
+    .then(res => res.text())
+    .then(res => {
+        document.getElementById("loader-ab").classList.add("hidden");
+        if (res.trim() === "success") {
+            alert(`✅ Laporan ${kec} bulan ${bln} berhasil disimpan sebagai ${statusFinal}`);
+            if(statusFinal === "Final") {
+                IS_EDIT_MODE_AB = false;
+                setupTombolAksiAB();
+                renderLaciAB(); // Render ulang agar terkunci
+            }
+        } else { alert("❌ Gagal: " + res); }
+    }).catch(err => {
+        document.getElementById("loader-ab").classList.add("hidden");
+        alert("Terjadi kesalahan jaringan.");
+    });
 }
