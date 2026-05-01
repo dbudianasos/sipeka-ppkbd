@@ -735,7 +735,7 @@ function initKhususAB() {
             selectKec.value = (localStorage.getItem("kecamatan") || "").toUpperCase();
             selectKec.disabled = true;
             selectKec.classList.add("bg-slate-200");
-            initDataAB();
+            ();
         }
     });
 }
@@ -802,8 +802,14 @@ function initDataAB() {
     document.getElementById("container-laci-ab").innerHTML = "";
     ADA_PERUBAHAN_BELUM_DISIMPAN = false; 
 
-    // Reset akses saat ganti bulan/tahun (harus minta akses lagi kalau mau edit final)
-    IS_EDIT_MODE_AB = false;
+    // JALUR VIP SUPER ADMIN
+    const userRole = localStorage.getItem("role") || "";
+    if (userRole === "super_admin") {
+        IS_EDIT_MODE_AB = true; // Langsung terbuka tanpa PIN
+    } else {
+        IS_EDIT_MODE_AB = false; // Admin Kec harus buka gembok Final pakai PIN
+    }
+    
     setupTombolAksiAB();
 
     Promise.all([
