@@ -694,10 +694,18 @@ function simpanSemuaReferensi() {
 // ============================================================
 
 let DATA_AB_TEMP = []; 
-let DATA_AB_ORIGINAL = []; // Simpanan data asli untuk fitur Reset
+let DATA_AB_ORIGINAL = []; 
 let TARGET_PPM_VILLAGE = []; 
 let IS_EDIT_MODE_AB = false;
 let ADA_PERUBAHAN_BELUM_DISIMPAN = false; 
+
+// --- PENERJEMAH NAMA ALKON (FIX BUG 0 KONDOM, IMPLANT, SUNTIK) ---
+function getKeyServer(metode) {
+    if (metode === "KONDOM") return "kdm";
+    if (metode === "IMPLANT") return "imp";
+    if (metode === "SUNTIK") return "stk";
+    return metode.toLowerCase();
+}
 
 function getPersentaseBulan(bulan) {
     const tren = {
@@ -740,11 +748,9 @@ function initKhususAB() {
     });
 }
 
-// --- SETUP TOMBOL SIMPAN / MINTA AKSES ---
 function setupTombolAksiAB() {
     const wadah = document.getElementById("wadah-tombol-ab");
     if (!wadah) return;
-
     if (IS_EDIT_MODE_AB) {
         wadah.innerHTML = `<button onclick="bukaModalSimpan()" class="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black px-6 py-2 rounded-xl border border-white/20 transition active:scale-95 uppercase tracking-widest flex items-center gap-2 shadow-lg"><span>💾</span> Simpan</button>`;
     } else {
@@ -791,7 +797,7 @@ function mintaAksesEditAB() {
     } else { alert("❌ PIN Salah! Akses ditolak."); }
 }
 
-// --- TARIK DATA & KONEKSI KE MASTER REFERENSI ---
+// --- TARIK DATA (KUMULATIF FIX) ---
 function initDataAB() {
     const thn = document.getElementById("ab-tahun").value;
     const bln = document.getElementById("ab-bulan").value;
@@ -803,51 +809,66 @@ function initDataAB() {
     ADA_PERUBAHAN_BELUM_DISIMPAN = false; 
 
     const userRole = (localStorage.getItem("role") || "").toLowerCase().trim();
-    if (userRole === "super_admin") {
-        IS_EDIT_MODE_AB = true; // Langsung terbuka tanpa PIN
-    } else {
-        IS_EDIT_MODE_AB = false; // Admin Kec & lainnya harus buka gembok Final pakai PIN
-    }
+    if (userRole === "super_admin") { IS_EDIT_MODE_AB = true; } 
+    else { IS_EDIT_MODE_AB = false; }
+    
     setupTombolAksiAB();
 
     Promise.all([
         fetch(`${API_URL}?action=get_master_referensi`).then(res => res.json()),
-        fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}&bulan=${bln}`).then(res => res.json())
+        fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}`) // TARIK SETAHUN PENUH
     ])
-    .then(([allTargets, savedData]) => {
+    .then(([allTargets, dataSetahun]) => {
         TARGET_PPM_VILLAGE = allTargets.filter(t => t.kecamatan.toUpperCase() === kec.toUpperCase() && t.tahun.toString() === thn.toString());
 
-        // CEK KONEKSI PPM
         if (TARGET_PPM_VILLAGE.length === 0) {
-            alert(`⚠️ PERINGATAN: Target PPM Tahun ${thn} belum tersedia di Master Referensi!\n\nSilakan seting Target PPM terlebih dahulu di menu Setting Target agar hitungan persentase akurat.`);
+            alert(`⚠️ PERINGATAN: Target PPM Tahun ${thn} belum tersedia di Master Referensi!`);
             document.getElementById("loader-ab").classList.add("hidden");
-            return; // Stop render jika PPM tidak ada
+            return; 
         }
 
+        PREVIEW_DATA_YEAR = dataSetahun; // Simpan untuk preview biar instan
+        const daftarBulanLalu = DAFTAR_BULAN.slice(0, DAFTAR_BULAN.indexOf(bln));
+
         DATA_AB_TEMP = TARGET_PPM_VILLAGE.map(target => {
-            let exist = savedData.find(s => s.desa.toUpperCase() === target.desa.toUpperCase()) || {};
+            let existThisMonth = dataSetahun.find(s => s.desa.toUpperCase() === target.desa.toUpperCase() && s.bulan === bln) || {};
+            
+            // MENGHITUNG KUMULATIF LALU SECARA REAL-TIME DARI DATA SETAHUN
+            let kumulatif = 0;
+            daftarBulanLalu.forEach(bLalu => {
+                let dLalu = dataSetahun.find(s => s.desa.toUpperCase() === target.desa.toUpperCase() && s.bulan === bLalu);
+                if(dLalu) {
+                    METODE_KB.forEach(m => {
+                        let k = getKeyServer(m);
+                        kumulatif += (parseInt(dLalu[`${k}_p`]) || 0) + (parseInt(dLalu[`${k}_s`]) || 0);
+                    });
+                }
+            });
+
             let obj = { 
                 desa: target.desa, target_ori: target.ppm, pkm: target.pkm, pus: target.pus, 
-                status: exist.status || "Draft", kumulatif_lalu: exist.kumulatif_lalu || 0 
+                status: existThisMonth.status || "Draft", kumulatif_lalu: kumulatif 
             };
             METODE_KB.forEach(m => {
-                let key = m.toLowerCase();
-                obj[`${key}_p`] = parseInt(exist[`${key}_p`]) || 0; 
-                obj[`${key}_s`] = parseInt(exist[`${key}_s`]) || 0;
+                let key = getKeyServer(m);
+                obj[`${key}_p`] = parseInt(existThisMonth[`${key}_p`]) || 0; 
+                obj[`${key}_s`] = parseInt(existThisMonth[`${key}_s`]) || 0;
             });
             return obj;
         });
 
-        // Backup Data Original untuk fitur Reset
         DATA_AB_ORIGINAL = JSON.parse(JSON.stringify(DATA_AB_TEMP));
 
         document.getElementById("loader-ab").classList.add("hidden");
         updateStatusBarAB(); 
         renderLaciAB();      
+    }).catch(err => {
+        console.error(err);
+        document.getElementById("loader-ab").classList.add("hidden");
     });
 }
 
-// --- RENDER LACI DESA & LOGIKA LOCKING ---
+// --- RENDER LACI DESA ---
 function renderLaciAB() {
     const container = document.getElementById("container-laci-ab");
     const thn = document.getElementById("ab-tahun").value;
@@ -856,7 +877,10 @@ function renderLaciAB() {
 
     DATA_AB_TEMP.forEach((d, idx) => {
         let totalAB_Bulan = 0;
-        METODE_KB.forEach(m => totalAB_Bulan += (parseInt(d[m.toLowerCase()+'_p']) || 0) + (parseInt(d[m.toLowerCase()+'_s']) || 0));
+        METODE_KB.forEach(m => {
+            let k = getKeyServer(m);
+            totalAB_Bulan += (parseInt(d[`${k}_p`]) || 0) + (parseInt(d[`${k}_s`]) || 0);
+        });
 
         let totalAB_JanBulan = totalAB_Bulan + (d.kumulatif_lalu || 0);
         let ppmTahunan = Object.values(d.target_ori).reduce((a,b) => a+b, 0);
@@ -865,9 +889,7 @@ function renderLaciAB() {
         let progresTahun = ppmTahunan > 0 ? ((totalAB_JanBulan / ppmTahunan) * 100).toFixed(1) : 0;
 
         const isFinal = d.status === "Final";
-        // LOGIKA KUNCI: Hanya terkunci jika status Final DAN user belum masukin PIN (IS_EDIT_MODE_AB = false)
         const isLocked = isFinal && !IS_EDIT_MODE_AB; 
-
         const dot = `<span class="inline-block w-1 h-1 rounded-full mx-1.5 bg-slate-300"></span>`;
 
         let sumWarna = "bg-white text-blue-600";
@@ -895,7 +917,7 @@ function renderLaciAB() {
             <div id="isi-laci-ab-${idx}" class="hidden p-5 border-t border-slate-50 bg-slate-50/10">
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     ${METODE_KB.map(m => {
-                        let k = m.toLowerCase();
+                        let k = getKeyServer(m);
                         let tBln = Math.round((d.target_ori[k] || 0) * getPersentaseBulan(bln));
                         return renderKotakAlkon(m, k, d, tBln, idx, isLocked); 
                     }).join('')}
@@ -905,7 +927,7 @@ function renderLaciAB() {
                     <div class="flex justify-between items-center">
                         <span class="text-[9px] font-black text-blue-800 uppercase tracking-widest">Total AB Bulan Ini:</span>
                         <div class="flex gap-2 items-center">
-                            ${!isLocked ? `<button onclick="resetLaciAB(${idx})" class="text-[8px] bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded font-bold uppercase transition">🔄 Reset</button>` : ''}
+                            ${!isLocked ? `<button onclick="resetLaciAB(${idx})" class="text-[8px] bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded font-bold uppercase transition shadow-sm border border-slate-300">🔄 Reset</button>` : ''}
                             <span class="text-lg font-black ${sumWarna} px-4 py-1 rounded-lg shadow-sm transition-all duration-300" id="live-sum-${idx}">${totalAB_Bulan}</span>
                         </div>
                     </div>
@@ -916,23 +938,18 @@ function renderLaciAB() {
     });
 }
 
-// --- FITUR RESET LACI KHUSUS (MENGHAPUS EDITAN) ---
 function resetLaciAB(idx) {
     if(confirm("Batalkan perubahan di desa ini?")) {
         DATA_AB_TEMP[idx] = JSON.parse(JSON.stringify(DATA_AB_ORIGINAL[idx]));
         renderLaciAB();
-        
-        // Cek apakah data sudah sama persis dengan aslinya untuk matikan sensor
         if(JSON.stringify(DATA_AB_TEMP) === JSON.stringify(DATA_AB_ORIGINAL)) {
             ADA_PERUBAHAN_BELUM_DISIMPAN = false;
         }
     }
 }
 
-// --- LOGIKA KOTAK INPUT (NO MINUS & BEBAS) ---
 function updatePS_AB(key, idx) {
     ADA_PERUBAHAN_BELUM_DISIMPAN = true; 
-
     const bulan = document.getElementById("ab-bulan").value;
     let valP = parseInt(document.getElementById(`p-${key}-${idx}`).value) || 0;
     let valS = parseInt(document.getElementById(`s-${key}-${idx}`).value) || 0;
@@ -946,7 +963,7 @@ function updatePS_AB(key, idx) {
     let sumTotal = 0;
     let targetBulanIni = 0;
     METODE_KB.forEach(m => {
-        let k = m.toLowerCase();
+        let k = getKeyServer(m);
         sumTotal += (parseInt(document.getElementById(`p-${k}-${idx}`).value) || 0) + (parseInt(document.getElementById(`s-${k}-${idx}`).value) || 0);
         targetBulanIni += Math.round((DATA_AB_TEMP[idx].target_ori[k] || 0) * getPersentaseBulan(bulan));
     });
@@ -958,14 +975,14 @@ function updatePS_AB(key, idx) {
         sumEl.innerText = sumTotal;
         if (sumTotal > targetBulanIni) {
             sumEl.className = "text-lg font-black text-white bg-red-500 px-4 py-1 rounded-lg shadow-sm transition-all duration-300";
-            warnEl.innerHTML = `<span class="text-red-500">⚠️ Jumlah peserta AB melebihi target di bulan ${bulan}. Ini akan mengurangi jatah capaian bulan-bulan selanjutnya. Harap diingat!</span>`;
+            warnEl.innerHTML = `<span class="text-red-500">⚠️ Melebihi target bulan ${bulan}. Akan memotong jatah bulan depan.</span>`;
             warnEl.classList.remove("hidden");
         } else if (sumTotal === targetBulanIni) {
             sumEl.className = "text-lg font-black text-white bg-emerald-500 px-4 py-1 rounded-lg shadow-sm transition-all duration-300";
             warnEl.classList.add("hidden");
         } else {
             sumEl.className = "text-lg font-black text-white bg-orange-400 px-4 py-1 rounded-lg shadow-sm transition-all duration-300";
-            warnEl.innerHTML = `<span class="text-orange-500">⚠️ Capaian masih di bawah target bulan ${bulan}.</span>`;
+            warnEl.innerHTML = `<span class="text-orange-500">⚠️ Masih di bawah target bulan ${bulan}.</span>`;
             warnEl.classList.remove("hidden");
         }
     }
@@ -973,7 +990,7 @@ function updatePS_AB(key, idx) {
 
 function renderKotakAlkon(m, k, d, tBln, idx, isLocked) {
     const isSpec = (m === "MOW" || m === "MOP");
-    const cssInput = isLocked ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed" : "bg-white border-slate-100 text-blue-900 focus:border-blue-500 focus:ring-1";
+    const cssInput = isLocked ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed" : "bg-white border-slate-100 text-blue-900 focus:border-blue-500";
     return `
     <div class="bg-white p-3 rounded-2xl border ${isSpec ? 'border-orange-100 bg-orange-50/5' : 'border-slate-100'} shadow-sm transition-all">
         <div class="flex justify-between items-center mb-2 border-b border-slate-50 pb-1">
@@ -987,7 +1004,6 @@ function renderKotakAlkon(m, k, d, tBln, idx, isLocked) {
     </div>`;
 }
 
-// --- UPDATE DASHBOARD PKM & LACI ENGSEL (TETAP SAMA) ---
 function updateStatusBarAB() {
     const wadah = document.getElementById("indikator-target-bulan");
     const bln = document.getElementById("ab-bulan").value;
@@ -998,7 +1014,10 @@ function updateStatusBarAB() {
         let ppmTahunan = Object.values(d.target_ori).reduce((a,b) => a+b, 0);
         let tBln = Math.round(ppmTahunan * getPersentaseBulan(bln));
         let abBln = 0;
-        METODE_KB.forEach(m => abBln += (parseInt(d[m.toLowerCase()+'_p']) || 0) + (parseInt(d[m.toLowerCase()+'_s']) || 0));
+        METODE_KB.forEach(m => {
+            let k = getKeyServer(m);
+            abBln += (parseInt(d[`${k}_p`]) || 0) + (parseInt(d[`${k}_s`]) || 0);
+        });
 
         totalKec.capaian += abBln; totalKec.target += tBln;
         if(!rekapPKM[d.pkm]) rekapPKM[d.pkm] = { capaian: 0, target: 0 };
@@ -1042,10 +1061,9 @@ function toggleLaciAB(idx) {
     }
 }
 
-// --- SINGKATAN DESA & LIVE PREVIEW ---
+// --- SINGKATAN DESA & PREVIEW STICKY (ANTI NABRAK) ---
 function getSingkatanDesa(namaLengkap) {
     let n = namaLengkap.toUpperCase().trim();
-    // VIP List (Prioritas Kecamatan Setu)
     const vip = {
         "LUBANG BUAYA":"LBY", "CILEDUG":"CLD", "TAMAN SARI":"TMS", "TAMAN RAHAYU":"TMR",
         "RAGEMANUNGGAL":"RGM", "MUKTI JAYA":"MKJ", "CIJENGKOL":"CJK", "BURANGKENG":"BRK",
@@ -1053,11 +1071,9 @@ function getSingkatanDesa(namaLengkap) {
     };
     if(vip[n]) return vip[n];
 
-    // Fallback Universal: Singkat kata pertama & kedua jika panjang
     let words = n.split(" ");
     if(words.length > 1) {
         let abbr = words.map(w => w[0]).join('');
-        // Tambal biar 3 huruf
         if(abbr.length < 3) abbr += words[words.length-1].replace(/[AEIOU]/g, '').substring(1, 3 - abbr.length + 1);
         return abbr.substring(0,3);
     }
@@ -1069,10 +1085,10 @@ function efekSingkatDesa(element) {
     const header = document.getElementById("header-desa-preview");
     if (element.scrollLeft > 30) {
         cells.forEach(c => { c.innerText = c.getAttribute("data-singkat"); c.classList.add("text-center"); });
-        if(header) { header.innerText = "DESA"; header.classList.remove("min-w-[150px]"); header.classList.add("min-w-[60px]"); }
+        if(header) { header.innerText = "DESA"; header.style.minWidth = "60px"; }
     } else {
         cells.forEach(c => { c.innerText = c.getAttribute("data-lengkap"); c.classList.remove("text-center"); });
-        if(header) { header.innerText = "DESA / KELURAHAN"; header.classList.remove("min-w-[60px]"); header.classList.add("min-w-[150px]"); }
+        if(header) { header.innerText = "DESA / KELURAHAN"; header.style.minWidth = "120px"; }
     }
 }
 
@@ -1085,11 +1101,18 @@ function bukaModalPreview() {
         alert("⚠️ PERUBAHAN BELUM DISIMPAN!\n\nSilakan 'Simpan' sebagai Draft terlebih dahulu, ATAU tekan 'Reset' pada laci desa yang diedit untuk membatalkan perubahan.");
         return; 
     }
+    // Jika belum punya data setahun, jangan buka
+    if (PREVIEW_DATA_YEAR.length === 0) return alert("Sistem masih menyiapkan data. Silakan tunggu sebentar.");
 
     document.getElementById("modal-preview-ab").classList.remove("hidden");
     const blnSekarang = document.getElementById("ab-bulan").value;
     idxBulanPreview = DAFTAR_BULAN.indexOf(blnSekarang);
-    tarikDataPreviewTahunan(); 
+    
+    // Karena PREVIEW_DATA_YEAR sudah ditarik di initDataAB, langsung render saja!
+    const kec = document.getElementById("ab-kecamatan").value;
+    const thn = document.getElementById("ab-tahun").value;
+    document.getElementById("label-kec-preview").innerText = `Kecamatan ${kec} - Tahun ${thn}`;
+    renderTableBakuAB(); 
 }
 
 function tutupModalPreview() { document.getElementById("modal-preview-ab").classList.add("hidden"); }
@@ -1101,22 +1124,6 @@ function geserBulanPreview(arah) {
     renderTableBakuAB();
 }
 
-function tarikDataPreviewTahunan() {
-    const kec = document.getElementById("ab-kecamatan").value;
-    const thn = document.getElementById("ab-tahun").value;
-    document.getElementById("label-kec-preview").innerText = `Kecamatan ${kec} - Tahun ${thn}`;
-    document.getElementById("loader-preview").classList.remove("hidden");
-    document.getElementById("tabel-baku-ab").innerHTML = "";
-
-    fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}`)
-    .then(res => res.json())
-    .then(data => {
-        PREVIEW_DATA_YEAR = data;
-        document.getElementById("loader-preview").classList.add("hidden");
-        renderTableBakuAB();
-    });
-}
-
 function renderTableBakuAB() {
     const table = document.getElementById("tabel-baku-ab");
     const namaBulan = DAFTAR_BULAN[idxBulanPreview];
@@ -1126,8 +1133,9 @@ function renderTableBakuAB() {
     let html = `
     <thead class="bg-slate-800 text-white sticky top-0 z-50 shadow-md">
         <tr class="text-[9px] uppercase tracking-tighter text-center">
-            <th rowspan="3" class="border border-slate-600 p-2 sticky left-0 bg-slate-900 z-50 w-8">NO</th>
-            <th rowspan="3" id="header-desa-preview" class="border border-slate-600 p-2 sticky left-8 md:left-10 bg-slate-900 z-50 min-w-[150px] transition-all duration-300">DESA / KELURAHAN</th>
+            <!-- LEBAR KOLOM STICKY DIKUNCI -->
+            <th rowspan="3" class="border border-slate-600 p-2 sticky left-0 bg-slate-900 z-50 min-w-[30px] max-w-[30px]">NO</th>
+            <th rowspan="3" id="header-desa-preview" style="min-width: 120px;" class="border border-slate-600 p-2 sticky left-[30px] bg-slate-900 z-50 transition-all duration-300">DESA / KELURAHAN</th>
             <th rowspan="3" class="border border-slate-600 p-2 leading-tight">PPM<br>THN INI</th>
             <th colspan="15" class="border border-slate-600 p-2 bg-blue-900">HASIL PESERTA KB BARU BULAN INI</th>
             <th colspan="15" class="border border-slate-600 p-2 bg-emerald-900">PENCAPAIAN PESERTA KB BARU S/D BULAN INI</th>
@@ -1150,7 +1158,7 @@ function renderTableBakuAB() {
             let dataBulanLalu = PREVIEW_DATA_YEAR.find(d => d.desa === desaOri.desa && d.bulan === DAFTAR_BULAN[i]);
             if(dataBulanLalu) {
                 METODE_KB.forEach(m => {
-                    let k = m.toLowerCase();
+                    let k = getKeyServer(m);
                     dKumulatif[`${k}_p`] += parseInt(dataBulanLalu[`${k}_p`]) || 0;
                     dKumulatif[`${k}_s`] += parseInt(dataBulanLalu[`${k}_s`]) || 0;
                 });
@@ -1161,7 +1169,7 @@ function renderTableBakuAB() {
         let jmlBulanIni = 0; let jmlKumulatif = 0;
 
         METODE_KB.forEach(m => {
-            let k = m.toLowerCase();
+            let k = getKeyServer(m);
             jmlBulanIni += (parseInt(dThis[`${k}_p`]) || 0) + (parseInt(dThis[`${k}_s`]) || 0);
             jmlKumulatif += (parseInt(dKumulatif[`${k}_p`]) || 0) + (parseInt(dKumulatif[`${k}_s`]) || 0);
         });
@@ -1171,19 +1179,20 @@ function renderTableBakuAB() {
 
         html += `
         <tr class="hover:bg-blue-50 transition border-b border-slate-200">
-            <td class="p-2 text-center font-bold text-slate-400 sticky left-0 bg-white border-r">${idx + 1}</td>
-            <td class="p-2 font-black uppercase sticky left-8 md:left-10 bg-white border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] cell-desa-preview transition-all duration-300" data-lengkap="${desaOri.desa}" data-singkat="${singkatan}">${desaOri.desa}</td>
+            <!-- SEL STICKY DIKUNCI DI KIRI -->
+            <td class="p-2 text-center font-bold text-slate-400 sticky left-0 bg-white border-r z-40 min-w-[30px] max-w-[30px]">${idx + 1}</td>
+            <td class="p-2 font-black uppercase sticky left-[30px] bg-white border-r z-40 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] cell-desa-preview transition-all duration-300 whitespace-normal leading-tight break-words" data-lengkap="${desaOri.desa}" data-singkat="${singkatan}">${desaOri.desa}</td>
             <td class="p-2 text-center font-bold text-blue-900 bg-blue-50/50">${ppmTahun}</td>
             
             ${METODE_KB.map(m => {
-                let k = m.toLowerCase();
+                let k = getKeyServer(m);
                 let p = parseInt(dThis[`${k}_p`]) || 0; let s = parseInt(dThis[`${k}_s`]) || 0;
                 return `<td class="p-1 text-center border-x border-slate-100">${p}</td><td class="p-1 text-center border-x border-slate-100">${s}</td>`;
             }).join('')}
             <td class="p-1 text-center font-black text-blue-800 bg-blue-50">${jmlBulanIni}</td>
 
             ${METODE_KB.map(m => {
-                let k = m.toLowerCase();
+                let k = getKeyServer(m);
                 let pK = parseInt(dKumulatif[`${k}_p`]) || 0; let sK = parseInt(dKumulatif[`${k}_s`]) || 0;
                 return `<td class="p-1 text-center border-x border-slate-100">${pK}</td><td class="p-1 text-center border-x border-slate-100">${sK}</td>`;
             }).join('')}
@@ -1214,15 +1223,25 @@ function prosesSimpanAB(statusFinal) {
         document.getElementById("loader-ab").classList.add("hidden");
         if (res.trim() === "success") {
             ADA_PERUBAHAN_BELUM_DISIMPAN = false; 
-            // Backup ulang agar tombol Reset bersih
             DATA_AB_ORIGINAL = JSON.parse(JSON.stringify(DATA_AB_TEMP)); 
             
+            // Perbarui data preview tahunan agar langsung sesuai setelah simpan
+            let idxBln = DAFTAR_BULAN.indexOf(bln);
+            DATA_AB_TEMP.forEach(d => {
+                let dYear = PREVIEW_DATA_YEAR.find(p => p.desa === d.desa && p.bulan === bln);
+                if(dYear) {
+                    METODE_KB.forEach(m => {
+                        let k = getKeyServer(m);
+                        dYear[`${k}_p`] = d[`${k}_p`]; dYear[`${k}_s`] = d[`${k}_s`];
+                    });
+                }
+            });
+
             alert(`✅ Laporan ${kec} bulan ${bln} berhasil disimpan sebagai ${statusFinal}`);
-            if(statusFinal === "Final") {
-                IS_EDIT_MODE_AB = false; // Kembalikan status terkunci
-                setupTombolAksiAB();
-                renderLaciAB(); 
+            if(statusFinal === "Final" && localStorage.getItem("role") !== "super_admin") {
+                IS_EDIT_MODE_AB = false; 
             }
+            setupTombolAksiAB(); renderLaciAB(); 
         } else { alert("❌ Gagal: " + res); }
     }).catch(err => {
         document.getElementById("loader-ab").classList.add("hidden");
