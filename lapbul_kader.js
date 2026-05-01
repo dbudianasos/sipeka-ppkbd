@@ -42,7 +42,6 @@ function initFormLapbul() {
     .then(data => {
         DATA_INIT_LAPBUL = data;
         
-        // Render Dropdown Bulan dengan Validasi Status Final
         let optBln = `<option value="">-- PILIH BULAN --</option>`;
         DAFTAR_BULAN.forEach(b => {
             const status = data.status_bulan[b] || "Belum Ada";
@@ -56,15 +55,17 @@ function initFormLapbul() {
         selBulan.disabled = false;
         selBulan.classList.remove("bg-slate-100", "cursor-wait");
         selBulan.classList.add("bg-white", "cursor-pointer");
+    }).catch(err => {
+        console.error("Gagal init form:", err);
+        alert("Gagal mengambil status bulan dari server.");
     });
 }
 
-// 2. LOAD DATA SAAT BULAN DIPILIH
+// 2. LOAD DATA SAAT BULAN DIPILIH (FIX LOADING ABADI)
 function loadDataBulanDipilih() {
     const bln = document.getElementById("lap-bulan").value;
     const thn = document.getElementById("lap-tahun").value;
     const kec = localStorage.getItem("kecamatan").toUpperCase();
-    const desa = localStorage.getItem("desa").toUpperCase();
 
     if(!bln) {
         document.getElementById("area-form").classList.add("hidden");
@@ -72,9 +73,9 @@ function loadDataBulanDipilih() {
         return;
     }
 
+    // Tampilkan Loading
     document.getElementById("loader-lapbul").classList.remove("hidden");
     
-    // Tarik data Register_AB khusus untuk Bagian V
     fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}&bulan=${bln}`)
     .then(res => res.json())
     .then(dataAB => {
@@ -82,9 +83,17 @@ function loadDataBulanDipilih() {
         renderSemuaSection();
         renderBagianV();
         
-        document.getElementById("loader-lapbul").classList.add("hidden");
+        // Munculkan Form
         document.getElementById("area-form").classList.remove("hidden");
         document.getElementById("wadah-tombol-cetak").classList.remove("hidden");
+    })
+    .catch(err => {
+        console.error("Gagal load data bulan:", err);
+        alert("Gagal menarik data. Pastikan koneksi stabil.");
+    })
+    .finally(() => {
+        // JURUS PAMUNGKAS: Apapun yang terjadi (berhasil/gagal), matikan loading!
+        document.getElementById("loader-lapbul").classList.add("hidden");
     });
 }
 
@@ -92,7 +101,6 @@ function loadDataBulanDipilih() {
 function renderSemuaSection() {
     const dLalu = DATA_INIT_LAPBUL.data_kader_lalu || {};
     
-    // BAGIAN I: KEADAAN UMUM (7 Item)
     const labelI = ["PPKBD", "SUB PPKBD", "Kelompok KB KS", "Kelompok BKB", "Kelompok BKR", "Kelompok BKL", "Kelompok UPPKA"];
     let htmlI = "";
     labelI.forEach((lab, i) => {
@@ -105,7 +113,6 @@ function renderSemuaSection() {
     });
     document.getElementById("sec-1").innerHTML = htmlI;
 
-    // BAGIAN II: OPERASIONAL
     const labelII = ["Frekuensi Rakor Desa", "Frekuensi KIE/Penyuluhan", "Tokoh Masyarakat Aktif KIE"];
     let htmlII = "";
     labelII.forEach((lab, i) => {
@@ -117,12 +124,11 @@ function renderSemuaSection() {
     });
     document.getElementById("sec-2").innerHTML = htmlII;
 
-    // BAGIAN III: KETAHANAN (BKB, BKR, BKL)
     const tipeIII = ["BKB", "BKR", "BKL"];
     const labelIII = ["Sasaran Kelompok", "Anggota Kelompok", "Anggota Berstatus PUS", "PUS Anggota Peserta KB", "Frekuensi Pertemuan"];
     let htmlIII = "";
     tipeIII.forEach(t => {
-        htmlIII += `<div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+        htmlIII += `<div class="bg-blue-50 p-3 rounded-xl border border-blue-100 mb-3">
             <h4 class="text-[10px] font-black text-blue-800 mb-2 uppercase">Kelompok ${t}</h4>
             <div class="space-y-2">`;
         labelIII.forEach((lab, i) => {
@@ -136,12 +142,11 @@ function renderSemuaSection() {
     });
     document.getElementById("sec-3").innerHTML = htmlIII;
 
-    // BAGIAN IV: UPPKA
     const labelIV = ["Anggota Kelompok UPPKA", "Kelompok UPPKA PUS", "Kelompok UPPKA PUS ber-KB", "Pertemuan UPPKA"];
     let htmlIV = "";
     labelIV.forEach((lab, i) => {
         htmlIV += `
-        <div class="flex justify-between items-center bg-orange-50 p-2 rounded-lg border border-orange-100">
+        <div class="flex justify-between items-center bg-orange-50 p-2 rounded-lg border border-orange-100 mb-2">
             <span class="text-[10px] font-bold text-orange-800 uppercase">${lab}</span>
             <input type="number" id="iv-${i}" value="${dLalu[`iv_${i}`] || 0}" class="w-16 p-2 border rounded-lg text-center font-black text-orange-900">
         </div>`;
@@ -158,21 +163,18 @@ function renderBagianV() {
     let totalPUS = 0; let totalPPM = 0;
     let listAlkon = [];
 
-    // Jika data dari Register_AB ditemukan (Jan-Bulan Ini)
     DATA_V_SERVER.forEach(d => {
-        // Ambil data satu desa
         totalPUS = Math.round(parseInt(d.pus || 0) / pembagi);
-        
         const alkonKeys = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
+        
+        // Ambil target_ori
+        let tOri = {};
+        try { tOri = typeof d.target_ori === 'string' ? JSON.parse(d.target_ori) : d.target_ori; } catch(e) { tOri = {}; }
+
         alkonKeys.forEach(k => {
-            // Target per PPKBD = Target Desa / Jumlah PPKBD
-            const targetKader = Math.round(parseInt(d.target_ori[k] || 0) / pembagi);
-            const baruBlnIni = Math.round((parseInt(d[k + '_p']) + parseInt(d[k + '_s'])) / pembagi);
-            
-            // Mencari Kumulatif s/d Bulan Ini (dari data init)
-            // (Disederhanakan: Kita asumsikan data yang ditarik per bulan sudah mencakup perhitungan kumulatif server)
-            // Namun untuk presisi, kita hitung dari DATA_V_SERVER
-            const baruSDIni = baruBlnIni; // Implementasi kumulatif real-time butuh loop tambahan jika perlu
+            const targetKader = Math.round(parseInt(tOri[k] || 0) / pembagi);
+            const baruBlnIni = Math.round((parseInt(d[k + '_p'] || 0) + parseInt(d[k + '_s'] || 0)) / pembagi);
+            const baruSDIni = baruBlnIni; 
 
             listAlkon.push({
                 nama: k.toUpperCase(),
@@ -191,7 +193,7 @@ function renderBagianV() {
     let htmlV = "";
     listAlkon.forEach(a => {
         htmlV += `
-        <div class="bg-white p-3 rounded-xl border border-slate-100 grid grid-cols-5 text-center items-center shadow-sm">
+        <div class="bg-white p-3 rounded-xl border border-slate-100 grid grid-cols-5 text-center items-center shadow-sm mb-2">
             <span class="text-[10px] font-black text-slate-800 text-left">${a.nama}</span>
             <div class="flex flex-col"><span class="text-[7px] text-slate-400 font-bold uppercase">TGT</span><span class="text-xs font-bold">${a.target}</span></div>
             <div class="flex flex-col"><span class="text-[7px] text-blue-400 font-bold uppercase">BLN</span><span class="text-xs font-bold text-blue-600">${a.bln_ini}</span></div>
@@ -205,7 +207,6 @@ function renderBagianV() {
 // 5. SIMPAN DATA I-IV KE SERVER
 function simpanDraftKader() {
     const dataJSON = {};
-    // Ambil data I-IV dari elemen input
     document.querySelectorAll('#area-form input').forEach(inp => {
         dataJSON[inp.id.replace(/-/g, '_')] = inp.value;
     });
@@ -226,8 +227,10 @@ function simpanDraftKader() {
     fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
     .then(res => res.text())
     .then(res => {
-        document.getElementById("loader-lapbul").classList.add("hidden");
         if(res === "success") alert("✅ Data Bagian I - IV Berhasil Disimpan!");
+    })
+    .finally(() => {
+        document.getElementById("loader-lapbul").classList.add("hidden");
     });
 }
 
@@ -235,34 +238,28 @@ function simpanDraftKader() {
 function siapkanCetakPDF() {
     const bln = document.getElementById("lap-bulan").value;
     const thn = document.getElementById("lap-tahun").value;
-    const ttd = DATA_INIT_LAPBUL.ttd_admin || {};
     
-    // Ambil semua nilai dari form untuk dimasukkan ke template cetak
     const area = document.getElementById("area-print");
     area.innerHTML = `
         <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 20px;">
-            <h2 style="margin: 0; font-size: 14px;">LAPORAN PENGELOLAAN PROGRAM KB</h2>
-            <h2 style="margin: 0; font-size: 14px;">PEMBANTU PEMBINA KELUARGA BERENCANA DESA (PPKBD)</h2>
+            <h2 style="margin: 0; font-size: 14px; font-weight: bold;">LAPORAN PENGELOLAAN PROGRAM KB</h2>
+            <h2 style="margin: 0; font-size: 14px; font-weight: bold;">PEMBANTU PEMBINA KELUARGA BERENCANA DESA (PPKBD)</h2>
         </div>
-
         <table style="width: 100%; font-size: 11px; margin-bottom: 15px;">
             <tr><td width="20%">NAMA</td><td>: ${localStorage.getItem("nama")}</td><td width="20%">BULAN</td><td>: ${bln} ${thn}</td></tr>
             <tr><td>DESA BINAAN</td><td>: ${localStorage.getItem("desa")}</td></tr>
             <tr><td>KECAMATAN</td><td>: ${localStorage.getItem("kecamatan")}</td></tr>
             <tr><td>KABUPATEN</td><td>: BEKASI</td></tr>
         </table>
-
-        <!-- ... Bagian Tabel I - V akan dibangun di sini mengikuti format gambar ... -->
         <p style="text-align: center; font-weight: bold; font-size: 12px;">(Draft Laporan F4 siPeKa)</p>
     `;
 
-    // Eksekusi html2pdf
     const opt = {
         margin: [10, 10],
         filename: `Lapbul_${bln}_${localStorage.getItem("desa")}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'legal', orientation: 'portrait' } // Legal mendekati F4
+        jsPDF: { unit: 'mm', format: 'legal', orientation: 'portrait' }
     };
 
     html2pdf().set(opt).from(area).save();
