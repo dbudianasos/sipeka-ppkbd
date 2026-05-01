@@ -716,12 +716,19 @@ function getPersentaseBulan(bulan) {
     return tren[bulan.toUpperCase()] || 0.083;
 }
 
+// --- INIT DATA AB (DENGAN PROTEKSI LOADING DROPDOWN) ---
 function initKhususAB() {
     const selectKec = document.getElementById("ab-kecamatan");
     const selectThn = document.getElementById("ab-tahun");
     const selectBln = document.getElementById("ab-bulan");
     if (!selectKec || !selectThn) return;
 
+    // 1. KUNCI DROPDOWN & TAMPILKAN STATUS LOADING
+    selectKec.disabled = true;
+    selectKec.innerHTML = `<option value="">⏳ MEMUAT KECAMATAN...</option>`;
+    selectKec.classList.add("bg-slate-100", "cursor-wait");
+
+    // Setting Tahun Otomatis
     const thnSkg = new Date().getFullYear();
     let optTahun = "";
     for(let y = thnSkg - 1; y <= thnSkg + 2; y++) { 
@@ -729,22 +736,38 @@ function initKhususAB() {
     }
     selectThn.innerHTML = optTahun;
     
+    // Setting Bulan Otomatis
     const daftarBulan = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
     selectBln.value = daftarBulan[new Date().getMonth()];
 
+    // 2. PROSES AMBIL DATA KECAMATAN
     fetch(`${API_URL}?action=get_semua_kecamatan`)
-    .then(res => res.json()).then(listKecamatan => {
+    .then(res => res.json())
+    .then(listKecamatan => {
         let opsiKec = `<option value="">-- PILIH KECAMATAN --</option>`;
         listKecamatan.forEach(k => { opsiKec += `<option value="${k}">${k}</option>`; });
+        
+        // ISI DATA & AKTIFKAN KEMBALI
         selectKec.innerHTML = opsiKec;
+        selectKec.disabled = false;
+        selectKec.classList.remove("cursor-wait", "bg-slate-100");
 
+        // 3. DETEKSI OTOMATIS SIAPA YANG LOGIN
         const role = (localStorage.getItem("role") || "").toLowerCase();
+        const kecUser = (localStorage.getItem("kecamatan") || "").toUpperCase();
+
         if (role.includes("admin_kec") || role.includes("admin_desa")) {
-            selectKec.value = (localStorage.getItem("kecamatan") || "").toUpperCase();
-            selectKec.disabled = true;
-            selectKec.classList.add("bg-slate-200");
+            selectKec.value = kecUser;
+            selectKec.disabled = true; // Kunci permanen untuk Admin Lokal
+            selectKec.classList.add("bg-slate-200", "font-black");
+            
+            // Langsung tarik data laci desa
             initDataAB();
         }
+    })
+    .catch(err => {
+        selectKec.innerHTML = `<option value="">❌ GAGAL MEMUAT</option>`;
+        console.error("Error memuat kecamatan:", err);
     });
 }
 
