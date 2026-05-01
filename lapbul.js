@@ -1248,48 +1248,64 @@ function renderTableBakuAB() {
         if(wadahScroll) wadahScroll.scrollLeft = 0;
 }
 
-// --- EKSEKUSI SIMPAN ---
+// --- EKSEKUSI SIMPAN (VERSI LOADING MENGAMBANG & AUTO-REFRESH) ---
 function prosesSimpanAB(statusFinal) {
     const thn = document.getElementById("ab-tahun").value;
     const bln = document.getElementById("ab-bulan").value;
     const kec = document.getElementById("ab-kecamatan").value;
-    document.getElementById("loader-ab").classList.remove("hidden");
+    
+    // 1. AKTIFKAN LOADING MENGAMBANG DI TENGAH LAYAR
+    const loader = document.getElementById("loader-ab");
+    if (loader) {
+        loader.classList.remove("hidden");
+        loader.className = "fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center text-white";
+        loader.innerHTML = `
+            <div class="relative flex justify-center items-center">
+                <div class="absolute w-24 h-24 border-4 border-orange-200 rounded-full animate-ping"></div>
+                <div class="w-20 h-20 bg-orange-500 rounded-[1.5rem] flex items-center justify-center shadow-2xl animate-bounce border-4 border-white">
+                    <span class="text-white font-black text-xs uppercase tracking-tighter">siPeKa</span>
+                </div>
+            </div>
+            <p class="mt-8 text-xs font-black uppercase tracking-[0.3em] animate-pulse text-orange-200">Sedang Memproses Data...</p>
+        `;
+    }
     
     const payload = {
-        action: "save_register_ab", tahun: thn, bulan: bln, kecamatan: kec,
-        status: statusFinal, admin_nama: localStorage.getItem("nama") || "Admin",
-        admin_nik: localStorage.getItem("nik") || "-", admin_role: localStorage.getItem("role") || "-",
+        action: "save_register_ab", 
+        tahun: thn, 
+        bulan: bln, 
+        kecamatan: kec,
+        status: statusFinal, 
+        admin_nama: localStorage.getItem("nama") || "Admin",
+        admin_nik: localStorage.getItem("nik") || "-", 
+        admin_role: localStorage.getItem("role") || "-",
         data_json: JSON.stringify(DATA_AB_TEMP)
     };
 
     fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
     .then(res => res.text())
     .then(res => {
-        document.getElementById("loader-ab").classList.add("hidden");
-        if (res.trim() === "success") {
-            ADA_PERUBAHAN_BELUM_DISIMPAN = false; 
-            DATA_AB_ORIGINAL = JSON.parse(JSON.stringify(DATA_AB_TEMP)); 
-            
-            // Perbarui data preview tahunan agar langsung sesuai setelah simpan
-            let idxBln = DAFTAR_BULAN.indexOf(bln);
-            DATA_AB_TEMP.forEach(d => {
-                let dYear = PREVIEW_DATA_YEAR.find(p => p.desa === d.desa && p.bulan === bln);
-                if(dYear) {
-                    METODE_KB.forEach(m => {
-                        let k = getKeyServer(m);
-                        dYear[`${k}_p`] = d[`${k}_p`]; dYear[`${k}_s`] = d[`${k}_s`];
-                    });
-                }
-            });
+        // 2. SEMBUNYIKAN LOADING
+        if (loader) {
+            loader.classList.add("hidden");
+            // Kembalikan desain loader ke asal agar tidak merusak tampilan saat narik data biasa
+            loader.className = "hidden text-center py-20";
+            loader.innerHTML = `<div class="animate-spin inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mb-4"></div><p class="text-[10px] font-bold text-slate-400 uppercase animate-pulse">Menghitung Distribusi Target...</p>`;
+        }
 
-            alert(`✅ Laporan ${kec} bulan ${bln} berhasil disimpan sebagai ${statusFinal}`);
-            if(statusFinal === "Final" && localStorage.getItem("role") !== "super_admin") {
-                IS_EDIT_MODE_AB = false; 
-            }
-            setupTombolAksiAB(); renderLaciAB(); 
-        } else { alert("❌ Gagal: " + res); }
+        if (res.trim() === "success") {
+            alert(`✅ SUKSES! Laporan ${kec} bulan ${bln} berhasil disimpan sebagai ${statusFinal}`);
+            
+            // 3. AUTO-REFRESH DATA (Pilihan Kec & Bulan gak akan berubah/reset)
+            ADA_PERUBAHAN_BELUM_DISIMPAN = false;
+            initDataAB(); 
+            
+        } else { 
+            alert("❌ Gagal Simpan: " + res); 
+        }
     }).catch(err => {
-        document.getElementById("loader-ab").classList.add("hidden");
-        alert("Terjadi kesalahan jaringan.");
+        if (loader) loader.classList.add("hidden");
+        console.error(err);
+        alert("Terjadi kesalahan jaringan saat mencoba menyimpan.");
     });
 }
