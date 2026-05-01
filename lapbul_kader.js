@@ -13,41 +13,49 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initFormLapbul() {
-    const loader = document.getElementById("loader-lapbul");
-    if(loader) loader.classList.remove("hidden"); // Tampilkan loading saat awal buka
-
+    const infoNama = document.getElementById("info-nama");
+    const infoDesa = document.getElementById("info-desa");
+    const infoKec = document.getElementById("info-kec");
     const selTahun = document.getElementById("lap-tahun");
     const selBulan = document.getElementById("lap-bulan");
-    const kec = (localStorage.getItem("kecamatan") || "").toUpperCase();
+
+    const nama = localStorage.getItem("nama");
     const desa = (localStorage.getItem("desa") || "").toUpperCase();
+    const kec = (localStorage.getItem("kecamatan") || "").toUpperCase();
     const nik = localStorage.getItem("nik");
 
-    // Isi Tahun Otomatis
+    if (infoNama) infoNama.innerText = nama;
+    if (infoDesa) infoDesa.innerText = desa;
+    if (infoKec) infoKec.innerText = kec;
+
+    // Isi Tahun
     const thnSkg = new Date().getFullYear();
     let optThn = "";
     for(let y = thnSkg - 1; y <= thnSkg + 1; y++) {
-        optThn += `<option value="${y}" ${y == thnSkg ? 'selected' : ''}>${y}</option>`;
+        optThn += `<option value="${y}" ${y === thnSkg ? 'selected' : ''}>${y}</option>`;
     }
     selTahun.innerHTML = optThn;
 
+    // Tarik Data Awal dari Server (Status AB, TTD, & Data Bulan Lalu)
     fetch(`${API_URL}?action=get_init_lapbul&tahun=${selTahun.value}&kecamatan=${kec}&desa=${desa}&nik=${nik}`)
     .then(res => res.json())
     .then(data => {
         DATA_INIT_LAPBUL = data;
+        
+        // Render Dropdown Bulan dengan Validasi Status Final
         let optBln = `<option value="">-- PILIH BULAN --</option>`;
         DAFTAR_BULAN.forEach(b => {
-            const status = data.status_bulan[b] || "Draft";
+            const status = data.status_bulan[b] || "Belum Ada";
             const isFinal = status === "Final";
-            optBln += `<option value="${b}" ${!isFinal ? 'disabled style="color:#cbd5e1"' : 'style="color:#1e3a8a; font-weight:bold"'}>
+            optBln += `<option value="${b}" ${!isFinal ? 'disabled class="text-slate-300"' : 'class="text-blue-900 font-bold"'}>
                 ${b} ${isFinal ? '✅' : '(BELUM FINAL)'}
             </option>`;
         });
+        
         selBulan.innerHTML = optBln;
         selBulan.disabled = false;
         selBulan.classList.remove("bg-slate-100", "cursor-wait");
-    })
-    .finally(() => {
-        if(loader) loader.classList.add("hidden"); // PASTIKAN LOADING HILANG
+        selBulan.classList.add("bg-white", "cursor-pointer");
     });
 }
 
@@ -150,41 +158,31 @@ function renderBagianV() {
     let totalPUS = 0; let totalPPM = 0;
     let listAlkon = [];
 
-    // Jika tidak ada data dari server, buat nol semua
-    if (DATA_V_SERVER.length === 0) {
-        document.getElementById("v-pus").innerText = 0;
-        document.getElementById("v-ppm").innerText = 0;
-        document.getElementById("v-tabel-alkon").innerHTML = `<p class="text-center text-[10px] text-slate-400 py-4">Data AB tidak ditemukan.</p>`;
-        return;
-    }
-
-    const d = DATA_V_SERVER[0]; // Ambil baris pertama (desa terkait)
-    totalPUS = Math.round(parseInt(d.pus || 0) / pembagi);
-    
-    const alkonKeys = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
-    alkonKeys.forEach(k => {
-        // Ambil target asli dari JSON target_ori
-        let tOri = 0;
-        try { 
-            // Pastikan target_ori sudah berupa object
-            const targets = typeof d.target_ori === 'string' ? JSON.parse(d.target_ori) : d.target_ori;
-            tOri = parseInt(targets[k] || 0);
-        } catch(e) { tOri = 0; }
-
-        const targetKader = Math.round(tOri / pembagi);
-        const baruBlnIni = Math.round((parseInt(d[k + '_p'] || 0) + parseInt(d[k + '_s'] || 0)) / pembagi);
+    // Jika data dari Register_AB ditemukan (Jan-Bulan Ini)
+    DATA_V_SERVER.forEach(d => {
+        // Ambil data satu desa
+        totalPUS = Math.round(parseInt(d.pus || 0) / pembagi);
         
-        // S/D Bulan Ini (Untuk sementara kita ambil dari data bulan terpilih)
-        const baruSDIni = baruBlnIni; 
+        const alkonKeys = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
+        alkonKeys.forEach(k => {
+            // Target per PPKBD = Target Desa / Jumlah PPKBD
+            const targetKader = Math.round(parseInt(d.target_ori[k] || 0) / pembagi);
+            const baruBlnIni = Math.round((parseInt(d[k + '_p']) + parseInt(d[k + '_s'])) / pembagi);
+            
+            // Mencari Kumulatif s/d Bulan Ini (dari data init)
+            // (Disederhanakan: Kita asumsikan data yang ditarik per bulan sudah mencakup perhitungan kumulatif server)
+            // Namun untuk presisi, kita hitung dari DATA_V_SERVER
+            const baruSDIni = baruBlnIni; // Implementasi kumulatif real-time butuh loop tambahan jika perlu
 
-        listAlkon.push({
-            nama: k.toUpperCase(),
-            target: targetKader,
-            bln_ini: baruBlnIni,
-            sd_ini: baruSDIni,
-            sisa: Math.max(0, targetKader - baruSDIni)
+            listAlkon.push({
+                nama: k.toUpperCase(),
+                target: targetKader,
+                bln_ini: baruBlnIni,
+                sd_ini: baruSDIni,
+                sisa: Math.max(0, targetKader - baruSDIni)
+            });
+            totalPPM += targetKader;
         });
-        totalPPM += targetKader;
     });
 
     document.getElementById("v-pus").innerText = totalPUS;
@@ -195,10 +193,10 @@ function renderBagianV() {
         htmlV += `
         <div class="bg-white p-3 rounded-xl border border-slate-100 grid grid-cols-5 text-center items-center shadow-sm">
             <span class="text-[10px] font-black text-slate-800 text-left">${a.nama}</span>
-            <div class="flex flex-col"><span class="text-[7px] text-slate-400 font-bold uppercase tracking-tighter">TGT</span><span class="text-xs font-bold">${a.target}</span></div>
-            <div class="flex flex-col"><span class="text-[7px] text-blue-400 font-bold uppercase tracking-tighter">BLN</span><span class="text-xs font-bold text-blue-600">${a.bln_ini}</span></div>
-            <div class="flex flex-col"><span class="text-[7px] text-emerald-400 font-bold uppercase tracking-tighter">S/D</span><span class="text-xs font-bold text-emerald-600">${a.sd_ini}</span></div>
-            <div class="flex flex-col"><span class="text-[7px] text-red-400 font-bold uppercase tracking-tighter">SISA</span><span class="text-xs font-bold text-red-500">${a.sisa}</span></div>
+            <div class="flex flex-col"><span class="text-[7px] text-slate-400 font-bold uppercase">TGT</span><span class="text-xs font-bold">${a.target}</span></div>
+            <div class="flex flex-col"><span class="text-[7px] text-blue-400 font-bold uppercase">BLN</span><span class="text-xs font-bold text-blue-600">${a.bln_ini}</span></div>
+            <div class="flex flex-col"><span class="text-[7px] text-emerald-400 font-bold uppercase">S/D</span><span class="text-xs font-bold text-emerald-600">${a.sd_ini}</span></div>
+            <div class="flex flex-col"><span class="text-[7px] text-red-400 font-bold uppercase">SISA</span><span class="text-xs font-bold text-red-500">${a.sisa}</span></div>
         </div>`;
     });
     document.getElementById("v-tabel-alkon").innerHTML = htmlV;
