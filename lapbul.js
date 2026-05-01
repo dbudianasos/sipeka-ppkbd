@@ -814,14 +814,15 @@ function initDataAB() {
     
     setupTombolAksiAB();
 
+    // INI DIA BIANG KEROKNYA KEMARIN (Kurang .then(res => res.json()) di baris kedua)
     Promise.all([
         fetch(`${API_URL}?action=get_master_referensi`).then(res => res.json()),
-        fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}`)
+        fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}`).then(res => res.json()) 
     ])
     .then(([allTargets, dataSetahun]) => {
-        // TANGKAP ERROR DARI SPREADSHEET AGAR TIDAK MUTER LALU HILANG
+        // Tangkap error jika GS mengirimkan JSON error
         if (allTargets.error_sistem || dataSetahun.error_sistem) {
-            alert("⚠️ Sistem Database Error (Bisa jadi ada kolom/baris yang kosong atau terhapus).\n\nDetail Error: " + (allTargets.error_sistem || dataSetahun.error_sistem));
+            alert("⚠️ Sistem Database Error.\n\nDetail Error: " + (allTargets.error_sistem || dataSetahun.error_sistem));
             document.getElementById("loader-ab").classList.add("hidden");
             return;
         }
@@ -870,7 +871,7 @@ function initDataAB() {
         renderLaciAB();      
     }).catch(err => {
         console.error(err);
-        alert("Gagal menarik data. Cek koneksi internet atau hubungi Administrator.");
+        alert("Gagal memproses data. Cek console log untuk detail.");
         document.getElementById("loader-ab").classList.add("hidden");
     });
 }
