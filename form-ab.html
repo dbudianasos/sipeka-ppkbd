@@ -144,23 +144,21 @@
   </button>
 </div>
 
-<!-- MODAL PREVIEW LIVE (SUPER DASHBOARD - UX MENGAPUNG) -->
+<!-- MODAL PREVIEW LIVE (SUPER DASHBOARD) -->
 <div id="modal-preview-ab" class="fixed inset-0 z-[100] hidden bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center p-2 md:p-4">
   
-  <!-- JUDUL MENGAPUNG DI ATAS -->
-  <div class="fixed top-6 left-0 right-0 z-[110] flex flex-col items-center pointer-events-none drop-shadow-xl">
-    <h2 class="font-black text-white uppercase text-base tracking-widest bg-slate-800/80 px-6 py-2 rounded-full border border-white/10">Register AB Live</h2>
-    <p id="label-kec-preview" class="text-[9px] text-slate-300 font-bold uppercase tracking-[0.2em] mt-2"></p>
-  </div>
-
-  <!-- AREA TABEL & LOADING -->
-  <div class="bg-white w-full max-w-[98vw] h-[85vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden border border-white/20 mt-10 relative">
+  <div class="bg-white w-full max-w-[98vw] h-[90vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden border border-white/20 relative">
     
+    <!-- JUDUL DI DALAM KOTAK (ANTI NABRAK) -->
+    <div class="bg-slate-800 text-white p-4 flex flex-col items-center justify-center relative z-10 shadow-md">
+        <h2 class="font-black uppercase text-sm md:text-base tracking-widest text-center">📋 Register AB Live Preview</h2>
+        <p id="label-kec-preview" class="text-[9px] text-blue-200 font-bold uppercase tracking-[0.2em] mt-1 text-center"></p>
+    </div>
+
     <!-- LOADING ANIMATION SIPEKA -->
     <div id="loader-preview" class="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center hidden">
       <div class="relative flex justify-center items-center">
           <div class="absolute w-20 h-20 border-4 border-blue-200 rounded-full animate-ping"></div>
-          <!-- GANTI SRC INI DENGAN LOGO BAPAK -->
           <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center shadow-2xl animate-pulse overflow-hidden">
               <span class="text-white font-black text-xs">SiPeKa</span>
           </div>
@@ -168,9 +166,9 @@
       <p class="mt-6 text-[10px] font-black text-blue-900 uppercase tracking-[0.2em] animate-pulse">Menarik Data Register...</p>
     </div>
 
-    <!-- TABEL BAKU (DENGAN SENSOR GESER) -->
+    <!-- TABEL BAKU (KOLOM STICKY DIPERBAIKI) -->
     <div class="w-full h-full overflow-auto bg-slate-50 relative pb-20" id="scroll-tabel-preview" onscroll="efekSingkatDesa(this)">
-       <table id="tabel-baku-ab" class="min-w-[1500px] w-full text-[10px] border-collapse bg-white shadow-sm m-2 md:m-4 rounded-xl overflow-hidden">
+       <table id="tabel-baku-ab" class="min-w-[1500px] w-full text-[10px] border-collapse bg-white shadow-sm rounded-xl overflow-hidden">
          <!-- Render JS -->
        </table>
     </div>
@@ -183,7 +181,7 @@
     <button onclick="geserBulanPreview(1)" class="p-3 bg-slate-50 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-full active:scale-90 transition"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg></button>
   </div>
 
-  <!-- TOMBOL X (CLOSE) MENGAPUNG KANAN BAWAH -->
+  <!-- TOMBOL X (CLOSE) MENGAPUNG -->
   <button onclick="tutupModalPreview()" class="fixed bottom-6 right-6 z-[110] bg-red-50 hover:bg-red-100 text-red-500 p-4 rounded-full shadow-2xl active:scale-90 transition-all border border-red-200 flex items-center justify-center">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
   </button>
