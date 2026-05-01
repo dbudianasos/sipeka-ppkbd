@@ -876,7 +876,7 @@ function initDataAB() {
     });
 }
 
-// --- RENDER LACI DESA ---
+// --- RENDER LACI DESA (VERSI UI KAPSUL SULTAN) ---
 function renderLaciAB() {
     const container = document.getElementById("container-laci-ab");
     const thn = document.getElementById("ab-tahun").value;
@@ -893,36 +893,51 @@ function renderLaciAB() {
         let totalAB_JanBulan = totalAB_Bulan + (d.kumulatif_lalu || 0);
         let ppmTahunan = Object.values(d.target_ori).reduce((a,b) => a+b, 0);
         let targetBulanIni = Math.round(ppmTahunan * getPersentaseBulan(bln));
-        let capBulan = targetBulanIni > 0 ? ((totalAB_Bulan / targetBulanIni) * 100).toFixed(1) : 0;
+        
+        // --- VARIABEL PERHITUNGAN PERSENTASE ---
         let progresTahun = ppmTahunan > 0 ? ((totalAB_JanBulan / ppmTahunan) * 100).toFixed(1) : 0;
+        let capBulan = targetBulanIni > 0 ? ((totalAB_Bulan / targetBulanIni) * 100).toFixed(1) : 0;
 
         const isFinal = d.status === "Final";
         const isLocked = isFinal && !IS_EDIT_MODE_AB; 
-        const dot = `<span class="inline-block w-1 h-1 rounded-full mx-1.5 bg-slate-300"></span>`;
 
-        let sumWarna = "bg-white text-blue-600";
-        if (totalAB_Bulan > targetBulanIni) sumWarna = "bg-red-500 text-white";
-        else if (totalAB_Bulan === targetBulanIni) sumWarna = "bg-emerald-500 text-white";
-        else sumWarna = "bg-orange-400 text-white";
+        // --- STYLING DINAMIS ---
+        // Jika Capaian Bulan terpenuhi (Hijau), jika belum (Oranye)
+        let capStyle = capBulan >= 100 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-orange-100 text-orange-800 border-orange-300';
+        
+        // Styling Total Angka Live di Laci Bawah
+        let sumWarna = "bg-white text-blue-600 border-blue-200";
+        if (totalAB_Bulan > targetBulanIni) sumWarna = "bg-red-500 text-white border-red-600";
+        else if (totalAB_Bulan === targetBulanIni) sumWarna = "bg-emerald-500 text-white border-emerald-600";
+        else sumWarna = "bg-orange-400 text-white border-orange-500";
 
         container.innerHTML += `
-        <div class="bg-white rounded-[2rem] border ${isFinal ? 'border-emerald-100' : 'border-slate-100'} overflow-hidden shadow-sm mb-4">
-            <div onclick="toggleLaciAB(${idx})" class="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50/50">
-                <div class="flex flex-col">
-                    <div class="flex items-center gap-2">
-                        <h3 class="font-black text-slate-800 text-sm uppercase">${d.desa}</h3>
-                        <span class="text-[7px] px-2 py-0.5 rounded-full font-black border ${isFinal ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-400'} uppercase">${d.status || 'DRAFT'}</span>
+        <div class="bg-white rounded-[2rem] border ${isFinal ? 'border-emerald-200 shadow-emerald-50' : 'border-slate-200'} overflow-hidden shadow-md mb-4 transition hover:shadow-lg">
+            <div onclick="toggleLaciAB(${idx})" class="p-4 sm:p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50/80">
+                <div class="flex flex-col w-full pr-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <h3 class="font-black text-slate-800 text-sm sm:text-base uppercase tracking-tight">${d.desa}</h3>
+                        <span class="text-[8px] px-2 py-0.5 rounded-full font-black border ${isFinal ? 'bg-emerald-500 border-emerald-600 text-white' : 'bg-slate-100 border-slate-300 text-slate-500 shadow-inner'} uppercase tracking-widest">${d.status || 'DRAFT'}</span>
                     </div>
-                    <div class="flex flex-wrap items-center mt-1.5 text-[8.5px] font-bold text-slate-400 uppercase tracking-tighter">
-                        <span class="text-blue-600">PPM ${thn}: ${ppmTahunan}</span> ${dot}
-                        <span>AB ${bln}: ${totalAB_Bulan}</span> ${bln !== 'JANUARI' ? `${dot} <span>Jan-${bln}: ${totalAB_JanBulan}</span>` : ''} ${dot}
-                        <span class="${capBulan >= 100 ? 'text-emerald-500' : 'text-orange-500'}">Cap: ${capBulan}%</span> ${dot}
-                        <span class="text-slate-800">Prog: ${progresTahun}%</span>
+                    
+                    <!-- REKAP SINGKAT (GAYA KAPSUL/BADGES) -->
+                    <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-0.5 text-[8.5px] sm:text-[9px] font-extrabold uppercase tracking-tighter">
+                        <span class="px-2 sm:px-2.5 py-1 rounded-full border bg-blue-50 text-blue-700 border-blue-200 shadow-sm">PPM ${thn}: ${ppmTahunan}</span>
+                        
+                        <span class="px-2 sm:px-2.5 py-1 rounded-full border bg-white text-slate-600 border-slate-300 shadow-sm">AB ${bln.substring(0,3)}: ${totalAB_Bulan}</span>
+                        
+                        ${bln !== 'JANUARI' ? `<span class="px-2 sm:px-2.5 py-1 rounded-full border bg-white text-slate-600 border-slate-300 shadow-sm">Jan-${bln.substring(0,3)}: ${totalAB_JanBulan}</span>` : ''}
+                        
+                        <span class="px-2 sm:px-2.5 py-1 rounded-full border ${capStyle} shadow-sm" title="Kinerja khusus bulan ini">CAP. BLN: ${capBulan}%</span>
+                        
+                        <span class="px-2 sm:px-2.5 py-1 rounded-full border bg-slate-800 text-white border-slate-700 shadow-md" title="Progres kumulatif tahunan">PROG: ${progresTahun}%</span>
                     </div>
+                    
                 </div>
-                <div id="icon-laci-ab-${idx}" class="w-9 h-9 flex items-center justify-center rounded-2xl bg-slate-50 text-blue-300">🔽</div>
+                <div id="icon-laci-ab-${idx}" class="w-10 h-10 shrink-0 flex items-center justify-center rounded-2xl bg-blue-50 text-blue-500 font-bold border border-blue-100 shadow-sm transition-transform duration-300">🔽</div>
             </div>
-            <div id="isi-laci-ab-${idx}" class="hidden p-5 border-t border-slate-50 bg-slate-50/10">
+            
+            <div id="isi-laci-ab-${idx}" class="hidden p-4 sm:p-5 border-t border-slate-100 bg-slate-50/50">
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
                     ${METODE_KB.map(m => {
                         let k = getKeyServer(m);
@@ -931,15 +946,15 @@ function renderLaciAB() {
                     }).join('')}
                 </div>
                 
-                <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100 flex flex-col justify-center shadow-inner relative">
+                <div class="mt-4 p-3 bg-white rounded-xl border border-blue-100 flex flex-col justify-center shadow-sm relative">
                     <div class="flex justify-between items-center">
-                        <span class="text-[9px] font-black text-blue-800 uppercase tracking-widest">Total AB Bulan Ini:</span>
+                        <span class="text-[10px] font-black text-blue-900 uppercase tracking-widest">Total AB Bulan Ini:</span>
                         <div class="flex gap-2 items-center">
-                            ${!isLocked ? `<button onclick="resetLaciAB(${idx})" class="text-[8px] bg-slate-200 hover:bg-slate-300 text-slate-600 px-2 py-1 rounded font-bold uppercase transition shadow-sm border border-slate-300">🔄 Reset</button>` : ''}
-                            <span class="text-lg font-black ${sumWarna} px-4 py-1 rounded-lg shadow-sm transition-all duration-300" id="live-sum-${idx}">${totalAB_Bulan}</span>
+                            ${!isLocked ? `<button onclick="resetLaciAB(${idx})" class="text-[9px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-bold uppercase transition shadow-sm border border-slate-200">🔄 Reset</button>` : ''}
+                            <span class="text-xl font-black border ${sumWarna} px-5 py-1.5 rounded-xl shadow-md transition-all duration-300" id="live-sum-${idx}">${totalAB_Bulan}</span>
                         </div>
                     </div>
-                    <p id="live-warn-${idx}" class="hidden mt-2 text-[9px] font-bold leading-tight"></p>
+                    <p id="live-warn-${idx}" class="hidden mt-2 text-[9px] sm:text-[10px] font-bold leading-tight"></p>
                 </div>
             </div>
         </div>`;
