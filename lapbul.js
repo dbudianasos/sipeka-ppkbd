@@ -1132,28 +1132,47 @@ function geserBulanPreview(arah) {
     renderTableBakuAB();
 }
 
+// --- RENDER TABEL LIVE PREVIEW (DENGAN PAKU BUMI CSS) ---
 function renderTableBakuAB() {
+    // SUNTIKAN PAKU BUMI (CSS ANTI GESER)
+    if (!document.getElementById('paku-bumi-css')) {
+        const style = document.createElement('style');
+        style.id = 'paku-bumi-css';
+        style.innerHTML = `
+            .tabel-sakti { border-collapse: separate !important; border-spacing: 0 !important; }
+            .tabel-sakti th, .tabel-sakti td { border-right: 1px solid #cbd5e1; border-bottom: 1px solid #cbd5e1; }
+            .paku-no { position: sticky !important; left: 0px !important; width: 40px !important; min-width: 40px !important; max-width: 40px !important; z-index: 40 !important; background-color: #f8fafc !important; }
+            .paku-desa { position: sticky !important; left: 40px !important; z-index: 40 !important; background-color: #ffffff !important; box-shadow: 3px 0 5px -2px rgba(0,0,0,0.15) !important; }
+            .paku-atas-no { position: sticky !important; top: 0px !important; left: 0px !important; z-index: 60 !important; width: 40px !important; min-width: 40px !important; max-width: 40px !important; background-color: #0f172a !important; border-top: 1px solid #475569; border-left: 1px solid #475569; }
+            .paku-atas-desa { position: sticky !important; top: 0px !important; left: 40px !important; z-index: 60 !important; background-color: #0f172a !important; border-top: 1px solid #475569; box-shadow: 3px 0 5px -2px rgba(0,0,0,0.5) !important; }
+        `;
+        document.head.appendChild(style);
+    }
+
     const table = document.getElementById("tabel-baku-ab");
+    table.className = "min-w-[1500px] w-full text-[10px] bg-white shadow-sm tabel-sakti";
+    
     const namaBulan = DAFTAR_BULAN[idxBulanPreview];
     document.getElementById("label-bulan-preview").innerText = namaBulan;
     const dataBulanIni = PREVIEW_DATA_YEAR.filter(d => d.bulan === namaBulan);
     
     let html = `
-    <thead class="bg-slate-800 text-white sticky top-0 z-50 shadow-md">
+    <thead class="bg-slate-800 text-white sticky top-0 z-[30] shadow-md">
         <tr class="text-[9px] uppercase tracking-tighter text-center">
-            <!-- LEBAR KOLOM STICKY DIKUNCI -->
-            <th rowspan="3" class="border border-slate-600 p-2 sticky left-0 bg-slate-900 z-50 min-w-[30px] max-w-[30px]">NO</th>
-            <th rowspan="3" id="header-desa-preview" style="min-width: 120px;" class="border border-slate-600 p-2 sticky left-[30px] bg-slate-900 z-50 transition-all duration-300">DESA / KELURAHAN</th>
-            <th rowspan="3" class="border border-slate-600 p-2 leading-tight">PPM<br>THN INI</th>
-            <th colspan="15" class="border border-slate-600 p-2 bg-blue-900">HASIL PESERTA KB BARU BULAN INI</th>
-            <th colspan="15" class="border border-slate-600 p-2 bg-emerald-900">PENCAPAIAN PESERTA KB BARU S/D BULAN INI</th>
-            <th rowspan="3" class="border border-slate-600 p-2 leading-tight">PERSENTASE<br>DARI PPM</th>
+            <!-- HEADER YANG DIPAKU -->
+            <th rowspan="3" class="p-2 paku-atas-no">NO</th>
+            <th rowspan="3" id="header-desa-preview" class="p-2 paku-atas-desa transition-all duration-300" style="min-width: 120px;">DESA / KELURAHAN</th>
+            
+            <th rowspan="3" class="p-2 leading-tight border-t border-slate-600 bg-slate-900">PPM<br>THN INI</th>
+            <th colspan="15" class="p-2 bg-blue-900 border-t border-slate-600">HASIL PESERTA KB BARU BULAN INI</th>
+            <th colspan="15" class="p-2 bg-emerald-900 border-t border-slate-600">PENCAPAIAN PESERTA KB BARU S/D BULAN INI</th>
+            <th rowspan="3" class="p-2 leading-tight border-t border-slate-600 bg-slate-900">PERSENTASE<br>DARI PPM</th>
         </tr>
         <tr class="text-[8px] uppercase">
-            ${[...Array(2)].map(() => METODE_KB.map(m => `<th colspan="2" class="border border-slate-600 p-1 bg-slate-700">${m}</th>`).join('') + `<th rowspan="2" class="border border-slate-600 p-1 bg-slate-600">JMLH</th>`).join('')}
+            ${[...Array(2)].map(() => METODE_KB.map(m => `<th colspan="2" class="p-1 bg-slate-700">${m}</th>`).join('') + `<th rowspan="2" class="p-1 bg-slate-600">JMLH</th>`).join('')}
         </tr>
         <tr class="text-[8px] uppercase">
-            ${[...Array(2)].map(() => METODE_KB.map(m => `<th class="border border-slate-600 px-2 py-1 bg-blue-700">P</th><th class="border border-slate-600 px-2 py-1 bg-blue-700">S</th>`).join('')).join('')}
+            ${[...Array(2)].map(() => METODE_KB.map(m => `<th class="px-2 py-1 bg-blue-700">P</th><th class="px-2 py-1 bg-blue-700">S</th>`).join('')).join('')}
         </tr>
     </thead>
     <tbody class="text-slate-700 bg-white">`;
@@ -1186,23 +1205,24 @@ function renderTableBakuAB() {
         let singkatan = getSingkatanDesa(desaOri.desa);
 
         html += `
-        <tr class="hover:bg-blue-50 transition border-b border-slate-200">
-            <!-- SEL STICKY DIKUNCI DI KIRI -->
-            <td class="p-2 text-center font-bold text-slate-400 sticky left-0 bg-white border-r z-40 min-w-[30px] max-w-[30px]">${idx + 1}</td>
-            <td class="p-2 font-black uppercase sticky left-[30px] bg-white border-r z-40 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] cell-desa-preview transition-all duration-300 whitespace-normal leading-tight break-words" data-lengkap="${desaOri.desa}" data-singkat="${singkatan}">${desaOri.desa}</td>
+        <tr class="hover:bg-blue-50 transition">
+            <!-- SEL DATA YANG DIPAKU -->
+            <td class="p-2 text-center font-bold text-slate-500 paku-no">${idx + 1}</td>
+            <td class="p-2 font-black uppercase paku-desa cell-desa-preview transition-all duration-300 whitespace-normal leading-tight break-words" data-lengkap="${desaOri.desa}" data-singkat="${singkatan}">${desaOri.desa}</td>
+            
             <td class="p-2 text-center font-bold text-blue-900 bg-blue-50/50">${ppmTahun}</td>
             
             ${METODE_KB.map(m => {
                 let k = getKeyServer(m);
                 let p = parseInt(dThis[`${k}_p`]) || 0; let s = parseInt(dThis[`${k}_s`]) || 0;
-                return `<td class="p-1 text-center border-x border-slate-100">${p}</td><td class="p-1 text-center border-x border-slate-100">${s}</td>`;
+                return `<td class="p-1 text-center bg-white">${p}</td><td class="p-1 text-center bg-white">${s}</td>`;
             }).join('')}
             <td class="p-1 text-center font-black text-blue-800 bg-blue-50">${jmlBulanIni}</td>
 
             ${METODE_KB.map(m => {
                 let k = getKeyServer(m);
                 let pK = parseInt(dKumulatif[`${k}_p`]) || 0; let sK = parseInt(dKumulatif[`${k}_s`]) || 0;
-                return `<td class="p-1 text-center border-x border-slate-100">${pK}</td><td class="p-1 text-center border-x border-slate-100">${sK}</td>`;
+                return `<td class="p-1 text-center bg-white">${pK}</td><td class="p-1 text-center bg-white">${sK}</td>`;
             }).join('')}
             <td class="p-1 text-center font-black text-emerald-800 bg-emerald-50">${jmlKumulatif}</td>
             <td class="p-2 text-center font-black ${persen >= 100 ? 'text-emerald-600' : 'text-slate-700'}">${persen}%</td>
