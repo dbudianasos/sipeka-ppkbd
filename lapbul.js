@@ -1229,6 +1229,8 @@ function renderTableBakuAB() {
         </tr>`;
     });
     html += `</tbody>`; table.innerHTML = html;
+    const wadahScroll = document.getElementById("scroll-tabel-preview");
+        if(wadahScroll) wadahScroll.scrollLeft = 0;
 }
 
 // --- EKSEKUSI SIMPAN ---
