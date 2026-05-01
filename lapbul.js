@@ -690,12 +690,13 @@ function simpanSemuaReferensi() {
 }
 
 // ============================================================
-// F. LOGIKA REGISTER AB (FIXED: REKAP & DYNAMIC PKM)
+// F. LOGIKA REGISTER AB (FIXED: SENSOR PREVIEW, AUTO-SUM & S-BEBAS)
 // ============================================================
 
 let DATA_AB_TEMP = []; 
 let TARGET_PPM_VILLAGE = []; 
 let IS_EDIT_MODE_AB = false;
+let ADA_PERUBAHAN_BELUM_DISIMPAN = false; // Sensor untuk mengunci Preview
 
 // --- 1. HITUNG TREN TARGET BULANAN (%) ---
 function getPersentaseBulan(bulan) {
@@ -748,14 +749,12 @@ function setupTombolAksiAB() {
     if (!wadah) return;
 
     if (IS_EDIT_MODE_AB) {
-        // Hanya satu tombol Simpan sesuai arahan Bapak
         wadah.innerHTML = `
             <button onclick="bukaModalSimpan()" class="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black px-6 py-2 rounded-xl border border-white/20 transition active:scale-95 uppercase tracking-widest flex items-center gap-2">
                 <span>💾</span> Simpan
             </button>
         `;
     } else {
-        // Tombol Buka Akses yang lebih sleek
         wadah.innerHTML = `
             <button onclick="mintaAksesEditAB()" class="bg-orange-500 hover:bg-orange-400 text-white text-[10px] font-black px-5 py-2 rounded-xl shadow-lg shadow-orange-900/20 transition active:scale-95 flex items-center gap-2 uppercase tracking-tighter">
                 <span>🔒</span> Buka Akses
@@ -792,7 +791,6 @@ function tutupModalSimpan() {
 // --- 3c. EKSEKUSI SIMPAN DARI MODAL ---
 function eksekusiSimpan(status) {
     tutupModalSimpan();
-    // Pastikan Bapak sudah punya fungsi prosesSimpanAB di lapbul.js
     if (typeof prosesSimpanAB === "function") {
         prosesSimpanAB(status);
     } else {
@@ -805,7 +803,6 @@ function mintaAksesEditAB() {
     const kec = document.getElementById("ab-kecamatan").value;
     if (!kec) return alert("Pilih Kecamatan terlebih dahulu!");
 
-    // Pastikan fungsi getKodeRahasia(kec) sudah ada di script.js Bapak
     const kodeAsli = (typeof getKodeRahasia === "function") ? getKodeRahasia(kec) : "1234"; 
     
     let input = prompt(`Masukkan Kode Otorisasi Edit AB Kecamatan ${kec}:`);
@@ -815,7 +812,7 @@ function mintaAksesEditAB() {
         alert("✅ Akses Diberikan! Gembok data telah dibuka.");
         IS_EDIT_MODE_AB = true;
         setupTombolAksiAB();
-        renderLaciAB(); // Render ulang agar inputan tidak disabled
+        renderLaciAB(); 
     } else {
         alert("❌ Kode Salah! Akses ditolak.");
     }
@@ -830,6 +827,7 @@ function initDataAB() {
 
     document.getElementById("loader-ab").classList.remove("hidden");
     document.getElementById("container-laci-ab").innerHTML = "";
+    ADA_PERUBAHAN_BELUM_DISIMPAN = false; // Reset sensor saat tarik data baru
 
     IS_EDIT_MODE_AB = (localStorage.getItem("role") === "super_admin");
     setupTombolAksiAB();
@@ -862,8 +860,8 @@ function initDataAB() {
         });
 
         document.getElementById("loader-ab").classList.add("hidden");
-        updateStatusBarAB(); // Munculkan Dashboard PKM
-        renderLaciAB();      // Munculkan Laci Desa
+        updateStatusBarAB(); 
+        renderLaciAB();      
     });
 }
 
@@ -889,6 +887,12 @@ function renderLaciAB() {
         const isLocked = isFinal && (role !== "super_admin" || !IS_EDIT_MODE_AB);
         const dot = `<span class="inline-block w-1 h-1 rounded-full mx-1.5 bg-slate-300"></span>`;
 
+        // Setting warna awal Live Sum
+        let sumWarna = "bg-white text-blue-600";
+        if (totalAB_Bulan > targetBulanIni) sumWarna = "bg-red-500 text-white";
+        else if (totalAB_Bulan === targetBulanIni) sumWarna = "bg-emerald-500 text-white";
+        else sumWarna = "bg-orange-400 text-white";
+
         container.innerHTML += `
         <div class="bg-white rounded-[2rem] border ${isFinal ? 'border-emerald-100' : 'border-slate-100'} overflow-hidden shadow-sm mb-4">
             <div onclick="toggleLaciAB(${idx})" class="p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50/50">
@@ -911,13 +915,16 @@ function renderLaciAB() {
                     ${METODE_KB.map(m => {
                         let k = m.toLowerCase();
                         let tBln = Math.round((d.target_ori[k] || 0) * getPersentaseBulan(bln));
-                        return renderKotakAlkon(m, k, d, tBln, idx, isLocked); //
+                        return renderKotakAlkon(m, k, d, tBln, idx, isLocked); 
                     }).join('')}
                 </div>
                 
-                <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100 flex justify-between items-center shadow-inner">
-                    <span class="text-[9px] font-black text-blue-800 uppercase tracking-widest">Total AB Bulan Ini (Live):</span>
-                    <span class="text-lg font-black text-blue-600 bg-white px-4 py-1 rounded-lg shadow-sm" id="live-sum-${idx}">${totalAB_Bulan}</span>
+                <div class="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100 flex flex-col justify-center shadow-inner">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[9px] font-black text-blue-800 uppercase tracking-widest">Total AB Bulan Ini (Live):</span>
+                        <span class="text-lg font-black ${sumWarna} px-4 py-1 rounded-lg shadow-sm transition-all duration-300" id="live-sum-${idx}">${totalAB_Bulan}</span>
+                    </div>
+                    <p id="live-warn-${idx}" class="hidden mt-2 text-[9px] font-bold leading-tight"></p>
                 </div>
                 
             </div>
@@ -925,44 +932,68 @@ function renderLaciAB() {
     });
 }
 
-// ---5. LOGIKA DOMINO & AUTO-SUM ---
+// ---5. LOGIKA DOMINO, AUTO-SUM & S-BEBAS ---
 function updatePS_AB(key, idx) {
+    ADA_PERUBAHAN_BELUM_DISIMPAN = true; // Nyalakan sensor karena data berubah
+
     const bulan = document.getElementById("ab-bulan").value;
     const targetSetahun = DATA_AB_TEMP[idx].target_ori[key];
-    let tBulan = Math.round(targetSetahun * getPersentaseBulan(bulan));
     
     let valP = parseInt(document.getElementById(`p-${key}-${idx}`).value) || 0;
-    let valS = tBulan - valP;
-    if (valS < 0) valS = 0; 
+    let valS = parseInt(document.getElementById(`s-${key}-${idx}`).value) || 0;
+    
+    // Cegah angka minus
+    if (valP < 0) { valP = 0; document.getElementById(`p-${key}-${idx}`).value = 0; }
+    if (valS < 0) { valS = 0; document.getElementById(`s-${key}-${idx}`).value = 0; }
 
-    document.getElementById(`s-${key}-${idx}`).value = valS;
+    // Simpan ke memori sementara (Swasta sekarang bebas, tidak pakai rumus otomatis kurang)
     DATA_AB_TEMP[idx][`${key}_p`] = valP;
     DATA_AB_TEMP[idx][`${key}_s`] = valS;
 
-    // AUTO SUM LACI
+    // AUTO SUM LACI & LOGIKA WARNA
     let sumTotal = 0;
+    let targetBulanIni = 0;
+    
     METODE_KB.forEach(m => {
         let k = m.toLowerCase();
         sumTotal += (parseInt(document.getElementById(`p-${k}-${idx}`).value) || 0) + 
                     (parseInt(document.getElementById(`s-${k}-${idx}`).value) || 0);
+        targetBulanIni += Math.round((DATA_AB_TEMP[idx].target_ori[k] || 0) * getPersentaseBulan(bulan));
     });
+    
     const sumEl = document.getElementById(`live-sum-${idx}`);
-    if(sumEl) sumEl.innerText = sumTotal;
+    const warnEl = document.getElementById(`live-warn-${idx}`);
+    
+    if(sumEl && warnEl) {
+        sumEl.innerText = sumTotal;
+        if (sumTotal > targetBulanIni) {
+            sumEl.className = "text-lg font-black text-white bg-red-500 px-4 py-1 rounded-lg shadow-sm transition-all duration-300";
+            warnEl.innerHTML = `<span class="text-red-500">⚠️ Jumlah peserta AB melebihi target di bulan ${bulan}. Ini akan mempengaruhi capaian AB di bulan-bulan selanjutnya (bahkan bisa melebihi 100%). Harap diingat!</span>`;
+            warnEl.classList.remove("hidden");
+        } else if (sumTotal === targetBulanIni) {
+            sumEl.className = "text-lg font-black text-white bg-emerald-500 px-4 py-1 rounded-lg shadow-sm transition-all duration-300";
+            warnEl.classList.add("hidden");
+        } else {
+            sumEl.className = "text-lg font-black text-white bg-orange-400 px-4 py-1 rounded-lg shadow-sm transition-all duration-300";
+            warnEl.innerHTML = `<span class="text-orange-500">⚠️ Capaian masih di bawah target bulan ${bulan}.</span>`;
+            warnEl.classList.remove("hidden");
+        }
+    }
 }
 
 // ---6. HELPER: RENDER KOTAK ALKON ---
 function renderKotakAlkon(m, k, d, tBln, idx, isLocked) {
     const isSpec = (m === "MOW" || m === "MOP");
-    const cssInput = isLocked ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed" : "bg-white border-slate-100 text-blue-900";
+    const cssInput = isLocked ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed" : "bg-white border-slate-100 text-blue-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
     return `
-    <div class="bg-white p-3 rounded-2xl border ${isSpec ? 'border-orange-100 bg-orange-50/5' : 'border-slate-100'} shadow-sm">
-        <div class="flex justify-between items-center mb-2">
+    <div class="bg-white p-3 rounded-2xl border ${isSpec ? 'border-orange-100 bg-orange-50/5' : 'border-slate-100'} shadow-sm transition-all">
+        <div class="flex justify-between items-center mb-2 border-b border-slate-50 pb-1">
             <span class="text-[9px] font-black ${isSpec ? 'text-orange-600' : 'text-slate-800'} uppercase">${m}</span>
             <span class="text-[8px] font-bold text-blue-500">T: ${tBln}</span>
         </div>
         <div class="grid grid-cols-2 gap-2">
-            <input type="number" id="p-${k}-${idx}" value="${d[k+'_p']}" oninput="updatePS_AB('${k}', ${idx})" ${isLocked ? 'disabled' : ''} class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${cssInput}" placeholder="P">
-            <input type="number" id="s-${k}-${idx}" value="${d[k+'_s']}" oninput="updatePS_AB('${k}', ${idx})" ${isLocked ? 'disabled' : ''} class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${cssInput}" placeholder="S">
+            <input type="number" min="0" id="p-${k}-${idx}" value="${d[k+'_p'] || 0}" oninput="updatePS_AB('${k}', ${idx})" ${isLocked ? 'disabled' : ''} class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${cssInput}" placeholder="P">
+            <input type="number" min="0" id="s-${k}-${idx}" value="${d[k+'_s'] || 0}" oninput="updatePS_AB('${k}', ${idx})" ${isLocked ? 'disabled' : ''} class="w-full p-2 border rounded-xl text-[11px] font-black text-center outline-none ${cssInput}" placeholder="S">
         </div>
     </div>`;
 }
@@ -1019,12 +1050,9 @@ function toggleLaciAB(idx) {
     const isi = document.getElementById(`isi-laci-ab-${idx}`);
     const icon = document.getElementById(`icon-laci-ab-${idx}`);
     
-    if (!isi) return; // Jika elemen tidak ditemukan, berhenti agar tidak error
-
-    // 1. Toggle (Buka/Tutup) konten laci
+    if (!isi) return; 
     isi.classList.toggle("hidden");
 
-    // 2. Ubah icon dan gaya visual jika elemen icon ada
     if (icon) {
         if (isi.classList.contains("hidden")) {
             icon.innerText = "🔽";
@@ -1037,16 +1065,21 @@ function toggleLaciAB(idx) {
 }
 
 // ---9. KONTROL LIVE PREVIEW ---
-let PREVIEW_DATA_YEAR = []; // Simpanan data setahun
+let PREVIEW_DATA_YEAR = []; 
 const DAFTAR_BULAN = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
 let idxBulanPreview = 0;
 
 function bukaModalPreview() {
+    if (ADA_PERUBAHAN_BELUM_DISIMPAN) {
+        alert("⚠️ ANDA MEMILIKI PERUBAHAN YANG BELUM DISIMPAN!\n\nSilakan klik tombol 'Simpan' (minimal sebagai Draft) terlebih dahulu agar Tabel Preview menampilkan data yang akurat sesuai kondisi lapangan.");
+        return; // Menghentikan proses buka modal jika belum di-save
+    }
+
     document.getElementById("modal-preview-ab").classList.remove("hidden");
     const blnSekarang = document.getElementById("ab-bulan").value;
     idxBulanPreview = DAFTAR_BULAN.indexOf(blnSekarang);
     
-    tarikDataPreviewTahunan(); // Tarik data live
+    tarikDataPreviewTahunan(); 
 }
 
 function tutupModalPreview() {
@@ -1068,7 +1101,6 @@ function tarikDataPreviewTahunan() {
     document.getElementById("loader-preview").classList.remove("hidden");
     document.getElementById("tabel-baku-ab").innerHTML = "";
 
-    // Panggil get_register_ab tanpa parameter bulan untuk menarik 12 bulan sekaligus
     fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}`)
     .then(res => res.json())
     .then(data => {
@@ -1083,15 +1115,14 @@ function renderTableBakuAB() {
     const namaBulan = DAFTAR_BULAN[idxBulanPreview];
     document.getElementById("label-bulan-preview").innerText = namaBulan;
 
-    // Filter "Hasil Bulan Ini"
     const dataBulanIni = PREVIEW_DATA_YEAR.filter(d => d.bulan === namaBulan);
     
-    // Header Format BKKBN
     let html = `
     <thead class="bg-slate-800 text-white sticky top-0 z-50 shadow-md">
         <tr class="text-[9px] uppercase tracking-tighter text-center">
             <th rowspan="3" class="border border-slate-600 p-2 sticky left-0 bg-slate-900 z-50">NO</th>
-            <th rowspan="3" class="border border-slate-600 p-2 sticky left-8 bg-slate-900 z-50 min-w-[150px]">DESA</th>
+            <!-- KOLOM DESA DISESUAIKAN LEBARNYA AGAR WRAP -->
+            <th rowspan="3" class="border border-slate-600 p-2 sticky left-8 bg-slate-900 z-50 max-w-[100px] whitespace-normal leading-tight">DESA / KELURAHAN</th>
             <th rowspan="3" class="border border-slate-600 p-2">PPM<br>TAHUN<br>INI</th>
             <th colspan="15" class="border border-slate-600 p-2 bg-blue-900">HASIL PESERTA KB BARU BULAN INI</th>
             <th colspan="15" class="border border-slate-600 p-2 bg-emerald-900">PENCAPAIAN PESERTA KB BARU S/D BULAN INI</th>
@@ -1106,11 +1137,9 @@ function renderTableBakuAB() {
     </thead>
     <tbody class="text-slate-700 bg-white">`;
 
-    // Looping Desa dari Master (Agar urutan rapi)
     DATA_AB_TEMP.forEach((desaOri, idx) => {
         let dThis = dataBulanIni.find(d => d.desa === desaOri.desa) || {};
         
-        // Hitung Kumulatif S/D Bulan Ini
         let dKumulatif = { iud_p:0, iud_s:0, mow_p:0, mow_s:0, mop_p:0, mop_s:0, kdm_p:0, kdm_s:0, imp_p:0, imp_s:0, stk_p:0, stk_s:0, pil_p:0, pil_s:0 };
         for(let i=0; i<=idxBulanPreview; i++) {
             let dataBulanLalu = PREVIEW_DATA_YEAR.find(d => d.desa === desaOri.desa && d.bulan === DAFTAR_BULAN[i]);
@@ -1137,13 +1166,15 @@ function renderTableBakuAB() {
         html += `
         <tr class="hover:bg-blue-50 transition border-b border-slate-200">
             <td class="p-2 text-center font-bold text-slate-400 sticky left-0 bg-white border-r">${idx + 1}</td>
-            <td class="p-2 font-black uppercase sticky left-8 bg-white border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">${desaOri.desa}</td>
+            <td class="p-2 font-black uppercase sticky left-8 bg-white border-r shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] whitespace-normal max-w-[100px] leading-tight break-words">${desaOri.desa}</td>
             <td class="p-2 text-center font-bold text-blue-900 bg-blue-50/50">${ppmTahun}</td>
             
-            <!-- HASIL BULAN INI -->
+            <!-- HASIL BULAN INI (FIX NaN) -->
             ${METODE_KB.map(m => {
                 let k = m.toLowerCase();
-                return `<td class="p-1 text-center border-x border-slate-100">${dThis[`${k}_p`] || 0}</td><td class="p-1 text-center border-x border-slate-100">${dThis[`${k}_s`] || 0}</td>`;
+                let p = parseInt(dThis[`${k}_p`]) || 0;
+                let s = parseInt(dThis[`${k}_s`]) || 0;
+                return `<td class="p-1 text-center border-x border-slate-100">${p}</td><td class="p-1 text-center border-x border-slate-100">${s}</td>`;
             }).join('')}
             <td class="p-1 text-center font-black text-blue-800 bg-blue-50">${jmlBulanIni}</td>
 
@@ -1187,11 +1218,12 @@ function prosesSimpanAB(statusFinal) {
     .then(res => {
         document.getElementById("loader-ab").classList.add("hidden");
         if (res.trim() === "success") {
+            ADA_PERUBAHAN_BELUM_DISIMPAN = false; // Matikan sensor setelah sukses save
             alert(`✅ Laporan ${kec} bulan ${bln} berhasil disimpan sebagai ${statusFinal}`);
             if(statusFinal === "Final") {
                 IS_EDIT_MODE_AB = false;
                 setupTombolAksiAB();
-                renderLaciAB(); // Render ulang agar terkunci
+                renderLaciAB(); 
             }
         } else { alert("❌ Gagal: " + res); }
     }).catch(err => {
