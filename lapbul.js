@@ -792,6 +792,7 @@ function mintaAksesEditAB() {
 }
 
 // --- TARIK DATA & KONEKSI KE MASTER REFERENSI ---
+// --- 3. TARIK DATA DARI SERVER ---
 function initDataAB() {
     const thn = document.getElementById("ab-tahun").value;
     const bln = document.getElementById("ab-bulan").value;
@@ -803,11 +804,12 @@ function initDataAB() {
     ADA_PERUBAHAN_BELUM_DISIMPAN = false; 
 
     // JALUR VIP SUPER ADMIN
-    const userRole = localStorage.getItem("role") || "";
+    // Kita baca role-nya dan pastikan huruf kecil semua agar tidak miss
+    const userRole = (localStorage.getItem("role") || "").toLowerCase().trim();
     if (userRole === "super_admin") {
         IS_EDIT_MODE_AB = true; // Langsung terbuka tanpa PIN
     } else {
-        IS_EDIT_MODE_AB = false; // Admin Kec harus buka gembok Final pakai PIN
+        IS_EDIT_MODE_AB = false; // Admin Kec & lainnya harus buka gembok Final pakai PIN
     }
     
     setupTombolAksiAB();
@@ -834,18 +836,23 @@ function initDataAB() {
             };
             METODE_KB.forEach(m => {
                 let key = m.toLowerCase();
-                obj[`${key}_p`] = parseInt(exist[`${key}_p`]) || 0; 
+                obj[`${key}_p`] = parseInt(exist[`${key}_p`]) || 0; // Fix Nan dari server
                 obj[`${key}_s`] = parseInt(exist[`${key}_s`]) || 0;
             });
             return obj;
         });
 
-        // Backup Data Original untuk fitur Reset
+        // Backup Data Original untuk fitur Reset Laci
         DATA_AB_ORIGINAL = JSON.parse(JSON.stringify(DATA_AB_TEMP));
 
         document.getElementById("loader-ab").classList.add("hidden");
         updateStatusBarAB(); 
         renderLaciAB();      
+    })
+    .catch(err => {
+        console.error("Terjadi error saat menarik data:", err);
+        document.getElementById("loader-ab").classList.add("hidden");
+        alert("Gagal menarik data dari server. Periksa koneksi internet Bapak.");
     });
 }
 
