@@ -802,8 +802,12 @@ function initDataAB() {
     document.getElementById("container-laci-ab").innerHTML = "";
     ADA_PERUBAHAN_BELUM_DISIMPAN = false; 
 
-    // Reset akses saat ganti bulan/tahun (harus minta akses lagi kalau mau edit final)
-    IS_EDIT_MODE_AB = false;
+    const userRole = (localStorage.getItem("role") || "").toLowerCase().trim();
+    if (userRole === "super_admin") {
+        IS_EDIT_MODE_AB = true; // Langsung terbuka tanpa PIN
+    } else {
+        IS_EDIT_MODE_AB = false; // Admin Kec & lainnya harus buka gembok Final pakai PIN
+    }
     setupTombolAksiAB();
 
     Promise.all([
