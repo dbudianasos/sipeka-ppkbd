@@ -797,7 +797,7 @@ function mintaAksesEditAB() {
     } else { alert("❌ PIN Salah! Akses ditolak."); }
 }
 
-// --- TARIK DATA (KUMULATIF FIX) ---
+// --- TARIK DATA (KUMULATIF FIX & ANTI SILENT ERROR) ---
 function initDataAB() {
     const thn = document.getElementById("ab-tahun").value;
     const bln = document.getElementById("ab-bulan").value;
@@ -816,9 +816,16 @@ function initDataAB() {
 
     Promise.all([
         fetch(`${API_URL}?action=get_master_referensi`).then(res => res.json()),
-        fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}`) // TARIK SETAHUN PENUH
+        fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}`)
     ])
     .then(([allTargets, dataSetahun]) => {
+        // TANGKAP ERROR DARI SPREADSHEET AGAR TIDAK MUTER LALU HILANG
+        if (allTargets.error_sistem || dataSetahun.error_sistem) {
+            alert("⚠️ Sistem Database Error (Bisa jadi ada kolom/baris yang kosong atau terhapus).\n\nDetail Error: " + (allTargets.error_sistem || dataSetahun.error_sistem));
+            document.getElementById("loader-ab").classList.add("hidden");
+            return;
+        }
+
         TARGET_PPM_VILLAGE = allTargets.filter(t => t.kecamatan.toUpperCase() === kec.toUpperCase() && t.tahun.toString() === thn.toString());
 
         if (TARGET_PPM_VILLAGE.length === 0) {
@@ -827,13 +834,12 @@ function initDataAB() {
             return; 
         }
 
-        PREVIEW_DATA_YEAR = dataSetahun; // Simpan untuk preview biar instan
+        PREVIEW_DATA_YEAR = dataSetahun;
         const daftarBulanLalu = DAFTAR_BULAN.slice(0, DAFTAR_BULAN.indexOf(bln));
 
         DATA_AB_TEMP = TARGET_PPM_VILLAGE.map(target => {
             let existThisMonth = dataSetahun.find(s => s.desa.toUpperCase() === target.desa.toUpperCase() && s.bulan === bln) || {};
             
-            // MENGHITUNG KUMULATIF LALU SECARA REAL-TIME DARI DATA SETAHUN
             let kumulatif = 0;
             daftarBulanLalu.forEach(bLalu => {
                 let dLalu = dataSetahun.find(s => s.desa.toUpperCase() === target.desa.toUpperCase() && s.bulan === bLalu);
@@ -864,6 +870,7 @@ function initDataAB() {
         renderLaciAB();      
     }).catch(err => {
         console.error(err);
+        alert("Gagal menarik data. Cek koneksi internet atau hubungi Administrator.");
         document.getElementById("loader-ab").classList.add("hidden");
     });
 }
