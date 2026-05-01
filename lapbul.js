@@ -912,7 +912,7 @@ function renderLaciAB() {
         else sumWarna = "bg-orange-400 text-white border-orange-500";
 
         container.innerHTML += `
-        <div class="bg-white rounded-[2rem] border ${isFinal ? 'border-emerald-200 shadow-emerald-50' : 'border-slate-200'} overflow-hidden shadow-md mb-4 transition hover:shadow-lg">
+        <div class="bg-white rounded-[1.2rem] border ${isFinal ? 'border-emerald-200 shadow-emerald-50' : 'border-slate-200'} overflow-hidden shadow-md mb-4 transition hover:shadow-lg">
             <div onclick="toggleLaciAB(${idx})" class="p-4 sm:p-5 flex justify-between items-center cursor-pointer hover:bg-slate-50/80">
                 <div class="flex flex-col w-full pr-4">
                     <div class="flex items-center gap-2 mb-2">
@@ -934,7 +934,7 @@ function renderLaciAB() {
                     </div>
                     
                 </div>
-                <div id="icon-laci-ab-${idx}" class="w-10 h-10 shrink-0 flex items-center justify-center rounded-2xl bg-blue-50 text-blue-500 font-bold border border-blue-100 shadow-sm transition-transform duration-300">🔽</div>
+                <div id="icon-laci-ab-${idx}" class="w-10 h-10 shrink-0 flex items-center justify-center rounded-xl bg-orange-50 text-orange-500 font-bold border border-orange-100 shadow-sm transition-transform duration-300">🔽</div>
             </div>
             
             <div id="isi-laci-ab-${idx}" class="hidden p-4 sm:p-5 border-t border-slate-100 bg-slate-50/50">
