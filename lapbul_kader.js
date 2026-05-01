@@ -154,39 +154,45 @@ function renderSemuaSection() {
     document.getElementById("sec-4").innerHTML = htmlIV;
 }
 
-// 4. RENDER BAGIAN V (DATA SERVER + PEMBAGI PPKBD)
+// --- 4. RENDER BAGIAN V (SINKRON DENGAN get_data_cetak_v) ---
 function renderBagianV() {
+    // Ambil pembagi dari data awal yang ditarik saat halaman buka
     const pembagi = DATA_INIT_LAPBUL.target_pembagi || 1;
     document.getElementById("label-pembagi").innerText = pembagi;
     document.getElementById("label-pembagi2").innerText = pembagi;
 
-    let totalPUS = 0; let totalPPM = 0;
+    // DATA_V_SERVER sekarang isinya adalah { capaian: {...}, referensi: {...} }
+    const cap = DATA_V_SERVER.capaian || {};
+    const ref = DATA_V_SERVER.referensi || {};
+    const ppm = ref.ppm || {};
+
+    // 1. Hitung PUS & Total Target yang sudah dibagi jumlah PPKBD
+    const totalPUS = Math.round((parseInt(ref.pus) || 0) / pembagi);
+    
+    let totalPPM = 0;
     let listAlkon = [];
+    const alkonKeys = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
 
-    DATA_V_SERVER.forEach(d => {
-        totalPUS = Math.round(parseInt(d.pus || 0) / pembagi);
-        const alkonKeys = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
+    // 2. Olah data tiap Alkon
+    alkonKeys.forEach(k => {
+        const targetKader = Math.round((parseInt(ppm[k]) || 0) / pembagi);
+        const baruBlnIni = Math.round((parseInt(cap[k]) || 0) / pembagi);
         
-        // Ambil target_ori
-        let tOri = {};
-        try { tOri = typeof d.target_ori === 'string' ? JSON.parse(d.target_ori) : d.target_ori; } catch(e) { tOri = {}; }
+        // Sementara S/D ini kita samakan dengan bulan ini 
+        // (Nanti bisa dikembangkan untuk tarik kumulatif murni)
+        const baruSDIni = baruBlnIni; 
 
-        alkonKeys.forEach(k => {
-            const targetKader = Math.round(parseInt(tOri[k] || 0) / pembagi);
-            const baruBlnIni = Math.round((parseInt(d[k + '_p'] || 0) + parseInt(d[k + '_s'] || 0)) / pembagi);
-            const baruSDIni = baruBlnIni; 
-
-            listAlkon.push({
-                nama: k.toUpperCase(),
-                target: targetKader,
-                bln_ini: baruBlnIni,
-                sd_ini: baruSDIni,
-                sisa: Math.max(0, targetKader - baruSDIni)
-            });
-            totalPPM += targetKader;
+        listAlkon.push({
+            nama: k.toUpperCase(),
+            target: targetKader,
+            bln_ini: baruBlnIni,
+            sd_ini: baruSDIni,
+            sisa: Math.max(0, targetKader - baruSDIni)
         });
+        totalPPM += targetKader;
     });
 
+    // 3. Tampilkan ke Layar
     document.getElementById("v-pus").innerText = totalPUS;
     document.getElementById("v-ppm").innerText = totalPPM;
 
@@ -195,10 +201,10 @@ function renderBagianV() {
         htmlV += `
         <div class="bg-white p-3 rounded-xl border border-slate-100 grid grid-cols-5 text-center items-center shadow-sm mb-2">
             <span class="text-[10px] font-black text-slate-800 text-left">${a.nama}</span>
-            <div class="flex flex-col"><span class="text-[7px] text-slate-400 font-bold uppercase">TGT</span><span class="text-xs font-bold">${a.target}</span></div>
-            <div class="flex flex-col"><span class="text-[7px] text-blue-400 font-bold uppercase">BLN</span><span class="text-xs font-bold text-blue-600">${a.bln_ini}</span></div>
-            <div class="flex flex-col"><span class="text-[7px] text-emerald-400 font-bold uppercase">S/D</span><span class="text-xs font-bold text-emerald-600">${a.sd_ini}</span></div>
-            <div class="flex flex-col"><span class="text-[7px] text-red-400 font-bold uppercase">SISA</span><span class="text-xs font-bold text-red-500">${a.sisa}</span></div>
+            <div class="flex flex-col"><span class="text-[7px] text-slate-400 font-bold uppercase tracking-tighter">TGT</span><span class="text-xs font-bold">${a.target}</span></div>
+            <div class="flex flex-col"><span class="text-[7px] text-blue-400 font-bold uppercase tracking-tighter">BLN</span><span class="text-xs font-bold text-blue-600">${a.bln_ini}</span></div>
+            <div class="flex flex-col"><span class="text-[7px] text-emerald-400 font-bold uppercase tracking-tighter">S/D</span><span class="text-xs font-bold text-emerald-600">${a.sd_ini}</span></div>
+            <div class="flex flex-col"><span class="text-[7px] text-red-400 font-bold uppercase tracking-tighter">SISA</span><span class="text-xs font-bold text-red-500">${a.sisa}</span></div>
         </div>`;
     });
     document.getElementById("v-tabel-alkon").innerHTML = htmlV;
