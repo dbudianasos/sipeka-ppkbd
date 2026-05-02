@@ -166,6 +166,31 @@ function initDashboard() {
 
   if (role === "super_admin") {
     roleText = "Super Administrator"; wilayahText = "Kabupaten Bekasi"; iconEmoji = "👑";
+
+  // --- TAMBAHAN BARU UNTUK PANEL SULTAN ---
+    const panelSultan = document.getElementById("panel-sultan");
+    if (panelSultan) {
+      panelSultan.classList.remove("hidden"); // Munculkan panel
+      
+      // Tarik status asli dari Google Sheets saat dashboard baru dibuka
+      fetch(`${API_URL}?action=check_maintenance`)
+        .then(res => res.json())
+        .then(data => {
+            const toggle = document.getElementById("toggle-maintenance");
+            const label = document.getElementById("label-status-sistem");
+            if (data.status === "maintenance") {
+                toggle.checked = true;
+                label.innerText = "MAINTENANCE";
+                label.className = "text-[9px] font-black uppercase bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full tracking-widest border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.5)]";
+            } else {
+                toggle.checked = false;
+                label.innerText = "AMAN";
+                label.className = "text-[9px] font-black uppercase bg-green-500/20 text-green-400 px-3 py-1 rounded-full tracking-widest border border-green-500/30";
+            }
+        });
+    }
+    // --- AKHIR TAMBAHAN ---
+    
   } else if (role === "admin_kec") {
     roleText = "Admin Kecamatan"; wilayahText = "Kecamatan " + kec; iconEmoji = "🏛️";
   } else if (role === "admin_desa") {
@@ -177,6 +202,51 @@ function initDashboard() {
   if (elRole) elRole.innerText = roleText;
   if (elWilayah) elWilayah.innerText = "📍 Wilayah: " + wilayahText;
   if (elIcon) elIcon.innerText = iconEmoji;
+}
+
+// ==========================================
+// KONTROL SAKLAR SULTAN
+// ==========================================
+function ubahStatusSistem(checkbox) {
+  const nik = localStorage.getItem("nik");
+  const statusBaru = checkbox.checked ? "ON" : "OFF";
+  const label = document.getElementById("label-status-sistem");
+
+  // Ubah visual sementara agar responsif
+  label.innerText = "MEMPROSES...";
+  label.className = "text-[9px] font-black uppercase bg-slate-500/20 text-slate-400 px-3 py-1 rounded-full tracking-widest border border-slate-500/30 animate-pulse";
+  checkbox.disabled = true;
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({ 
+      action: "toggle_maintenance", 
+      nik: nik, 
+      status_baru: statusBaru 
+    })
+  })
+  .then(res => res.text())
+  .then(res => {
+    checkbox.disabled = false;
+    if (res.trim() === "success") {
+      if (statusBaru === "ON") {
+        label.innerText = "MAINTENANCE";
+        label.className = "text-[9px] font-black uppercase bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full tracking-widest border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.5)]";
+      } else {
+        label.innerText = "AMAN";
+        label.className = "text-[9px] font-black uppercase bg-green-500/20 text-green-400 px-3 py-1 rounded-full tracking-widest border border-green-500/30";
+      }
+    } else {
+      alert("❌ Gagal merubah status: Unauthorized!");
+      checkbox.checked = !checkbox.checked; // Kembalikan ke posisi semula
+      label.innerText = "ERROR";
+    }
+  })
+  .catch(err => {
+    alert("❌ Gangguan koneksi!");
+    checkbox.disabled = false;
+    checkbox.checked = !checkbox.checked;
+  });
 }
 
 function tampilkanMotivasi() {
