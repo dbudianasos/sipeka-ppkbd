@@ -1777,17 +1777,28 @@ function backupLogKeCSV() {
 // ============================================================================
 // 10. FITUR TOMBOL MELAYANG (FAB) & AUTO-CHAT WA
 // ============================================================================
+// Mapping Nama Menu
+const FAB_MENU_NAMES = {
+    'tentang': 'Tentang Aplikasi',
+    'bantuan': 'Pusat Bantuan',
+    'kopi': 'Traktir Kopi'
+};
+
 function handleFabClick(type) {
     const label = document.getElementById("label-" + type);
     if (!label) return;
 
     if (lastFabClicked !== type) {
-        // Klik Pertama: Munculkan Label (Petunjuk Nama Menu)
+        // KLIK PERTAMA: Munculkan Label + Instruksi "KLIK 2x"
+        // Sembunyikan label lain dulu
         document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
+        
+        // Update isi teks label secara dinamis
+        label.innerText = `${FAB_MENU_NAMES[type]} - (KLIK 2x)`;
         label.classList.remove('opacity-0');
         lastFabClicked = type;
         
-        // Reset jika tidak ada aksi lanjut
+        // Timer 3 detik: Menghilangkan keterangan
         setTimeout(() => {
             if(lastFabClicked === type) {
                 label.classList.add('opacity-0');
@@ -1796,11 +1807,12 @@ function handleFabClick(type) {
         }, 3000);
     } 
     else {
-        // Klik Kedua: Eksekusi Aksi Utama
+        // KLIK KEDUA: Jalankan Aksi
         if (type === 'tentang') window.location.href = 'tentang.html';
         if (type === 'bantuan') kirimPesanWA();
-        if (type === 'kopi') bukaTraktir(); // Panggil fungsi modal kopi
+        if (type === 'kopi') bukaTraktir();
         
+        // Langsung sembunyikan setelah klik kedua
         label.classList.add('opacity-0');
         lastFabClicked = null;
     }
@@ -1810,22 +1822,16 @@ function kirimPesanWA() {
     const nama = localStorage.getItem("nama") || "Kader siPeKa";
     const desa = localStorage.getItem("desa") || "-";
     const kec = localStorage.getItem("kecamatan") || "-";
-    
-    // Pesan Otomatis Chatbot
     const pesan = `Halo Pak Dian, saya *${nama}* dari *Desa ${desa}, Kec. ${kec}*. %0A%0ASehubungan dengan penggunaan aplikasi *siPeKa*, ada yang ingin saya tanyakan mengenai: %0A...`;
-    
-    const urlWA = `https://wa.me/6282260188765?text=${pesan}`;
-    window.open(urlWA, '_blank');
+    window.open(`https://wa.me/6282260188765?text=${pesan}`, '_blank');
 }
 
 function toggleFAB() {
     const menu = document.getElementById('menu-fab');
     const icon = document.getElementById('icon-fab');
-    const instruksi = document.getElementById('label-instruksi');
     
     if (menu.classList.contains('hidden')) {
         menu.classList.remove('hidden');
-        if(instruksi) instruksi.classList.remove('hidden'); 
         setTimeout(() => {
             menu.classList.remove('translate-y-4', 'opacity-0');
             icon.style.transform = 'rotate(45deg)';
@@ -1833,7 +1839,6 @@ function toggleFAB() {
     } else {
         menu.classList.add('translate-y-4', 'opacity-0');
         icon.style.transform = 'rotate(0deg)';
-        if(instruksi) instruksi.classList.add('hidden'); 
         document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
         lastFabClicked = null;
         setTimeout(() => { menu.classList.add('hidden'); }, 300);
@@ -1844,15 +1849,8 @@ function bukaTraktir() {
     const modal = document.getElementById("modal-traktir");
     if (modal) {
         modal.classList.remove("hidden");
-        // Otomatis tutup menu FAB biar layar fokus ke modal
-        const menu = document.getElementById('menu-fab');
-        const icon = document.getElementById('icon-fab');
-        const instruksi = document.getElementById('label-instruksi');
-        
-        if (menu) menu.classList.add('translate-y-4', 'opacity-0');
-        if (icon) icon.style.transform = 'rotate(0deg)';
-        if (instruksi) instruksi.classList.add('hidden');
-        setTimeout(() => { if (menu) menu.classList.add('hidden'); }, 300);
+        // Otomatis tutup menu FAB biar fokus
+        toggleFAB();
     }
 }
 
