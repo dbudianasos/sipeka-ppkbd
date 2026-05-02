@@ -1777,16 +1777,18 @@ function backupLogKeCSV() {
 // ============================================================================
 // 10. FITUR TOMBOL MELAYANG (FAB) & AUTO-CHAT WA
 // ============================================================================
+
+// Gunakan variabel lastFabClicked yang sudah dipindah ke Global (Paling Atas)
 function handleFabClick(type) {
     const label = document.getElementById("label-" + type);
+    if (!label) return;
 
     if (lastFabClicked !== type) {
-        // Klik Pertama: Sembunyikan label lain, munculkan label ini
+        // Klik Pertama: Munculkan Keterangan
         document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
         label.classList.remove('opacity-0');
         lastFabClicked = type;
         
-        // Timer Reset
         setTimeout(() => {
             if(lastFabClicked === type) {
                 label.classList.add('opacity-0');
@@ -1795,26 +1797,43 @@ function handleFabClick(type) {
         }, 3000);
     } 
     else {
-        // Klik Kedua: Eksekusi Aksi
+        // Klik Kedua: Jalankan Aksi
         if (type === 'tentang') window.location.href = 'tentang.html';
         if (type === 'bantuan') kirimPesanWA();
-        if (type === 'kopi') bukaTraktir();
+        if (type === 'kopi') {
+            console.log("Membuka Modal Kopi..."); // Cek di console jika gagal
+            bukaTraktir();
+        }
         
         label.classList.add('opacity-0');
         lastFabClicked = null;
     }
 }
 
-function kirimPesanWA() {
-    const nama = localStorage.getItem("nama") || "Kader siPeKa";
-    const desa = localStorage.getItem("desa") || "-";
-    const kec = localStorage.getItem("kecamatan") || "-";
-    
-    // Pesan Otomatis Chatbot
-    const pesan = `Halo Pak Dian, saya *${nama}* dari *Desa ${desa}, Kec. ${kec}*. %0A%0ASehubungan dengan penggunaan aplikasi *siPeKa*, ada yang ingin saya tanyakan mengenai: %0A...`;
-    
-    const urlWA = `https://wa.me/6282260188765?text=${pesan}`;
-    window.open(urlWA, '_blank');
+function bukaTraktir() {
+    const modal = document.getElementById("modal-traktir");
+    if (modal) {
+        modal.classList.remove("hidden");
+        // Reset menu FAB agar tidak menutupi modal
+        const menu = document.getElementById('menu-fab');
+        const icon = document.getElementById('icon-fab');
+        const instruksi = document.getElementById('label-instruksi');
+        
+        if (menu) menu.classList.add('translate-y-4', 'opacity-0');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+        if (instruksi) instruksi.classList.add('hidden');
+        
+        setTimeout(() => { 
+            if (menu) menu.classList.add('hidden'); 
+        }, 300);
+    } else {
+        console.error("Elemen modal-traktir tidak ditemukan!");
+    }
+}
+
+function tutupTraktir() {
+    const modal = document.getElementById("modal-traktir");
+    if (modal) modal.classList.add("hidden");
 }
 
 function toggleFAB() {
