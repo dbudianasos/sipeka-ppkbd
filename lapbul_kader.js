@@ -98,12 +98,12 @@ function loadDataBulanDipilih() {
     });
 }
 
-// 3. RENDER INPUT ROMAWI I - IV (FIX TAMPILAN & UX ANGKA 0)
+// 3. RENDER INPUT ROMAWI I - IV (FIX TAMPILAN, UX ANGKA 0, & ANTI-MINUS)
 function renderSemuaSection() {
     const dLalu = DATA_INIT_LAPBUL.data_kader_lalu || {};
     
-    // 💡 JURUS UX SULTAN: Hapus 0 saat diklik, kembali 0 jika dibiarkan kosong
-    const UX_ANGKA = `onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') this.value='0';"`;
+    // 💡 JURUS UX SULTAN: Hapus 0 saat fokus, balik 0 jika kosong, dan KUNCI MINIMAL 0
+    const UX_ANGKA = `min="0" onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') this.value='0';"`;
 
     // ==========================================
     // BAGIAN I: KEADAAN UMUM
@@ -122,8 +122,8 @@ function renderSemuaSection() {
         const valLap = dLalu[`i_lap_${i}`] || 0;
         htmlI += `
         <div class="col-span-2 text-[11px] font-black text-slate-700 uppercase mt-2 border-b border-slate-100 pb-1">${i+1}. ${lab}</div>
-        <input type="number" id="i-ada-${i}" value="${valAda}" class="p-2 border border-slate-300 bg-slate-50 rounded-lg text-center font-bold text-slate-600 shadow-inner" placeholder="Ada" ${UX_ANGKA}>
-        <input type="number" id="i-lap-${i}" value="${valLap}" class="p-2 border-2 border-blue-200 focus:border-blue-500 bg-white rounded-lg text-center font-black text-blue-900 shadow-sm" placeholder="Lapor" ${UX_ANGKA}>`;
+        <input type="number" id="i-ada-${i}" value="${valAda}" class="p-2 border border-slate-300 bg-slate-50 rounded-lg text-center font-bold text-slate-600 shadow-inner" placeholder="0" ${UX_ANGKA}>
+        <input type="number" id="i-lap-${i}" value="${valLap}" class="p-2 border-2 border-blue-200 focus:border-blue-500 bg-white rounded-lg text-center font-black text-blue-900 shadow-sm" placeholder="0" ${UX_ANGKA}>`;
     });
     document.getElementById("sec-1").innerHTML = htmlI;
 
