@@ -28,34 +28,18 @@ let translateY = 0;
 function pantauMaintenance() {
   const nik = localStorage.getItem("nik");
   
-  // 1. Kalau bos besar (Bapak) yang login, bebasin aja nggak usah di-cek
   if (nik === "3207160604930002") return; 
 
-  // 2. Cek apakah ini halaman login (index.html)
   const isLoginPage = window.location.pathname.includes("index.html") || window.location.pathname.endsWith("/");
-  
-  // 3. JIKA DI HALAMAN LOGIN, HENTIKAN RADAR! 
-  // Biarkan fungsi login() yang mengurus peringatannya saat tombol Masuk diklik.
   if (isLoginPage) return; 
 
-  // 4. Jika kader sedang di dalam Dashboard, baru tembak Tembok Raksasa
+  // --- UBAH JADI POST DI SINI ---
   fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors", // Kita paksa kirim tanpa nunggu balasan ketat
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ action: "check_maintenance" })
-      })
-      .then(() => {
-        // Karena mode 'no-cors', kita tidak bisa baca JSON-nya langsung.
-        // Solusinya: Kita panggil ulang dengan cara standar atau biarkan saja 
-        // jika hanya untuk memicu trigger.
-        
-        // TAPI untuk membaca STATUS (ON/OFF), kita pakai cara aman ini:
-        return fetch(API_URL + "?action=check_maintenance"); 
-      })
+    method: "POST",
+    body: new URLSearchParams({ action: "toggle_maintenance" })
+  })
     .then(res => res.json())
     .then(data => {
-      // JIKA REMOT DI-ON-KAN DARI GOOGLE SHEETS
       if (data.status === "maintenance") {
         document.body.innerHTML = `
           <div class="fixed inset-0 z-[9999] bg-slate-900 flex items-center justify-center p-4">
@@ -188,7 +172,7 @@ function initDashboard() {
       // --- UBAH JADI POST DI SINI ---
       fetch(API_URL, {
         method: "POST",
-        body: new URLSearchParams({ action: "check_maintenance" })
+        body: new URLSearchParams({ action: "toggle_maintenance" })
       })
         .then(res => res.json())
         .then(data => {
