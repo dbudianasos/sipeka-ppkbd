@@ -1775,22 +1775,19 @@ function backupLogKeCSV() {
 }
 
 // ============================================================================
-// 10. FITUR TOMBOL MELAYANG (FAB) & MODAL UI
+// 10. FITUR TOMBOL MELAYANG (FAB) & AUTO-CHAT WA
 // ============================================================================
-function handleFabClick(type) {
-    const labelId = "label-" + type;
-    const label = document.getElementById(labelId);
+let lastFabClicked = null;
 
-    // Jika ini klik pertama pada tombol tersebut
+function handleFabClick(type) {
+    const label = document.getElementById("label-" + type);
+
     if (lastFabClicked !== type) {
-        // Sembunyikan semua label dulu
+        // Klik Pertama: Munculkan Label
         document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
-        
-        // Munculkan label yang diklik
         label.classList.remove('opacity-0');
         lastFabClicked = type;
         
-        // Reset otomatis setelah 3 detik jika tidak diklik lagi
         setTimeout(() => {
             if(lastFabClicked === type) {
                 label.classList.add('opacity-0');
@@ -1798,24 +1795,38 @@ function handleFabClick(type) {
             }
         }, 3000);
     } 
-    // Jika ini klik kedua (atau label sudah muncul)
     else {
+        // Klik Kedua: Jalankan Aksi
         if (type === 'tentang') window.location.href = 'tentang.html';
-        if (type === 'bantuan') window.open('https://wa.me/6282260188765', '_blank');
+        if (type === 'bantuan') kirimPesanWA(); // Panggil fungsi Auto-Chat
         if (type === 'kopi') bukaTraktir();
         
-        // Reset status
         label.classList.add('opacity-0');
         lastFabClicked = null;
     }
 }
 
+// FUNGSI AUTO-CHAT WA (CHATBOT SEDERHANA)
+function kirimPesanWA() {
+    const nama = localStorage.getItem("nama") || "Kader siPeKa";
+    const desa = localStorage.getItem("desa") || "-";
+    const kec = localStorage.getItem("kecamatan") || "-";
+    
+    // Pesan Otomatis (Gunakan %0A untuk baris baru)
+    const pesan = `Halo Pak Dian, saya *${nama}* dari *Desa ${desa}, Kec. ${kec}*. %0A%0ASehubungan dengan penggunaan aplikasi *siPeKa*, ada yang ingin saya tanyakan mengenai: %0A...`;
+    
+    const urlWA = `https://wa.me/6282260188765?text=${pesan}`;
+    window.open(urlWA, '_blank');
+}
+
 function toggleFAB() {
     const menu = document.getElementById('menu-fab');
     const icon = document.getElementById('icon-fab');
+    const instruksi = document.getElementById('label-instruksi');
     
     if (menu.classList.contains('hidden')) {
         menu.classList.remove('hidden');
+        if(instruksi) instruksi.classList.remove('hidden'); // Munculkan instruksi "Klik 2x"
         setTimeout(() => {
             menu.classList.remove('translate-y-4', 'opacity-0');
             icon.style.transform = 'rotate(45deg)';
@@ -1823,19 +1834,17 @@ function toggleFAB() {
     } else {
         menu.classList.add('translate-y-4', 'opacity-0');
         icon.style.transform = 'rotate(0deg)';
-        // Reset label saat menu ditutup
+        if(instruksi) instruksi.classList.add('hidden'); // Sembunyikan instruksi
         document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
         lastFabClicked = null;
         setTimeout(() => { menu.classList.add('hidden'); }, 300);
     }
 }
 
+// Fungsi Modal Traktir Kopi (Hanya pastikan sudah ada di script.js)
 function bukaTraktir() {
     const modal = document.getElementById("modal-traktir");
-    if (modal) {
-        modal.classList.remove("hidden");
-        toggleFAB(); // Tutup menu melayang setelah modal buka
-    }
+    if (modal) modal.classList.remove("hidden");
 }
 
 function tutupTraktir() {
