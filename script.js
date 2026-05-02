@@ -1,19 +1,58 @@
+// ============================================================================
+// SIPEKA PPKBD - CORE JAVASCRIPT
+// Dikembangkan oleh: Dian Budiana
+// ============================================================================
+
+// ============================================================================
+// 0. CONFIGURASI & VARIABLE GLOBAL
+// ============================================================================
 const API_URL = "https://script.google.com/macros/s/AKfycbzXt4isvjY5KrSZi37IedLKHGzCwiL1dMoB4N6IeSyKyTJXruTpjMuhWdm3RvJyCGQqEA/exec"; 
 
-// Variable Global
 let base64Foto = ""; 
 let dataRiwayatGlobal = [];
 let dataRenjaGlobal = []; 
 let GLOBAL_WILAYAH = []; 
-let DATA_USERS_ALL = []; // Untuk penampung filter user
+let DATA_USERS_ALL = []; 
 let myChartInstance = null;
+
+// Variabel Zooming Foto
 let currentScale = 1;
 let isDragging = false;
 let startX, startY;
 let translateX = 0;
 let translateY = 0;
 
-// ================= 1. LOGIN & SATPAM DIGITAL (FIXED + MAINTENANCE) =================
+// ============================================================================
+// 1. AUTHENTICATION, SECURITY & MAINTENANCE
+// ============================================================================
+function pantauMaintenance() {
+  const nik = localStorage.getItem("nik");
+  // Kalau bos besar (Bapak) yang login, bebasin aja nggak usah di-cek
+  if (nik === "3207160604930002") return; 
+
+  fetch(`${API_URL}?action=check_maintenance`)
+    .then(res => res.json())
+    .then(data => {
+      // JIKA REMOT DI-ON-KAN DARI GOOGLE SHEETS
+      if (data.status === "maintenance") {
+        document.body.innerHTML = `
+          <div class="fixed inset-0 z-[9999] bg-slate-900 flex items-center justify-center p-4">
+              <div class="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+                  <div class="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-5 border-4 border-white shadow-lg">
+                      <span class="text-5xl">🚧</span>
+                  </div>
+                  <h3 class="text-xl font-black text-slate-800 uppercase tracking-widest mb-2">SISTEM SIBUK</h3>
+                  <p class="text-[11px] font-bold text-slate-500 mb-6 leading-relaxed">${data.pesan}</p>
+                  <button onclick="logout()" class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-4 rounded-xl text-xs uppercase tracking-widest active:scale-95 transition shadow-lg shadow-red-200">
+                      KELUAR APLIKASI
+                  </button>
+              </div>
+          </div>
+        `;
+      }
+    }).catch(e => console.log("Radar skip"));
+}
+
 function login() {
   const nik = document.getElementById("nik").value;
   const password = document.getElementById("password").value;
@@ -21,7 +60,6 @@ function login() {
 
   if (!nik || !password) { info.innerText = "NIK & Password wajib diisi!"; return; }
 
-  // 1. Munculkan Animasi Loading Khas siPeKa
   const loader = document.getElementById("loader-login");
   if (loader) loader.classList.remove("hidden");
   info.innerText = "⏳ Memverifikasi...";
@@ -32,20 +70,17 @@ function login() {
   })
   .then(res => res.json())
   .then(data => {
-    // 2. Matikan Animasi Loading
     if (loader) loader.classList.add("hidden");
 
-    // 3. CEK SAKLAR MAINTENANCE DULU
     if (data.status === "maintenance") {
       const pesanEl = document.getElementById("pesan-maintenance");
       const modalEl = document.getElementById("modal-maintenance");
       if(pesanEl) pesanEl.innerText = data.pesan;
       if(modalEl) modalEl.classList.remove("hidden");
-      info.innerText = ""; // Bersihkan info
-      return; // Hentikan proses masuk
+      info.innerText = ""; 
+      return; 
     }
 
-    // 4. JIKA NORMAL & SUKSES LOGIN
     if (data.status === "success") {
       localStorage.setItem("nik", data.nik);
       localStorage.setItem("nama", data.nama);
@@ -65,42 +100,101 @@ function login() {
   });
 }
 
-// FUNGSI UNTUK MENUTUP POPUP MAINTENANCE
 function tutupMaintenance() {
   const modalMaint = document.getElementById("modal-maintenance");
   if (modalMaint) modalMaint.classList.add("hidden");
 }
 
-// =====================================================================
-
-
 function cekLogin() {
-  const nik = localStorage.getItem("nik");
-  const role = localStorage.getItem("role");
-  const isLoginPage = window.location.pathname.includes("index.html") || window.location.pathname.endsWith("/");
+  const nik = localStorage.getItem("nik");
+  const role = localStorage.getItem("role");
+  const isLoginPage = window.location.pathname.includes("index.html") || window.location.pathname.endsWith("/");
 
-  // 1. JIKA BELUM LOGIN & BUKAN DI HALAMAN LOGIN -> Tendang ke Login
-  if (!nik && !isLoginPage) {
-    window.location.href = "index.html";
-    return;
-  }
+  if (!nik && !isLoginPage) {
+    window.location.href = "index.html";
+    return;
+  }
 
-  // 2. JIKA SUDAH LOGIN & MALAH BUKA HALAMAN LOGIN -> Lempar ke Dashboard masing-masing
-  if (nik && isLoginPage) {
-    if (role && role.includes("admin")) {
-      window.location.href = "dashboard-admin.html";
-    } else {
-      window.location.href = "dashboard-kader.html";
-    }
-  }
+  if (nik && isLoginPage) {
+    if (role && role.includes("admin")) window.location.href = "dashboard-admin.html";
+    else window.location.href = "dashboard-kader.html";
+  }
 }
 
 function logout() {
-  localStorage.clear();
-  window.location.href = "index.html";
+  localStorage.clear();
+  window.location.href = "index.html";
 }
 
-// ================= 2. SISTEM WILAYAH (FIXED) =================
+
+// ============================================================================
+// 2. TAMPILAN DASHBOARD & UI UTILITIES
+// ============================================================================
+function initDashboard() {
+  const nama = localStorage.getItem("nama");
+  const role = localStorage.getItem("role");
+  const kec = localStorage.getItem("kecamatan");
+  const desa = localStorage.getItem("desa");
+  const fotoBase64 = localStorage.getItem("foto");
+
+  const elNama = document.getElementById("namaUser");
+  const elRole = document.getElementById("labelRole");
+  const elWilayah = document.getElementById("wilayahOtoritas");
+  const elIcon = document.getElementById("iconRole");
+  const elFotoHeader = document.getElementById("fotoProfilHeader"); 
+
+  if (elNama) elNama.innerText = nama || "Pengguna";
+
+  if (elFotoHeader) {
+    if (fotoBase64 && fotoBase64 !== "" && fotoBase64 !== "-") {
+      elFotoHeader.src = "data:image/jpeg;base64," + fotoBase64;
+    } else {
+      elFotoHeader.src = "def-profil.png";
+    }
+  }
+
+  let roleText = "", wilayahText = "", iconEmoji = "👤"; 
+
+  if (role === "super_admin") {
+    roleText = "Super Administrator"; wilayahText = "Kabupaten Bekasi"; iconEmoji = "👑";
+  } else if (role === "admin_kec") {
+    roleText = "Admin Kecamatan"; wilayahText = "Kecamatan " + kec; iconEmoji = "🏛️";
+  } else if (role === "admin_desa") {
+    roleText = "Admin Desa"; wilayahText = "Desa " + desa; iconEmoji = "🏠";
+  } else {
+    roleText = "Kader PPKBD"; wilayahText = "Desa " + desa; iconEmoji = "👤";
+  }
+
+  if (elRole) elRole.innerText = roleText;
+  if (elWilayah) elWilayah.innerText = "📍 Wilayah: " + wilayahText;
+  if (elIcon) elIcon.innerText = iconEmoji;
+}
+
+function tampilkanMotivasi() {
+  const daftar = ["\"Semangat melayani!\"", "\"Kerja ikhlas, kerja tuntas!\""];
+  const el = document.getElementById("motivasi-login");
+  if (el) el.innerText = daftar[Math.floor(Math.random() * daftar.length)];
+}
+
+function setTahunOtomatis() {
+  const thn = new Date().getFullYear();
+  const elFilter = document.getElementById("filter-tahun");
+  if (elFilter) elFilter.innerHTML = `<option value="${thn}">${thn}</option>`;
+
+  const elRenja = document.getElementById("renja-tahun");
+  if (elRenja) elRenja.innerHTML = `<option value="${thn}">${thn}</option><option value="${thn + 1}">${thn + 1}</option>`;
+}
+
+function navigasiKembali() {
+  const role = localStorage.getItem("role");
+  if (role && role.toLowerCase().includes("admin")) window.location.href = "dashboard-admin.html";
+  else window.location.href = "dashboard-kader.html";
+}
+
+
+// ============================================================================
+// 3. WILAYAH & MANAJEMEN ROLE
+// ============================================================================
 function loadWilayahDatabase() {
   const selKec = document.getElementById("user-kecamatan") || document.getElementById("select-kecamatan");
   if (!selKec) return;
@@ -114,7 +208,6 @@ function loadWilayahDatabase() {
       uniqueKec.forEach(item => {
         if(item.nama_kec && item.nama_kec !== "-") {
           let opt = document.createElement("option");
-          // Paksa huruf besar agar pencocokan selalu berhasil
           opt.value = item.nama_kec.toUpperCase(); 
           opt.setAttribute("data-kode", item.kode_kec); 
           opt.innerHTML = item.nama_kec.toUpperCase();
@@ -143,8 +236,6 @@ function updateDropdownDesa(desaTerpilih = "") {
   }
   
   const filtered = GLOBAL_WILAYAH.filter(item => (item.nama_kec || "").toUpperCase() === kecDipilih);
-  
-  // Filter Anti Ganda (Mencegah nama desa kembar muncul di form pendaftaran)
   const uniqueDesa = [...new Set(filtered.map(item => (item.nama_desa || "").trim().toUpperCase()))].sort();
   
   uniqueDesa.forEach(namaDesa => {
@@ -152,7 +243,6 @@ function updateDropdownDesa(desaTerpilih = "") {
       let opt = document.createElement("option");
       opt.value = namaDesa;
       opt.innerHTML = namaDesa;
-      // Pencocokan kebal salah huruf besar/kecil
       if(desaTerpilih && namaDesa === desaTerpilih.toUpperCase()) opt.selected = true;
       selDesa.appendChild(opt);
     }
@@ -161,7 +251,6 @@ function updateDropdownDesa(desaTerpilih = "") {
 
 function initUserPage() {
   const role = localStorage.getItem("role");
-  // Paksa uppercase sejak awal
   const kec = localStorage.getItem("kecamatan") ? localStorage.getItem("kecamatan").toUpperCase() : "";
   const desa = localStorage.getItem("desa") ? localStorage.getItem("desa").toUpperCase() : "";
   
@@ -179,7 +268,6 @@ function initUserPage() {
   }
   if (displayWil) displayWil.innerText = (role === "super_admin") ? "Kabupaten Bekasi" : "Kecamatan " + kec;
   
-  // 1. Kunci Kecamatan
   if (selKec && role !== "super_admin") { 
     selKec.value = kec; 
     selKec.disabled = true; 
@@ -188,18 +276,14 @@ function initUserPage() {
   if (!selRole) return;
   let ops = "";
   
-  // 2. Logika Otoritas Pembuatan Akun
   if (role === "super_admin") {
     ops = `<option value="admin_kec">Admin Kecamatan</option><option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
     if(selDesa) updateDropdownDesa();
-    
   } else if (role === "admin_kec") {
     ops = `<option value="admin_desa">Admin Desa</option><option value="kader">Kader PPKBD</option>`;
     if(selDesa) updateDropdownDesa();
-    
   } else {
     ops = `<option value="kader">Kader PPKBD</option>`;
-    // Khusus Admin Desa: Langsung isikan nama desanya dan kunci!
     if(selDesa) { 
         updateDropdownDesa(desa); 
         selDesa.disabled = true; 
@@ -210,7 +294,40 @@ function initUserPage() {
   if(filterRole) filterRole.innerHTML = `<option value="">Semua Role</option>` + ops;
 }
 
-// ================= 3. MANAJEMEN USER (SEARCH & FILTER) =================
+function evaluasiRoleOtomatis() {
+  const selRole = document.getElementById("user-role");
+  const selKec = document.getElementById("user-kecamatan");
+  const selDesa = document.getElementById("user-wilayah");
+  if (!selRole || !selKec || !selDesa) return;
+
+  const kec = selKec.value.toUpperCase();
+  const desa = selDesa.value.toUpperCase();
+  const myRole = localStorage.getItem("role");
+
+  if (kec === "SEMUA KECAMATAN") {
+    selRole.innerHTML = `<option value="super_admin">👑 SUPER ADMINISTRATOR (KABUPATEN)</option>`;
+  } 
+  else if (kec !== "" && desa === "SEMUA DESA") {
+    selRole.innerHTML = `<option value="admin_kec">🏛️ ADMIN KECAMATAN ${kec}</option>`;
+  } 
+  else if (kec !== "" && desa !== "" && desa !== "SEMUA DESA") {
+    if (myRole === "super_admin" || myRole === "admin_kec") {
+      selRole.innerHTML = `
+        <option value="admin_desa">🏠 ADMIN DESA ${desa}</option>
+        <option value="kader" selected>👤 KADER PPKBD ${desa}</option>
+      `;
+    } else {
+      selRole.innerHTML = `<option value="kader">👤 KADER PPKBD ${desa}</option>`;
+    }
+  } else {
+    selRole.innerHTML = `<option value="">-- Pilih Wilayah Terlebih Dahulu --</option>`;
+  }
+}
+
+
+// ============================================================================
+// 4. MANAJEMEN USER (TAMBAH, EDIT, HAPUS, FILTER)
+// ============================================================================
 function loadUsers() {
   const container = document.getElementById("container-daftar-user");
   const filterWil = document.getElementById("filter-wilayah");
@@ -222,7 +339,6 @@ function loadUsers() {
   
   container.innerHTML = `<p class="text-center text-[10px] text-gray-400 py-10 italic animate-pulse">Sinkronisasi data...</p>`;
   
-  // Memanggil GAS Action 7 (3-Level Authority)
   fetch(`${API_URL}?action=get_users&role_admin=${roleAdmin}&kec_admin=${kecAdmin}&desa_admin=${desaAdmin}`)
     .then(res => res.json())
     .then(data => {
@@ -270,14 +386,12 @@ function applyFilters() {
   });
 
   container.innerHTML = "";
-  
   if (filteredData.length === 0) { 
     container.innerHTML = `<p class="text-center text-[10px] text-slate-400 py-10 italic">Data tidak ditemukan.</p>`; 
     return; 
   }
   
   filteredData.forEach(u => {
-    // --- MENGEMBALIKAN VARIABEL VISUAL ASLI BAPAK ---
     const dNama = u.Nama || u.nama || "---";
     const dNik = u.NIK || u.nik || "---";
     const dKec = u.Kecamatan || u.kecamatan || "---";
@@ -288,14 +402,10 @@ function applyFilters() {
     let statusColor = dStatus === "aktif" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
     let labelTombolStatus = dStatus === "aktif" ? "NONAKTIFKAN" : "AKTIFKAN";
     
-    // Emoji Role Asli Bapak
     let roleLabel = dRole === "super_admin" ? "👑 Super Admin" : (dRole === "admin_kec" ? "🏛️ Admin Kec" : (dRole === "admin_desa" ? "🏠 Admin Desa" : "👤 Kader"));
     
-    // --- LOGIKA TOMBOL OTORITAS (TRIPLE-CHECK) ---
-    // Tombol ini muncul untuk semua admin
     let aksiTombol = `<button onclick="kelolaOtoritasUser('${dNik}', 'toggle_status')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-bold py-2 rounded-xl active:scale-95 transition">${labelTombolStatus}</button>`;
     
-    // Tombol ini HANYA muncul untuk Super Admin
     if (roleAdmin === "super_admin") {
       aksiTombol += `
         <button onclick="resetPasswordUser('${dNik}')" class="flex-1 bg-orange-50 text-orange-600 text-[10px] font-bold py-2 rounded-xl active:scale-95 transition">🔄 RESET PASS</button>
@@ -303,7 +413,6 @@ function applyFilters() {
       `;
     }
     
-    // --- RENDER HTML ASLI BAPAK (Dengan Injeksi Tombol Otoritas) ---
     container.innerHTML += `
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-2">
         <div class="flex justify-between items-start mb-2">
@@ -324,7 +433,135 @@ function applyFilters() {
   });
 }
 
-// --- FUNGSI EKSEKUSI (SINKRON DENGAN GAS ACTION 8) ---
+function tambahUser() {
+  const btn = document.getElementById("btn-tambah-user");
+  const nikInput = document.getElementById("user-nik");
+  const namaInput = document.getElementById("user-nama");
+  const kecInput = document.getElementById("user-kecamatan");
+  const desaInput = document.getElementById("user-wilayah");
+  const roleInput = document.getElementById("user-role");
+  const hpInput = document.getElementById("user-hp");
+
+  const payload = {
+    action: "tambah_user",
+    admin_nik: localStorage.getItem("nik"),
+    admin_nama: localStorage.getItem("nama"),
+    admin_role: localStorage.getItem("role"),
+    user_nik: nikInput.value.trim(),
+    nama: namaInput.value.toUpperCase().trim(),
+    password: "123456", 
+    role: roleInput.value,
+    kecamatan: kecInput.value,
+    desa: desaInput.value,
+    hp: hpInput.value
+  };
+
+  if (!payload.user_nik || !payload.nama || !payload.kecamatan || !payload.desa) {
+    return alert("⚠️ Mohon lengkapi NIK, Nama, Kecamatan, dan Desa!");
+  }
+
+  btn.innerText = "⏳ MENGECEK & MENYIMPAN...";
+  btn.disabled = true;
+
+  fetch(API_URL, { 
+    method: "POST", 
+    body: new URLSearchParams(payload) 
+  })
+  .then(res => res.text())
+  .then(res => {
+    const responClean = res.trim();
+    if (responClean === "success") {
+      alert("✅ Berhasil!\nUser " + payload.nama + " telah didaftarkan ke sistem.");
+      if (typeof batalEdit === 'function') batalEdit(); 
+      if (typeof loadUsers === 'function') loadUsers(); 
+    } 
+    else if (responClean === "nik_exists") {
+      alert("⚠️ DATA GANDA!\nNIK " + payload.user_nik + " sudah terdaftar di sistem.\n\nSilakan cek kembali NIK atau gunakan fitur EDIT jika ingin memperbarui data user tersebut.");
+      btn.innerText = "SIMPAN DATA PENGGUNA";
+      btn.disabled = false;
+    } 
+    else {
+      alert("❌ Gagal: " + res);
+      btn.innerText = "SIMPAN DATA PENGGUNA";
+      btn.disabled = false;
+    }
+  })
+  .catch(err => {
+    console.error("Fetch Error:", err);
+    alert("❌ Terjadi kesalahan koneksi. Silakan coba lagi.");
+    btn.innerText = "SIMPAN DATA PENGGUNA";
+    btn.disabled = false;
+  });
+}
+
+function prosesUpdateUser() {
+  const btn = document.getElementById("btn-tambah-user");
+  const nikTarget = document.getElementById("edit-nik-target").value; 
+  
+  const payload = {
+    action: "admin_manage_user",
+    sub_action: "update_user",
+    target_nik: nikTarget,
+    admin_nik: localStorage.getItem("nik"),
+    admin_nama: localStorage.getItem("nama"),
+    admin_role: localStorage.getItem("role"),
+    nama: document.getElementById("user-nama").value.toUpperCase(),
+    role_target: document.getElementById("user-role").value,
+    kecamatan: document.getElementById("user-kecamatan").value,
+    desa: document.getElementById("user-wilayah").value,
+    hp: document.getElementById("user-hp").value
+  };
+
+  if (!payload.nama || !payload.kecamatan || !payload.desa) {
+    return alert("⚠️ Nama, Kecamatan & Desa tidak boleh kosong!");
+  }
+
+  btn.innerText = "⏳ MEMPROSES UPDATE...";
+  btn.disabled = true;
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams(payload)
+  })
+  .then(res => res.text())
+  .then(res => {
+    if (res.trim() === "success") {
+      alert("✅ Data Pengguna Berhasil Diperbarui!");
+      batalEdit(); 
+      loadUsers(); 
+    } else {
+      alert("❌ Gagal Update: " + res);
+      btn.innerText = "UPDATE DATA PENGGUNA";
+      btn.disabled = false;
+    }
+  })
+  .catch(err => {
+    alert("❌ Kesalahan koneksi jaringan.");
+    btn.innerText = "UPDATE DATA PENGGUNA";
+    btn.disabled = false;
+  });
+}
+
+function batalEdit() {
+  document.getElementById("form-title").innerText = "👤 Registrasi Akun Baru";
+  document.getElementById("btn-batal-edit").classList.add("hidden");
+  
+  document.getElementById("edit-nik-target").value = "";
+  document.getElementById("user-nik").value = "";
+  document.getElementById("user-nik").disabled = false;
+  document.getElementById("user-nama").value = "";
+  document.getElementById("user-hp").value = "";
+  
+  const btnSubmit = document.getElementById("btn-tambah-user");
+  btnSubmit.innerText = "SIMPAN DATA PENGGUNA";
+  btnSubmit.classList.replace("bg-orange-500", "bg-blue-900");
+  
+  btnSubmit.onclick = function() { tambahUser(); }; 
+  btnSubmit.disabled = false;
+  
+  initUserPage(); 
+}
+
 function kelolaOtoritasUser(nik, subAction, extraData = {}) {
   const confirmMsg = subAction === 'toggle_status' ? "Ubah status keaktifan user ini?" : "Proses aksi ini?";
   if (subAction !== 'update_user' && !confirm(confirmMsg)) return;
@@ -336,7 +573,7 @@ function kelolaOtoritasUser(nik, subAction, extraData = {}) {
     admin_nik: localStorage.getItem("nik"),
     admin_nama: localStorage.getItem("nama"),
     admin_role: localStorage.getItem("role"),
-    ...extraData // Spread parameter jika ada data edit (nama, wilayah, dll)
+    ...extraData 
   };
 
   fetch(API_URL, {
@@ -347,229 +584,63 @@ function kelolaOtoritasUser(nik, subAction, extraData = {}) {
   .then(res => {
     if (res.trim() === "success") {
       alert("✅ Otoritas Berhasil Diperbarui!");
-      loadUsers(); // Refresh daftar user otomatis
+      loadUsers(); 
     } else {
       alert("❌ Gagal: " + res);
     }
   });
 }
 
-// Fungsi Panggilan Khusus Reset Password
 function resetPasswordUser(nik) {
   if (confirm("Reset password user ini ke standar (123456)?")) {
     kelolaOtoritasUser(nik, 'reset_password');
   }
 }
 
-// ================= DASHBOARD & STATISTIK (FUNGSI LAMA) =================
-function initDashboard() {
-  const nama = localStorage.getItem("nama");
-  const role = localStorage.getItem("role");
-  const kec = localStorage.getItem("kecamatan");
-  const desa = localStorage.getItem("desa");
-  const fotoBase64 = localStorage.getItem("foto");
+// ⚠️ [KONFIRMASI BAPAK]: INI ADALAH FUNGSI siapkanEditUser VERSI BARU DARI BAPAK
+// Saya menggunakan yang ini karena ada fitur timeout untuk set role otomatis
+function siapkanEditUser(nik) {
+  const user = DATA_USERS_ALL.find(u => u.NIK.toString() === nik.toString());
+  if (!user) return alert("Data tidak ditemukan.");
 
-  const elNama = document.getElementById("namaUser");
-  const elRole = document.getElementById("labelRole");
-  const elWilayah = document.getElementById("wilayahOtoritas");
-  const elIcon = document.getElementById("iconRole");
-  const elFotoHeader = document.getElementById("fotoProfilHeader"); 
+  document.getElementById("form-title").innerText = "✏️ EDIT DATA: " + (user.Nama || "").toUpperCase();
+  document.getElementById("btn-batal-edit").classList.remove("hidden");
+  document.getElementById("edit-nik-target").value = user.NIK; 
+  document.getElementById("user-nik").value = user.NIK;
+  document.getElementById("user-nik").disabled = true; 
+  document.getElementById("user-nama").value = user.Nama;
+  document.getElementById("user-hp").value = user.HP || "";
 
-  if (elNama) elNama.innerText = nama || "Pengguna";
-
-  // --- LOGIKA FOTO PROFIL (FIXED) ---
-  if (elFotoHeader) {
-    if (fotoBase64 && fotoBase64 !== "" && fotoBase64 !== "-") {
-      elFotoHeader.src = "data:image/jpeg;base64," + fotoBase64;
-    } else {
-      // Pastikan file def-profil.png satu folder dengan file html
-      elFotoHeader.src = "def-profil.png";
-    }
-  }
-
-  let roleText = "";
-  let wilayahText = "";
-  let iconEmoji = "👤"; 
-
-  if (role === "super_admin") {
-    roleText = "Super Administrator";
-    wilayahText = "Kabupaten Bekasi";
-    iconEmoji = "👑";
-  } else if (role === "admin_kec") {
-    roleText = "Admin Kecamatan";
-    wilayahText = "Kecamatan " + kec;
-    iconEmoji = "🏛️";
-  } else if (role === "admin_desa") {
-    roleText = "Admin Desa";
-    wilayahText = "Desa " + desa;
-    iconEmoji = "🏠";
-  } else {
-    roleText = "Kader PPKBD";
-    wilayahText = "Desa " + desa;
-    iconEmoji = "👤";
-  }
-
-  if (elRole) elRole.innerText = roleText;
-  if (elWilayah) elWilayah.innerText = "📍 Wilayah: " + wilayahText;
-  if (elIcon) elIcon.innerText = iconEmoji;
-}
-
-//====================== 4. LOAD STATISTIK (GRAFIK KINERJA) ==========================//
-function loadGrafik() {
-  const role = localStorage.getItem("role");
-  const nikLogin = localStorage.getItem("nik");
-  
-  const elTahun = document.getElementById("filter-tahun");
-  const elBulan = document.getElementById("filter-bulan");
-  if (!elTahun || !elBulan) return; 
-
-  const tahun = elTahun.value;
-  const bulan = elBulan.value;
-  const userEl = document.getElementById("filter-user");
-  const userSelect = userEl ? userEl.value : "";
-
-  // KUNCI PERBAIKAN: Deteksi NIK secara akurat per level wilayah
-  let nikTarget = nikLogin; // Default untuk Kader biasa
-
-  if (role && role.includes("admin")) {
-    const adminArea = document.getElementById("admin-filter-area");
-    if (adminArea) adminArea.classList.remove("hidden");
-
-    if (userSelect !== "") {
-       nikTarget = userSelect; // Tarik data 1 kader spesifik
-    } else {
-       // Kumpulkan semua NIK Kader dari dropdown untuk rekap regional
-       let targetNiks = [];
-       if (userEl) {
-         for (let i = 1; i < userEl.options.length; i++) {
-            targetNiks.push(userEl.options[i].value);
-         }
-       }
-       
-       if (role === "super_admin" && targetNiks.length === 0) {
-          nikTarget = ""; // Super admin kosong = tarik seluruh kabupaten
-       } else {
-          nikTarget = targetNiks.join(",") || "KOSONG"; // Gabungkan NIK pake koma
-       }
-    }
+  const kecEl = document.getElementById("user-kecamatan");
+  if (kecEl) {
+    kecEl.value = (user.Kecamatan || "").toUpperCase();
+    updateDropdownDesa(user.Desa); 
+    
+    setTimeout(() => {
+      evaluasiRoleOtomatis(); 
+      document.getElementById("user-role").value = user.Role; 
+    }, 200);
   }
 
-  // Minta Data ke Server
-  fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
-    .then(res => res.json())
-    .then(data => {
-      
-      // --- UPDATE KARTU RINGKASAN ---
-      const totalReal = data.realisasi_tahunan.reduce((a, b) => a + b, 0);
-      const totalTarget = data.target_tahunan.reduce((a, b) => a + b, 0);
-      const persen = totalTarget > 0 ? Math.round((totalReal / totalTarget) * 100) : 0;
+  const btnSubmit = document.getElementById("btn-tambah-user");
+  btnSubmit.innerText = "UPDATE DATA PENGGUNA";
+  btnSubmit.classList.remove("bg-blue-900");
+  btnSubmit.classList.add("bg-orange-500");
+  btnSubmit.onclick = function() { prosesUpdateUser(); };
 
-      if (document.getElementById("total-realisasi")) document.getElementById("total-realisasi").innerText = totalReal;
-      if (document.getElementById("total-persen")) document.getElementById("total-persen").innerText = persen + "%";
-
-      // --- UPDATE DIAGRAM DONUT ---
-      const canvas = document.getElementById('myChart');
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        if (myChartInstance) myChartInstance.destroy();
-        
-        myChartInstance = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
-            datasets: [{
-              data: data.realisasi_bulanan, 
-              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#94a3b8'],
-              borderWidth: 2, borderColor: '#ffffff', hoverOffset: 6
-            }]
-          },
-          options: {
-            responsive: true, maintainAspectRatio: false, cutout: '65%',
-            plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } }
-          }
-        });
-      }
-
-      // --- UPDATE PERINGKAT TOP 5 ---
-      const rankArea = document.getElementById("section-peringkat");
-      if (role && role.includes("admin") && rankArea) {
-        rankArea.classList.remove("hidden");
-        renderPeringkat(data.ranking);
-      }
-    })
-    .catch(err => console.error("Gagal load statistik:", err));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-//====================== 5. RENDER PERINGKAT ==========================//
-function renderPeringkat(dataRanking) {
-  const listPeringkat = document.getElementById("list-peringkat");
-  if (!listPeringkat) return;
 
-  if (!dataRanking || dataRanking.length === 0) {
-    listPeringkat.innerHTML = "<p class='text-center text-[10px] text-gray-400 py-4'>Belum ada data laporan.</p>";
-    return;
-  }
 
-  listPeringkat.innerHTML = dataRanking.map((u, i) => {
-    const namaKader = u.Nama || u.nama || "Anonim";
-    const skorKader = u.Skor || u.skor || 0;
-
-    return `
-    <div class="flex items-center justify-between bg-white p-3 rounded-2xl shadow-sm border border-slate-50">
-      <div class="flex items-center gap-3">
-        <span class="flex items-center justify-center w-6 h-6 rounded-full ${i === 0 ? 'bg-yellow-400' : 'bg-slate-100'} text-[10px] font-bold ${i === 0 ? 'text-white' : 'text-gray-400'}">${i+1}</span>
-        <p class="text-[11px] font-bold text-slate-700 uppercase">${namaKader}</p>
-      </div>
-      <span class="text-[9px] bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-bold">${skorKader} Lap</span>
-    </div>
-  `}).join('');
-}
-
-function tampilkanMotivasi() {
-  const daftar = ["\"Semangat melayani!\"", "\"Kerja ikhlas, kerja tuntas!\""];
-  const el = document.getElementById("motivasi-login");
-  if (el) el.innerText = daftar[Math.floor(Math.random() * daftar.length)];
-}
-
-function setTahunOtomatis() {
-  const thn = new Date().getFullYear();
-  
-  // 1. Untuk Filter Statistik (Hanya tahun ini)
-  const elFilter = document.getElementById("filter-tahun");
-  if (elFilter) {
-    elFilter.innerHTML = `<option value="${thn}">${thn}</option>`;
-  }
-
-  // 2. Untuk Form Renja (Tahun ini & Tahun depan)
-  const elRenja = document.getElementById("renja-tahun");
-  if (elRenja) {
-    elRenja.innerHTML = `
-      <option value="${thn}">${thn}</option>
-      <option value="${thn + 1}">${thn + 1}</option>
-    `;
-  }
-}
-
-// ================= 5. PENGGERAK DOM =================
-document.addEventListener("DOMContentLoaded", () => {
-  cekLogin();
-  if (typeof setTahunOtomatis === 'function') setTahunOtomatis();
-  if (document.getElementById("motivasi-login")) tampilkanMotivasi();
-
-  // Jika di halaman dashboard, jalankan initDashboard
-  if (document.getElementById("namaUser")) initDashboard();
-});
-
-// ==========================================
-// 6. LOGIKA KAMUS PPKBD & SATUAN (TAHAP 2)
-// ==========================================
-
+// ============================================================================
+// 5. RENCANA KERJA (RENJA)
+// ============================================================================
 function updateSubstansi() {
   const jenis = document.getElementById("renja-jenis").value;
   const wrapperSub = document.getElementById("wrapper-substansi");
   const selectSub = document.getElementById("renja-substansi");
   
-  // Kamus asli dari backup Bapak
   const dataSubstansi = {
     "Pertemuan": ["Pertemuan Rutin Kader", "Rapat Koordinasi (Desa/RW)", "Pertemuan Kelompok Kerja (Pokja)"],
     "KIE": ["Penyuluhan Kelompok", "Konseling Individu", "Kunjungan Rumah (Door-to-door)", "Penyebaran Media Informasi"],
@@ -579,7 +650,6 @@ function updateSubstansi() {
 
   selectSub.innerHTML = '<option value="">-- Pilih Substansi --</option>';
 
-  // Logika: Sembunyikan jika "Lainnya" atau kosong
   if (jenis === "Lainnya" || jenis === "") {
     if (wrapperSub) wrapperSub.classList.add("hidden");
     let opt = document.createElement("option");
@@ -595,14 +665,13 @@ function updateSubstansi() {
         opt.innerHTML = item;
         selectSub.appendChild(opt);
       });
-      // Tambahkan pilihan lainnya di tiap kategori
       let optLain = document.createElement("option");
       optLain.value = "Lainnya di " + jenis;
       optLain.innerHTML = "Lainnya...";
       selectSub.appendChild(optLain);
     }
   }
-  updateSatuanOtomatis(); // Panggil otomatisasi satuan
+  updateSatuanOtomatis(); 
   if (typeof generateIndikator === 'function') generateIndikator(); 
 }
 
@@ -614,13 +683,9 @@ function updateSatuanOtomatis() {
 
   if (!satuanSel) return;
 
-  // Logika cerdas penentuan satuan sesuai juknis Bapak
   if (jenis === "Pencatatan & Pelaporan") {
-    if (substansi.toLowerCase().includes("verval")) {
-      satuanSel.value = "Keluarga";
-    } else {
-      satuanSel.value = "Dokumen";
-    }
+    if (substansi.toLowerCase().includes("verval")) satuanSel.value = "Keluarga";
+    else satuanSel.value = "Dokumen";
   } else if (jenis === "Pelayanan & Penggerakan") {
     satuanSel.value = "Akseptor";
   } else if (jenis === "Pertemuan") {
@@ -649,15 +714,11 @@ function generateIndikator() {
   }
   
   let namaKegiatan = (substansi && substansi !== "") ? substansi : jenis;
-  if (jenis === "Lainnya") {
-    namaKegiatan = "kegiatan operasional";
-  }
+  if (jenis === "Lainnya") namaKegiatan = "kegiatan operasional";
 
-  // Gabungkan keterangan jika ada
   const detailKegiatan = keterangan ? `${namaKegiatan} (${keterangan})` : namaKegiatan;
   let kalimatBaku = "";
 
-  // Logika Switch-Case asli dari backup Bapak
   switch (jenis) {
     case "Pertemuan":
       kalimatBaku = `Terselenggaranya agenda ${detailKegiatan} serta meningkatnya kesepahaman pada ${peserta} dari unsur ${sasaran} di wilayah ${lokasi}.`;
@@ -678,16 +739,13 @@ function generateIndikator() {
   inputIndikator.value = kalimatBaku;
 }
 
-// --- SIMPAN RENCANA KERJA KE SERVER ---
 function simpanRenja() {
   const btn = document.getElementById("btn-simpan-renja");
   const info = document.getElementById("info-renja");
   
-  // Ambil identitas dari localStorage
   const nik = localStorage.getItem("nik");
   const nama = localStorage.getItem("nama");
   
-  // Ambil data form
   const jenis = document.getElementById("renja-jenis").value;
   const substansi = document.getElementById("renja-substansi").value;
   const keterangan = document.getElementById("renja-keterangan").value.trim();
@@ -695,13 +753,11 @@ function simpanRenja() {
   const targetAngka = document.getElementById("renja-target-angka").value;
   const targetSatuan = document.getElementById("renja-target-satuan").value;
 
-  // Validasi Dasar
   if (!jenis || !volume || !targetAngka) {
     alert("⚠️ Mohon lengkapi Jenis Kegiatan, Volume, dan Target Sasaran!");
     return;
   }
 
-  // Jahit Nama Kegiatan (Persis logika backup Bapak untuk GAS)
   let kegiatanGabung = (jenis === "Lainnya") ? "Lainnya: " + keterangan : jenis + ": " + substansi + (keterangan ? " - " + keterangan : "");
 
   btn.disabled = true;
@@ -731,9 +787,6 @@ function simpanRenja() {
     if (res.trim() === "success") {
       alert("✅ Rencana Kerja Berhasil Disimpan!");
 
-      // --- PROSES RESET TOTAL FORM ---
-      
-      // 1. Reset Dropdown Utama & Sembunyikan Substansi
       document.getElementById("renja-jenis").value = "";
       const wrapperSub = document.getElementById("wrapper-substansi");
       if (wrapperSub) wrapperSub.classList.add("hidden");
@@ -741,19 +794,13 @@ function simpanRenja() {
       const subEl = document.getElementById("renja-substansi");
       if (subEl) subEl.innerHTML = '<option value="">-- Pilih Substansi --</option>';
 
-      // 2. Kosongkan Semua Kolom Input Teks & Angka
       document.getElementById("renja-keterangan").value = "";
       document.getElementById("renja-volume").value = "";
       document.getElementById("renja-sasaran").value = "";
       document.getElementById("renja-target-angka").value = "";
       document.getElementById("renja-indikator").value = "";
 
-      // 3. Khusus Lokasi: Tidak perlu direset jika Kader 
-      // ingin menginput banyak data di lokasi yang sama (biar cepat)
-      // Tapi jika ingin dikosongkan juga, aktifkan baris bawah ini:
-      // document.getElementById("renja-lokasi").value = "";
-
-      loadRenja(); // Segarkan daftar di bawah
+      loadRenja(); 
     } else {
       alert("❌ Gagal menyimpan: " + res);
     }
@@ -768,7 +815,6 @@ function simpanRenja() {
   });
 }
 
-// --- MUAT DAFTAR RENJA SAYA ---
 function loadRenja() {
   const list = document.getElementById("listRenja");
   const nik = localStorage.getItem("nik");
@@ -786,7 +832,6 @@ function loadRenja() {
       }
 
       data.forEach(item => {
-        // Logika warna border: Biru jika bisa dihapus, Hijau jika sudah terkunci (dipakai lapor)
         const borderCol = item.can_delete ? 'border-blue-900' : 'border-green-500';
         const statusLabel = item.can_delete ? 
           `<button onclick="hapusRenja('${item.renja_id}')" class="text-red-300 hover:text-red-500 transition">🗑️</button>` : 
@@ -818,7 +863,6 @@ function loadRenja() {
     });
 }
 
-// --- HAPUS RENJA ---
 function hapusRenja(id) {
   if (!confirm("Apakah Anda yakin ingin menghapus Rencana Kerja ini?")) return;
   
@@ -834,11 +878,10 @@ function hapusRenja(id) {
     });
 }
 
-// ============================================================
-// 7. LOGIKA INPUT LAPORAN (VISUM) - TAHAP 1
-// ============================================================
 
-// --- A. BATASI TANGGAL MAKSIMAL HARI INI ---
+// ============================================================================
+// 6. LAPORAN VISUM (FORM, KAMERA & PENYIMPANAN)
+// ============================================================================
 function batasiTanggalLaporan() {
   const inputTgl = document.getElementById("lap-tgl");
   if (inputTgl) {
@@ -847,15 +890,12 @@ function batasiTanggalLaporan() {
   }
 }
 
-/// --- B. TARIK DATA RENJA KE MEMORI (DENGAN AUTO-CHECK) ---
 function loadRenjaUntukLaporan() {
   const nik = localStorage.getItem("nik");
   const dropdown = document.getElementById("pilih-renja");
   
-  // Beri indikasi ke user bahwa data sedang diambil
   if (dropdown) dropdown.innerHTML = '<option value="">⏳ Sinkronisasi Renja...</option>';
-  
-  dataRenjaGlobal = []; // Reset penampung global
+  dataRenjaGlobal = []; 
   
   fetch(`${API_URL}?action=get_renja&nik=${nik}`)
     .then(res => res.json())
@@ -864,15 +904,11 @@ function loadRenjaUntukLaporan() {
         dataRenjaGlobal = data;
         console.log("Data Renja untuk laporan siap!");
 
-        // JURUS ANTI-BALAPAN:
-        // Cek apakah user sudah terlanjur isi tanggal. 
-        // Jika sudah, langsung jalankan filter tanpa nunggu klik kedua kali.
         const tglSudahAda = document.getElementById("lap-tgl").value;
         if (tglSudahAda) {
           console.log("Tanggal terdeteksi, menjalankan filter otomatis...");
           filterRenjaBerdasarkanTanggal();
         } else {
-          // Jika belum isi tanggal, kembalikan teks dropdown ke semula
           if (dropdown) dropdown.innerHTML = '<option value="">-- Pilih Rencana Kerja --</option>';
         }
       } else {
@@ -885,7 +921,6 @@ function loadRenjaUntukLaporan() {
     });
 }
 
-// --- C. BUKA KUNCI FORM & FILTER TAHUN ---
 function bukaKunciForm() {
   const tglInput = document.getElementById("lap-tgl").value;
   const areaLanjutan = document.getElementById("area-lanjutan");
@@ -895,8 +930,6 @@ function bukaKunciForm() {
     areaLanjutan.removeAttribute("disabled");
     areaLanjutan.classList.remove("opacity-40");
     if (pesanKunci) pesanKunci.style.display = "none";
-    
-    // Jalankan filter otomatis
     filterRenjaBerdasarkanTanggal();
   } else {
     areaLanjutan.setAttribute("disabled", "true");
@@ -913,9 +946,7 @@ function filterRenjaBerdasarkanTanggal() {
   const tahunPilih = String(tglInput.split("-")[0]);
   dropdown.innerHTML = '<option value="">-- Pilih Renja --</option>';
   
-  // Filter: Tahun harus sama & Sisa Volume > 0
   const renjaTersedia = dataRenjaGlobal.filter(r => {
-    const tahunCocok = String(r.tahun).trim() === String(tahunPilih).trim();
     return String(r.tahun) === tahunPilih && Number(r.sisa_vol) > 0;
   });
 
@@ -925,18 +956,15 @@ function filterRenjaBerdasarkanTanggal() {
     dropdown.innerHTML = `<option value="">(Tidak ada Renja aktif tahun ${tahunPilih})</option>`;
   } else {
     renjaTersedia.forEach(r => {
-      // Masukkan satuan ke data-attribute agar bisa diambil nanti
       dropdown.innerHTML += `<option value="${r.renja_id}" data-satuan="${r.target_peserta}" data-kegiatan="${r.kegiatan}">
         ${r.kegiatan} (Sisa: ${r.sisa_vol}x)
       </option>`;
     });
   }
   if (typeof updateLabelSatuanLaporan === 'function') updateLabelSatuanLaporan();
-  if (typeof validasiFotoLaporan === 'function') validasiFotoLaporan();
-        
+  if (typeof validasiFotoLaporan === 'function') validasiFotoLaporan();       
 }
 
-// --- D. PINDAH MODE: RENJA VS LUAR RENJA ---
 function toggleAreaForm() {
   const sumber = document.getElementById("sumber-kegiatan").value;
   const areaRenja = document.getElementById("area-pilih-renja");
@@ -953,7 +981,6 @@ function toggleAreaForm() {
   validasiFotoLaporan();      
 }
 
-// --- E. TAMPILKAN DETAIL RENCANA YANG DIPILIH ---
 function showDetailRenja() {
   const drp = document.getElementById("pilih-renja");
   const previewBox = document.getElementById("preview-renja-full");
@@ -961,7 +988,6 @@ function showDetailRenja() {
 
   if (drp && drp.selectedIndex > 0) {
     const opt = drp.options[drp.selectedIndex];
-    // Ambil detail dari teks option (kegiatan + sisa)
     previewTeks.innerText = opt.text;
     previewBox.classList.remove("hidden");
   } else {
@@ -970,7 +996,6 @@ function showDetailRenja() {
   updateLabelSatuanLaporan(); 
 }
 
-// --- F. UPDATE LABEL SATUAN (ORANG/KELUARGA/DLL) ---
 function updateLabelSatuanLaporan() {
   const drp = document.getElementById("pilih-renja");
   const container = document.getElementById("container-satuan-laporan");
@@ -979,10 +1004,9 @@ function updateLabelSatuanLaporan() {
   if (!container) return;
 
   if (sumber === "renja") {
-    let satuanAsli = "Orang"; // Default
+    let satuanAsli = "Orang"; 
     if (drp && drp.selectedIndex > 0) {
       const teksTarget = drp.options[drp.selectedIndex].getAttribute("data-satuan") || "";
-      // Pecah "12 Keluarga" ambil kata "Keluarga"-nya saja
       const parts = teksTarget.split(" ");
       satuanAsli = parts.length > 1 ? parts[parts.length - 1] : "Orang";
     }
@@ -994,7 +1018,6 @@ function updateLabelSatuanLaporan() {
       </div>
     `;
   } else {
-    // Jika Luar Renja, biarkan kader pilih satuan secara manual
     container.innerHTML = `
       <select id="lap-satuan-manual" onchange="validasiFotoLaporan()" class="w-full p-4 text-sm font-bold text-amber-900 bg-amber-50 border border-amber-200 rounded-2xl outline-none focus:ring-2 focus:ring-amber-500 shadow-sm">
         <option value="Orang">Orang</option>
@@ -1008,7 +1031,6 @@ function updateLabelSatuanLaporan() {
   }
 }
 
-// --- G. VALIDASI FORM (UNTUK BUKA KUNCI KAMERA) ---
 function validasiFotoLaporan() {
   const tgl = document.getElementById("lap-tgl").value;
   const lokasi = document.getElementById("lap-lokasi").value.trim();
@@ -1021,17 +1043,14 @@ function validasiFotoLaporan() {
 
   let kegiatanOk = false;
   if (sumber === "renja") {
-    // Cek apakah sudah pilih renja dan isi catatan
     const renjaId = document.getElementById("pilih-renja").value;
     const catatan = document.getElementById("lap-catatan-renja").value.trim();
     if (renjaId && catatan.length >= 5) kegiatanOk = true;
   } else {
-    // Cek apakah isi kegiatan manual minimal 5 karakter
     const manualTeks = document.getElementById("lap-kegiatan-manual").value.trim();
     if (manualTeks.length >= 5) kegiatanOk = true;
   }
 
-  // Jika semua syarat (Tgl, Lokasi, Kegiatan, Hasil) terpenuhi, buka kunci kamera
   if (tgl && lokasi && kegiatanOk && realisasi > 0) {
     areaFoto.classList.remove("opacity-30", "pointer-events-none");
     areaFoto.classList.add("bg-blue-50/50", "border-blue-200");
@@ -1041,7 +1060,6 @@ function validasiFotoLaporan() {
       ikon.innerText = "📸";
     }
   } else {
-    // Kunci kembali jika ada data yang dihapus
     areaFoto.classList.add("opacity-30", "pointer-events-none");
     areaFoto.classList.remove("bg-blue-50/50", "border-blue-200");
     labelFoto.innerText = "Lengkapi Data di Atas Terlebih Dahulu";
@@ -1050,12 +1068,10 @@ function validasiFotoLaporan() {
   }
 }
 
-// --- H. FUNGSI BUKA KAMERA ---
 function bukaKamera() {
   document.getElementById('lap-foto-file').click();
 }
 
-// --- I. PROSES FOTO & WATERMARK (LOGIKA BACKUP) ---
 function previewFoto(input) {
   const file = input.files[0];
   if (!file) return;
@@ -1072,13 +1088,11 @@ function previewFoto(input) {
 
   const reader = new FileReader();
   
-  // Ambil data untuk Watermark
   const tglInput = document.getElementById("lap-tgl").value;
   const lokasiRaw = document.getElementById("lap-lokasi").value.toUpperCase();
   const realisasi = document.getElementById("lap-realisasi").value;
   const sumber = document.getElementById("sumber-kegiatan").value;
   
-  // Ambil satuan
   let satuan = "Orang";
   if (sumber === "renja") {
     const containerSatuan = document.getElementById("container-satuan-laporan");
@@ -1087,7 +1101,6 @@ function previewFoto(input) {
     satuan = document.getElementById("lap-satuan-manual").value;
   }
 
-  // Ambil nama kegiatan
   let teksKegiatan = "";
   if (sumber === "renja") {
     const drp = document.getElementById("pilih-renja");
@@ -1101,7 +1114,7 @@ function previewFoto(input) {
     img.src = e.target.result;
     img.onload = function() {
       const canvas = document.createElement('canvas');
-      const MAX_WIDTH = 1000; // Kompresi agar tidak berat saat upload
+      const MAX_WIDTH = 1000; 
       let width = img.width;
       let height = img.height;
 
@@ -1115,7 +1128,6 @@ function previewFoto(input) {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(img, 0, 0, width, height);
 
-      // --- DRAW WATERMARK BOX (Sesuai Backup Bapak) ---
       const boxHeight = height * 0.18; 
       ctx.fillStyle = "rgba(0, 0, 0, 0.6)"; 
       ctx.fillRect(0, height - boxHeight, width, boxHeight);
@@ -1125,7 +1137,6 @@ function previewFoto(input) {
       const fontSizeBig = Math.round(width * 0.04); 
       const fontSizeSmall = Math.round(width * 0.03);
 
-      // Kiri: Nama Aplikasi & Kegiatan
       ctx.textAlign = "left";
       ctx.font = `bold ${fontSizeBig}px Arial`;
       ctx.fillText("siPeKa PPKBD", padding, height - (boxHeight * 0.7));
@@ -1134,11 +1145,10 @@ function previewFoto(input) {
       const cetakKeg = teksKegiatan.length > 35 ? teksKegiatan.substring(0, 35) + "..." : teksKegiatan;
       ctx.fillText(cetakKeg.toUpperCase(), padding, height - (boxHeight * 0.45));
       
-      ctx.fillStyle = "#FFD700"; // Warna Emas untuk Hasil
+      ctx.fillStyle = "#FFD700"; 
       ctx.font = `bold ${fontSizeSmall}px Arial`;
       ctx.fillText(`HASIL: ${realisasi} ${satuan}`, padding, height - (boxHeight * 0.2));
 
-      // Kanan: Lokasi & Tanggal
       ctx.textAlign = "right";
       ctx.fillStyle = "white";
       ctx.font = `bold ${fontSizeSmall}px Arial`;
@@ -1148,7 +1158,6 @@ function previewFoto(input) {
       ctx.font = `${fontSizeSmall}px Arial`;
       ctx.fillText("📅 " + tglInput, width - padding, height - (boxHeight * 0.3));
 
-      // Simpan ke variabel global base64Foto
       base64Foto = canvas.toDataURL("image/jpeg", 0.8);
       preview.src = base64Foto;
 
@@ -1160,23 +1169,19 @@ function previewFoto(input) {
   reader.readAsDataURL(file);
 }
 
-// --- J. SIMPAN LAPORAN VISUM KE SERVER ---
 async function simpanLaporan() {
   const btn = document.getElementById("btn-simpan-laporan");
   const info = document.getElementById("info-laporan");
   
-  // 1. Ambil Identitas & Wilayah
   const nik = localStorage.getItem("nik");
   const nama = localStorage.getItem("nama");
   const kecamatan = localStorage.getItem("kecamatan");
 
-  // 2. Ambil Data Form Dasar
   const sumber = document.getElementById("sumber-kegiatan").value;
   const tanggal = document.getElementById("lap-tgl").value;
   const lokasi = document.getElementById("lap-lokasi").value.trim();
   const realisasi = document.getElementById("lap-realisasi").value;
 
-  // 3. Tentukan Satuan Final
   let satuanFinal = "";
   if (sumber === "renja") {
     const containerSatuan = document.getElementById("container-satuan-laporan");
@@ -1186,7 +1191,6 @@ async function simpanLaporan() {
     satuanFinal = selectSatuan ? selectSatuan.value : "Orang";
   }
 
-  // 4. Logika Penentuan Nama Kegiatan & Renja ID
   let renja_id = "";
   let namaKegiatanFinal = "";
 
@@ -1203,11 +1207,9 @@ async function simpanLaporan() {
     if (catatanRenja.length < 5) {
       return alert("⚠️ Uraian detail kegiatan minimal 5 karakter!");
     }
-    // Gabungkan Nama Renja dengan Catatan Detail
     namaKegiatanFinal = `${teksRenja} | Detail: ${catatanRenja}`;
 
   } else {
-    // Jalur Luar Renja (Insidental)
     renja_id = "LUAR-RENJA";
     const kegiatanManual = document.getElementById("lap-kegiatan-manual").value.trim();
 
@@ -1217,11 +1219,9 @@ async function simpanLaporan() {
     namaKegiatanFinal = `Insidental: ${kegiatanManual}`;
   }
 
-  // 5. Validasi Akhir Sebelum Kirim
   if (!base64Foto) return alert("⚠️ Foto Visum belum diambil atau gagal diproses!");
   if (!tanggal || !lokasi || !realisasi) return alert("⚠️ Lengkapi Tanggal, Lokasi, dan Hasil!");
 
-  // 6. Eksekusi Pengiriman
   btn.disabled = true; 
   btn.innerText = "⏳ SEDANG MENGIRIM...";
   info.innerText = "Mohon tunggu, sedang mengunggah data & foto ke server...";
@@ -1238,10 +1238,10 @@ async function simpanLaporan() {
         renja_id: renja_id,
         kegiatan: namaKegiatanFinal,
         tanggal: tanggal,
-        realisasi: `${realisasi} ${satuanFinal}`, // Contoh: "15 Orang"
+        realisasi: `${realisasi} ${satuanFinal}`, 
         lokasi: lokasi,
         role: localStorage.getItem("role"),
-        foto_data: base64Foto, // Format Base64 yang sudah ada Watermark
+        foto_data: base64Foto, 
       })
     });
 
@@ -1262,10 +1262,10 @@ async function simpanLaporan() {
   }
 }
 
-// ============================================================
-// 9. LOGIKA RIWAYAT LAPORAN MANDIRI (KADER)
-// ============================================================
-// --- A. LOAD RIWAYAT DENGAN LOGIKA REJECT & ALASAN (VERSI FIX BUG 3) ---
+
+// ============================================================================
+// 7. RIWAYAT LAPORAN & FOTO VIEWER
+// ============================================================================
 function loadRiwayatKader() {
   const container = document.getElementById("list-riwayat-kader");
   const nik = localStorage.getItem("nik");
@@ -1288,14 +1288,12 @@ function loadRiwayatKader() {
       }
 
       data.reverse().forEach(item => {
-        // --- 1. Logika Filter Bulan ---
         const tglObj = new Date(item.tanggal);
         const bulanIndex = tglObj.getMonth().toString(); 
         if (filterBulan !== "ALL" && bulanIndex !== filterBulan) return;
 
-        // --- 2. Tentukan Status & Warna ---
         const status = (item.status || "PENDING").toUpperCase();
-        let statusColor = "bg-orange-100 text-orange-600"; // Default Pending
+        let statusColor = "bg-orange-100 text-orange-600"; 
         let labelStatus = "DRAFT / PENDING";
         let aksiKader = "";
         let alasanHTML = "";
@@ -1307,18 +1305,16 @@ function loadRiwayatKader() {
           aksiKader = `<span class="text-[10px] text-green-500 font-black">Disetujui ✅</span>`;
         } 
         else if (status === "REJECT") {
-          statusColor = "bg-red-100 text-red-700"; // Merah untuk Reject
+          statusColor = "bg-red-100 text-red-700"; 
           labelStatus = "DITOLAK";
-          countPending++; // Masuk hitungan antrian karena harus diperbaiki
+          countPending++; 
           
-          // Munculkan Alasan Penolakan
           alasanHTML = `
             <div class="mt-3 p-3 bg-red-50 rounded-xl border border-red-100">
               <p class="text-[8px] font-black text-red-600 uppercase mb-1">Catatan Admin:</p>
               <p class="text-[10px] font-bold text-slate-700 leading-tight">${item.alasan || "Foto/Data tidak sesuai"}</p>
             </div>`;
           
-          // Tombol Hapus khusus Reject
           aksiKader = `<button onclick="hapusLaporanKader('${item.id}')" class="bg-red-600 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg shadow-lg active:scale-95 transition">🗑️ HAPUS & REVISI</button>`;
         } 
         else {
@@ -1326,7 +1322,6 @@ function loadRiwayatKader() {
           aksiKader = `<button onclick="hapusLaporanKader('${item.id}')" class="text-red-500 text-[10px] font-bold px-2 py-1 transition active:text-red-700">🗑️ HAPUS</button>`;
         }
         
-        // --- 3. Render Card ---
         container.innerHTML += `
           <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 mb-4 overflow-hidden">
             <div class="flex justify-between items-start mb-3">
@@ -1361,7 +1356,39 @@ function loadRiwayatKader() {
     });
 }
 
-// --- B. LOGIKA MODAL PREVIEW FOTO (ZOOM & DRAG) ---
+function hapusLaporanKader(id) {
+  if (!confirm("Hapus laporan ini? Foto di server juga akan ikut dihapus permanen.")) return;
+
+  const nik = localStorage.getItem("nik");
+  const nama = localStorage.getItem("nama");
+  const role = localStorage.getItem("role");
+
+  const params = new URLSearchParams({
+    action: "hapus_laporan",
+    laporan_id: id,
+    nik: nik,
+    nama: nama,
+    role: role
+  });
+
+  fetch(`${API_URL}?${params.toString()}`)
+    .then(res => res.text())
+    .then(res => {
+      if (res.trim() === "success") {
+        alert("✅ Laporan berhasil dihapus!");
+        loadRiwayatKader(); 
+      } else if (res.trim() === "ditolak") {
+        alert("❌ Gagal! Laporan sudah disetujui Admin dan tidak bisa dihapus.");
+      } else {
+        alert("❌ Gagal menghapus: " + res);
+      }
+    })
+    .catch(err => {
+      console.error("Error Hapus:", err);
+      alert("❌ Terjadi kesalahan koneksi saat menghapus.");
+    });
+}
+
 function intipFoto(id) {
   if (!id || id === "-" || id === "undefined") return alert("⚠️ Foto tidak tersedia.");
   
@@ -1413,364 +1440,118 @@ function tutupIntip() {
   }
 }
 
-// --- C. LOGIKA GESER (MOUSE & TOUCH) ---
-document.addEventListener("DOMContentLoaded", () => {
-  const zoomArea = document.getElementById("modal-foto");
-  if (zoomArea) {
-    const startAction = (e) => {
-      isDragging = true;
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      startX = clientX - translateX;
-      startY = clientY - translateY;
-      const container = document.getElementById("zoom-container");
-      if(container) container.style.transition = "none";
-    };
 
-    const moveAction = (e) => {
-      if (!isDragging) return;
-      if (e.touches) e.preventDefault(); 
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      translateX = clientX - startX;
-      translateY = clientY - startY;
-      updateTransform();
-    };
-
-    const stopAction = () => {
-      isDragging = false;
-      const container = document.getElementById("zoom-container");
-      if(container) container.style.transition = "transform 0.2s ease-out";
-    };
-
-    zoomArea.addEventListener("mousedown", startAction);
-    window.addEventListener("mousemove", moveAction);
-    window.addEventListener("mouseup", stopAction);
-    zoomArea.addEventListener("touchstart", startAction, { passive: false });
-    window.addEventListener("touchmove", moveAction, { passive: false });
-    window.addEventListener("touchend", stopAction);
-  }
-});
-
-// --- D. LOGIKA HAPUS LAPORAN (DENGAN IDENTITAS LENGKAP) ---
-function hapusLaporanKader(id) {
-  if (!confirm("Hapus laporan ini? Foto di server juga akan ikut dihapus permanen.")) return;
-
-  // 1. Ambil identitas lengkap untuk dicatat di Log
-  const nik = localStorage.getItem("nik");
-  const nama = localStorage.getItem("nama");
+// ============================================================================
+// 8. STATISTIK & PERINGKAT KINERJA
+// ============================================================================
+function loadGrafik() {
   const role = localStorage.getItem("role");
+  const nikLogin = localStorage.getItem("nik");
+  
+  const elTahun = document.getElementById("filter-tahun");
+  const elBulan = document.getElementById("filter-bulan");
+  if (!elTahun || !elBulan) return; 
 
-  // 2. Susun parameter kiriman
-  const params = new URLSearchParams({
-    action: "hapus_laporan",
-    laporan_id: id,
-    nik: nik,
-    nama: nama,
-    role: role
-  });
+  const tahun = elTahun.value;
+  const bulan = elBulan.value;
+  const userEl = document.getElementById("filter-user");
+  const userSelect = userEl ? userEl.value : "";
 
-  // 3. Eksekusi ke Server
-  fetch(`${API_URL}?${params.toString()}`)
-    .then(res => res.text())
-    .then(res => {
-      if (res.trim() === "success") {
-        alert("✅ Laporan berhasil dihapus!");
-        loadRiwayatKader(); // Segarkan daftar riwayat
-      } else if (res.trim() === "ditolak") {
-        alert("❌ Gagal! Laporan sudah disetujui Admin dan tidak bisa dihapus.");
-      } else {
-        alert("❌ Gagal menghapus: " + res);
+  let nikTarget = nikLogin; 
+
+  if (role && role.includes("admin")) {
+    const adminArea = document.getElementById("admin-filter-area");
+    if (adminArea) adminArea.classList.remove("hidden");
+
+    if (userSelect !== "") {
+       nikTarget = userSelect; 
+    } else {
+       let targetNiks = [];
+       if (userEl) {
+         for (let i = 1; i < userEl.options.length; i++) {
+            targetNiks.push(userEl.options[i].value);
+         }
+       }
+       
+       if (role === "super_admin" && targetNiks.length === 0) {
+          nikTarget = ""; 
+       } else {
+          nikTarget = targetNiks.join(",") || "KOSONG"; 
+       }
+    }
+  }
+
+  fetch(`${API_URL}?action=get_statistik&nik=${nikTarget}&bulan=${bulan}&tahun=${tahun}&role=${role}`)
+    .then(res => res.json())
+    .then(data => {
+      
+      const totalReal = data.realisasi_tahunan.reduce((a, b) => a + b, 0);
+      const totalTarget = data.target_tahunan.reduce((a, b) => a + b, 0);
+      const persen = totalTarget > 0 ? Math.round((totalReal / totalTarget) * 100) : 0;
+
+      if (document.getElementById("total-realisasi")) document.getElementById("total-realisasi").innerText = totalReal;
+      if (document.getElementById("total-persen")) document.getElementById("total-persen").innerText = persen + "%";
+
+      const canvas = document.getElementById('myChart');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (myChartInstance) myChartInstance.destroy();
+        
+        myChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Pertemuan', 'KIE', 'Pelayanan', 'Pencatatan', 'Lainnya'],
+            datasets: [{
+              data: data.realisasi_bulanan, 
+              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#94a3b8'],
+              borderWidth: 2, borderColor: '#ffffff', hoverOffset: 6
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false, cutout: '65%',
+            plugins: { legend: { display: true, position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } }
+          }
+        });
+      }
+
+      const rankArea = document.getElementById("section-peringkat");
+      if (role && role.includes("admin") && rankArea) {
+        rankArea.classList.remove("hidden");
+        renderPeringkat(data.ranking);
       }
     })
-    .catch(err => {
-      console.error("Error Hapus:", err);
-      alert("❌ Terjadi kesalahan koneksi saat menghapus.");
-    });
+    .catch(err => console.error("Gagal load statistik:", err));
 }
 
-// ============================================================
-// 10. Navigasi Kembali
-// ============================================================
-function navigasiKembali() {
-  const role = localStorage.getItem("role");
-  
-  // Jika role mengandung kata 'admin', arahkan ke dashboard admin
-  if (role && role.toLowerCase().includes("admin")) {
-    window.location.href = "dashboard-admin.html";
-  } else {
-    // Jika selain itu (Kader), arahkan ke dashboard kader
-    window.location.href = "dashboard-kader.html";
-  }
-}
+function renderPeringkat(dataRanking) {
+  const listPeringkat = document.getElementById("list-peringkat");
+  if (!listPeringkat) return;
 
-// Tambahan: Jalankan ini di bagian paling atas profil.html 
-// Untuk mencegah orang "nembak" URL tanpa login
-function proteksiHalaman() {
-  if (!localStorage.getItem("nik")) {
-    window.location.href = "index.html"; // Tendang ke login jika tidak ada NIK
-  }
-}
-
-// ============================================================
-// 11. LOGIKA EDIT USER SEPERTI SIGA (TANPA POPUP)
-// ============================================================
-// 1. Menyiapkan Form untuk Mode Edit
-function siapkanEditUser(nik) {
-  const user = DATA_USERS_ALL.find(u => u.NIK.toString() === nik.toString());
-  if (!user) return alert("Data tidak ditemukan.");
-
-  document.getElementById("form-title").innerText = "✏️ EDIT DATA: " + (user.Nama || "").toUpperCase();
-  document.getElementById("btn-batal-edit").classList.remove("hidden");
-
-  document.getElementById("edit-nik-target").value = user.NIK; 
-  document.getElementById("user-nik").value = user.NIK;
-  document.getElementById("user-nik").disabled = true; 
-  document.getElementById("user-nama").value = user.Nama;
-  document.getElementById("user-hp").value = user.HP || "";
-  
-  // Set Wilayah (Akan memicu evaluasiRoleOtomatis secara pasif)
-  const kecEl = document.getElementById("user-kecamatan");
-  if (kecEl) {
-    kecEl.value = (user.Kecamatan || "").toUpperCase();
-    updateDropdownDesa(user.Desa); 
-  }
-  
-  // Set Role manual (khusus edit jangan di-otomatiskan dulu)
-  setTimeout(() => {
-    const roleEl = document.getElementById("user-role");
-    if(roleEl) roleEl.value = user.Role;
-  }, 100);
-
-  const btnSubmit = document.getElementById("btn-tambah-user");
-  btnSubmit.innerText = "UPDATE DATA PENGGUNA";
-  btnSubmit.classList.replace("bg-blue-900", "bg-orange-500");
-  btnSubmit.onclick = function() { prosesUpdateUser(); }; // Arahkan ke Update
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// 2. Mengembalikan Form ke Mode Registrasi
-function batalEdit() {
-  document.getElementById("form-title").innerText = "👤 Registrasi Akun Baru";
-  document.getElementById("btn-batal-edit").classList.add("hidden");
-  
-  document.getElementById("edit-nik-target").value = "";
-  document.getElementById("user-nik").value = "";
-  document.getElementById("user-nik").disabled = false;
-  document.getElementById("user-nama").value = "";
-  document.getElementById("user-hp").value = "";
-  
-  const btnSubmit = document.getElementById("btn-tambah-user");
-  btnSubmit.innerText = "SIMPAN DATA PENGGUNA";
-  btnSubmit.classList.replace("bg-orange-500", "bg-blue-900");
-  
-  // KEMBALIKAN KE FUNGSI TAMBAH (PASTIKAN FUNGSI TAMBAHUSER ADA DI BAWAH)
-  btnSubmit.onclick = function() { tambahUser(); }; 
-  btnSubmit.disabled = false;
-  
-  initUserPage(); 
-}
-
-// 3. Proses Pengiriman Data Update ke Server
-function prosesUpdateUser() {
-  const btn = document.getElementById("btn-tambah-user");
-  const nikTarget = document.getElementById("edit-nik-target").value; // Ini kunci utamanya
-  
-  // Susun payload untuk dikirim ke GAS (Sesuai action 8)
-  const payload = {
-    action: "admin_manage_user",
-    sub_action: "update_user",
-    target_nik: nikTarget,
-    admin_nik: localStorage.getItem("nik"),
-    admin_nama: localStorage.getItem("nama"),
-    admin_role: localStorage.getItem("role"),
-    nama: document.getElementById("user-nama").value.toUpperCase(),
-    role_target: document.getElementById("user-role").value,
-    kecamatan: document.getElementById("user-kecamatan").value,
-    desa: document.getElementById("user-wilayah").value,
-    hp: document.getElementById("user-hp").value
-  };
-
-  if (!payload.nama || !payload.kecamatan || !payload.desa) {
-    return alert("⚠️ Nama, Kecamatan & Desa tidak boleh kosong!");
+  if (!dataRanking || dataRanking.length === 0) {
+    listPeringkat.innerHTML = "<p class='text-center text-[10px] text-gray-400 py-4'>Belum ada data laporan.</p>";
+    return;
   }
 
-  btn.innerText = "⏳ MEMPROSES UPDATE...";
-  btn.disabled = true;
+  listPeringkat.innerHTML = dataRanking.map((u, i) => {
+    const namaKader = u.Nama || u.nama || "Anonim";
+    const skorKader = u.Skor || u.skor || 0;
 
-  fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams(payload)
-  })
-  .then(res => res.text())
-  .then(res => {
-    if (res.trim() === "success") {
-      alert("✅ Data Pengguna Berhasil Diperbarui!");
-      batalEdit(); // Kembalikan form ke keadaan semula
-      loadUsers(); // Refresh tabel data di bawah
-    } else {
-      alert("❌ Gagal Update: " + res);
-      btn.innerText = "UPDATE DATA PENGGUNA";
-      btn.disabled = false;
-    }
-  })
-  .catch(err => {
-    alert("❌ Kesalahan koneksi jaringan.");
-    btn.innerText = "UPDATE DATA PENGGUNA";
-    btn.disabled = false;
-  });
-}
-// ============================================================
-// 12. FUNGSI TAMBAH USER (DENGAN VALIDASI NIK GANDA)
-// ============================================================
-function tambahUser() {
-  const btn = document.getElementById("btn-tambah-user");
-  
-  // Pastikan elemen input ada sebelum mengambil nilainya
-  const nikInput = document.getElementById("user-nik");
-  const namaInput = document.getElementById("user-nama");
-  const kecInput = document.getElementById("user-kecamatan");
-  const desaInput = document.getElementById("user-wilayah");
-  const roleInput = document.getElementById("user-role");
-  const hpInput = document.getElementById("user-hp");
-
-  const payload = {
-    action: "tambah_user",
-    admin_nik: localStorage.getItem("nik"),
-    admin_nama: localStorage.getItem("nama"),
-    admin_role: localStorage.getItem("role"),
-    user_nik: nikInput.value.trim(),
-    nama: namaInput.value.toUpperCase().trim(),
-    password: "123456", // Default password
-    role: roleInput.value,
-    kecamatan: kecInput.value,
-    desa: desaInput.value,
-    hp: hpInput.value
-  };
-
-  // 1. Validasi Input di Sisi Client
-  if (!payload.user_nik || !payload.nama || !payload.kecamatan || !payload.desa) {
-    return alert("⚠️ Mohon lengkapi NIK, Nama, Kecamatan, dan Desa!");
-  }
-
-  // 2. Persiapan Kirim Data
-  btn.innerText = "⏳ MENGECEK & MENYIMPAN...";
-  btn.disabled = true;
-
-  fetch(API_URL, { 
-    method: "POST", 
-    body: new URLSearchParams(payload) 
-  })
-  .then(res => res.text())
-  .then(res => {
-    const responClean = res.trim();
-
-    // A. JIKA BERHASIL
-    if (responClean === "success") {
-      alert("✅ Berhasil!\nUser " + payload.nama + " telah didaftarkan ke sistem.");
-      if (typeof batalEdit === 'function') batalEdit(); // Reset form
-      if (typeof loadUsers === 'function') loadUsers(); // Refresh daftar di bawah
-    } 
-    
-    // B. JIKA NIK SUDAH ADA (DARI GAS TURBO)
-    else if (responClean === "nik_exists") {
-      alert("⚠️ DATA GANDA!\nNIK " + payload.user_nik + " sudah terdaftar di sistem.\n\nSilakan cek kembali NIK atau gunakan fitur EDIT jika ingin memperbarui data user tersebut.");
-      btn.innerText = "SIMPAN DATA PENGGUNA";
-      btn.disabled = false;
-    } 
-    
-    // C. JIKA ADA GAGAL LAINNYA
-    else {
-      alert("❌ Gagal: " + res);
-      btn.innerText = "SIMPAN DATA PENGGUNA";
-      btn.disabled = false;
-    }
-  })
-  .catch(err => {
-    console.error("Fetch Error:", err);
-    alert("❌ Terjadi kesalahan koneksi. Silakan coba lagi.");
-    btn.innerText = "SIMPAN DATA PENGGUNA";
-    btn.disabled = false;
-  });
-}
-// ============================================================
-// 13. ROLE OTOMATIS
-// ============================================================
-// Fungsi ini dipanggil setiap kali dropdown Desa/Wilayah berubah
-function evaluasiRoleOtomatis() {
-  const selRole = document.getElementById("user-role");
-  const selKec = document.getElementById("user-kecamatan");
-  const selDesa = document.getElementById("user-wilayah");
-  if (!selRole || !selKec || !selDesa) return;
-
-  const kec = selKec.value.toUpperCase();
-  const desa = selDesa.value.toUpperCase();
-  const myRole = localStorage.getItem("role");
-
-  // 1. Logika Super Admin (Kabupaten)
-  if (kec === "SEMUA KECAMATAN") {
-    selRole.innerHTML = `<option value="super_admin">👑 SUPER ADMINISTRATOR (KABUPATEN)</option>`;
-  } 
-  // 2. Logika Admin Kecamatan
-  else if (kec !== "" && desa === "SEMUA DESA") {
-    selRole.innerHTML = `<option value="admin_kec">🏛️ ADMIN KECAMATAN ${kec}</option>`;
-  } 
-  // 3. Logika Admin Desa & Kader
-  else if (kec !== "" && desa !== "" && desa !== "SEMUA DESA") {
-    if (myRole === "super_admin" || myRole === "admin_kec") {
-      selRole.innerHTML = `
-        <option value="admin_desa">🏠 ADMIN DESA ${desa}</option>
-        <option value="kader" selected>👤 KADER PPKBD ${desa}</option>
-      `;
-    } else {
-      // Admin Desa hanya bisa daftarkan Kader
-      selRole.innerHTML = `<option value="kader">👤 KADER PPKBD ${desa}</option>`;
-    }
-  } else {
-    selRole.innerHTML = `<option value="">-- Pilih Wilayah Terlebih Dahulu --</option>`;
-  }
+    return `
+    <div class="flex items-center justify-between bg-white p-3 rounded-2xl shadow-sm border border-slate-50">
+      <div class="flex items-center gap-3">
+        <span class="flex items-center justify-center w-6 h-6 rounded-full ${i === 0 ? 'bg-yellow-400' : 'bg-slate-100'} text-[10px] font-bold ${i === 0 ? 'text-white' : 'text-gray-400'}">${i+1}</span>
+        <p class="text-[11px] font-bold text-slate-700 uppercase">${namaKader}</p>
+      </div>
+      <span class="text-[9px] bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-bold">${skorKader} Lap</span>
+    </div>
+  `}).join('');
 }
 
-// Tambahan sedikit pada fungsi siapkanEditUser agar Role langsung terisi
-function siapkanEditUser(nik) {
-  const user = DATA_USERS_ALL.find(u => u.NIK.toString() === nik.toString());
-  if (!user) return;
 
-  document.getElementById("form-title").innerText = "✏️ EDIT DATA: " + (user.Nama || "").toUpperCase();
-  document.getElementById("btn-batal-edit").classList.remove("hidden");
-  document.getElementById("edit-nik-target").value = user.NIK; 
-  document.getElementById("user-nik").value = user.NIK;
-  document.getElementById("user-nik").disabled = true; 
-  document.getElementById("user-nama").value = user.Nama;
-  document.getElementById("user-hp").value = user.HP || "";
-
-  const kecEl = document.getElementById("user-kecamatan");
-  if (kecEl) {
-    kecEl.value = (user.Kecamatan || "").toUpperCase();
-    // Jalankan update desa dan PAKSA role sesuai database lama dulu
-    updateDropdownDesa(user.Desa); 
-    
-    // Beri jeda sedikit agar dropdown desa selesai render sebelum set Role asli
-    setTimeout(() => {
-      evaluasiRoleOtomatis(); // Jalankan auto-role
-      document.getElementById("user-role").value = user.Role; // Lalu paksa balik ke role aslinya
-    }, 200);
-  }
-
-  const btnSubmit = document.getElementById("btn-tambah-user");
-  btnSubmit.innerText = "UPDATE DATA PENGGUNA";
-  btnSubmit.classList.remove("bg-blue-900");
-  btnSubmit.classList.add("bg-orange-500");
-  btnSubmit.onclick = function() { prosesUpdateUser(); };
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ==========================================
-// 14. LOGIKA HALAMAN LOG AKTIVITAS (AUDIT HYBRID)
-// ==========================================
-let DATA_LOG_GLOBAL = []; // Variabel untuk menyimpan log agar bisa difilter/didownload
+// ============================================================================
+// 9. LOG AKTIVITAS & BACKUP CSV
+// ============================================================================
+let DATA_LOG_GLOBAL = []; 
 
 function loadLogAktivitas() {
   const container = document.getElementById("container-log");
@@ -1782,10 +1563,8 @@ function loadLogAktivitas() {
   fetch(`${API_URL}?action=get_logs&role=${role}&kec=${kec}`)
     .then(res => res.json())
     .then(data => {
-      // Data sekarang berbentuk { logs: [...], total_database: X }
       DATA_LOG_GLOBAL = data.logs; 
       
-      // Tampilkan info total log di sub-title atau elemen baru
       const infoTotal = document.getElementById("info-total-log");
       if (infoTotal) {
         infoTotal.innerText = `Kapasitas Database: ${data.total_database} / 2000 Baris`;
@@ -1803,16 +1582,13 @@ function loadLogAktivitas() {
     });
 }
 
-// Fungsi Render Dinamis (Tabel untuk Super, Timeline untuk yang lain)
 function renderLogSesuaiOtoritas() {
   const container = document.getElementById("container-log");
   const roleAdmin = localStorage.getItem("role");
   
-  // Ambil Nilai Filter
   const filterAksi = document.getElementById("filter-aksi-log") ? document.getElementById("filter-aksi-log").value.toUpperCase() : "";
   const keyword = document.getElementById("search-log") ? document.getElementById("search-log").value.toUpperCase() : "";
 
-  // Saring Data
   const dataTerfilter = DATA_LOG_GLOBAL.filter(log => {
     const matchAksi = filterAksi === "" || (log.aksi || "").toUpperCase().includes(filterAksi);
     const matchKey = (log.nama || "").toUpperCase().includes(keyword) || (log.nik || "").toString().includes(keyword);
@@ -1824,7 +1600,6 @@ function renderLogSesuaiOtoritas() {
     return;
   }
 
-  // JIKA SUPER ADMIN: TAMPILKAN TABEL MODERN
   if (roleAdmin === "super_admin") {
     let htmlTabel = `
       <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
@@ -1863,8 +1638,6 @@ function renderLogSesuaiOtoritas() {
     htmlTabel += `</tbody></table></div></div>`;
     container.innerHTML = htmlTabel;
   } 
-  
-  // JIKA ADMIN BIASA: TAMPILKAN TIMELINE
   else {
     let htmlTimeline = `<div class="relative border-l-2 border-slate-200 ml-3 space-y-6 pb-10">`;
     dataTerfilter.forEach(log => {
@@ -1890,21 +1663,13 @@ function renderLogSesuaiOtoritas() {
   }
 }
 
-// ==========================================
-// FUNGSI BACKUP LOG KE CSV (Tanpa Bebani Server)
-// ==========================================
 function backupLogKeCSV() {
   if (DATA_LOG_GLOBAL.length === 0) return alert("⚠️ Tidak ada data untuk di-backup!");
 
-  // Siapkan Header
   let csvContent = "TIMESTAMP,NIK,NAMA_USER,ROLE,AKSI,ID_TERKAIT,KETERANGAN\n";
 
-  // Looping Data
   DATA_LOG_GLOBAL.forEach(log => {
-    // Format tanggal ke string standar
     const tgl = new Date(log.timestamp).toISOString();
-    
-    // Gabungkan kolom dengan pemisah koma, teks diapit kutip agar koma di dalam teks aman
     const row = [
       `"${tgl}"`,
       `"${log.nik || ""}"`,
@@ -1912,17 +1677,15 @@ function backupLogKeCSV() {
       `"${log.role || ""}"`,
       `"${log.aksi || ""}"`,
       `"${log.id_data || ""}"`,
-      `"${(log.keterangan || "").replace(/"/g, '""')}"` // Escape double quotes
+      `"${(log.keterangan || "").replace(/"/g, '""')}"` 
     ].join(",");
     
     csvContent += row + "\n";
   });
 
-  // Buat File CSV di browser
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   
-  // Panggil proses download otomatis
   const link = document.createElement("a");
   link.setAttribute("href", url);
   link.setAttribute("download", `Backup_Log_siPeKa_${new Date().getTime()}.csv`);
@@ -1930,3 +1693,57 @@ function backupLogKeCSV() {
   link.click();
   document.body.removeChild(link);
 }
+
+// ============================================================================
+// 10. PENGGERAK UTAMA (DOM CONTENT LOADED)
+// ============================================================================
+// Ini adalah "Mesin Starter" untuk memicu semua fungsi saat halaman selesai dimuat.
+// ⚠️ Saya sudah menggabungkan fungsi Drag Foto (yang nyelip di tengah) ke sini.
+// ============================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Eksekusi Login & Keamanan
+  cekLogin();
+  pantauMaintenance(); 
+  if (document.getElementById("motivasi-login")) tampilkanMotivasi();
+
+  // 2. Eksekusi Dashboard
+  if (typeof setTahunOtomatis === 'function') setTahunOtomatis();
+  if (document.getElementById("namaUser")) initDashboard();
+
+  // 3. Eksekusi Modal Foto (Fungsi Geser/Zoom Modal Intip Foto)
+  const zoomArea = document.getElementById("modal-foto");
+  if (zoomArea) {
+    const startAction = (e) => {
+      isDragging = true;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      startX = clientX - translateX;
+      startY = clientY - translateY;
+      const container = document.getElementById("zoom-container");
+      if(container) container.style.transition = "none";
+    };
+
+    const moveAction = (e) => {
+      if (!isDragging) return;
+      if (e.touches) e.preventDefault(); 
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      translateX = clientX - startX;
+      translateY = clientY - startY;
+      updateTransform();
+    };
+
+    const stopAction = () => {
+      isDragging = false;
+      const container = document.getElementById("zoom-container");
+      if(container) container.style.transition = "transform 0.2s ease-out";
+    };
+
+    zoomArea.addEventListener("mousedown", startAction);
+    window.addEventListener("mousemove", moveAction);
+    window.addEventListener("mouseup", stopAction);
+    zoomArea.addEventListener("touchstart", startAction, { passive: false });
+    window.addEventListener("touchmove", moveAction, { passive: false });
+    window.addEventListener("touchend", stopAction);
+  }
+});
