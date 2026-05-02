@@ -1777,11 +1777,11 @@ function backupLogKeCSV() {
 // ============================================================================
 // 10. FITUR TOMBOL MELAYANG (FAB) & AUTO-CHAT WA
 // ============================================================================
-// Mapping Nama Menu
+// Mapping Nama Menu (Singkat agar Bubble tidak kepanjangan)
 const FAB_MENU_NAMES = {
-    'tentang': 'Tentang Aplikasi',
-    'bantuan': 'Pusat Bantuan',
-    'kopi': 'Traktir Kopi'
+    'tentang': 'Tentang',
+    'bantuan': 'Bantuan',
+    'kopi': 'Kopi'
 };
 
 function handleFabClick(type) {
@@ -1789,16 +1789,13 @@ function handleFabClick(type) {
     if (!label) return;
 
     if (lastFabClicked !== type) {
-        // KLIK PERTAMA: Munculkan Label + Instruksi "KLIK 2x"
-        // Sembunyikan label lain dulu
+        // KLIK 1: Munculkan Bubble Teks di Kiri Ikon
         document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
         
-        // Update isi teks label secara dinamis
-        label.innerText = `${FAB_MENU_NAMES[type]} - (KLIK 2x)`;
+        label.innerText = `${FAB_MENU_NAMES[type]} (KLIK 2x)`;
         label.classList.remove('opacity-0');
         lastFabClicked = type;
         
-        // Timer 3 detik: Menghilangkan keterangan
         setTimeout(() => {
             if(lastFabClicked === type) {
                 label.classList.add('opacity-0');
@@ -1807,12 +1804,11 @@ function handleFabClick(type) {
         }, 3000);
     } 
     else {
-        // KLIK KEDUA: Jalankan Aksi
+        // KLIK 2: Eksekusi
         if (type === 'tentang') window.location.href = 'tentang.html';
         if (type === 'bantuan') kirimPesanWA();
         if (type === 'kopi') bukaTraktir();
         
-        // Langsung sembunyikan setelah klik kedua
         label.classList.add('opacity-0');
         lastFabClicked = null;
     }
@@ -1849,8 +1845,7 @@ function bukaTraktir() {
     const modal = document.getElementById("modal-traktir");
     if (modal) {
         modal.classList.remove("hidden");
-        // Otomatis tutup menu FAB biar fokus
-        toggleFAB();
+        toggleFAB(); // Tutup menu FAB otomatis
     }
 }
 
