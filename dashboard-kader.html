@@ -153,39 +153,39 @@
 
   <script src="script.js"></script>
 
-  <!-- TOMBOL MELAYANG (FAB) MENU BANTUAN - VERSI SLIM & RAPI -->
+  <!-- TOMBOL MELAYANG (FAB) MENU BANTUAN - VERSI SMART TOUCH -->
   <div class="fixed bottom-6 right-4 z-[100] flex flex-col items-center gap-3">
       
-      <!-- Menu Anak (Sejajar Lurus ke Atas) -->
+      <!-- Menu Anak -->
       <div id="menu-fab" class="hidden flex flex-col items-center gap-3 transition-all duration-300 transform translate-y-4 opacity-0">
           
           <!-- 1. Tentang Aplikasi -->
-          <div class="flex flex-col items-center gap-1 group cursor-pointer" onclick="window.location.href='tentang.html'">
-              <span class="bg-slate-800 text-white text-[8px] font-bold px-2 py-1 rounded-md shadow-md opacity-0 group-hover:opacity-100 transition">Tentang</span>
-              <button class="w-9 h-9 bg-white text-blue-600 rounded-full flex items-center justify-center shadow-lg border border-blue-100 group-hover:scale-110 transition">
-                  <span class="text-base">ℹ️</span>
+          <div class="flex flex-col items-center gap-1 group">
+              <span id="label-tentang" class="bg-slate-800 text-white text-[8px] font-bold px-2 py-1 rounded-md shadow-md opacity-0 transition-opacity duration-300">Tentang</span>
+              <button onclick="handleFabClick('tentang')" class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center shadow-lg border border-blue-100 active:scale-90 transition">
+                  <span class="text-lg">ℹ️</span>
               </button>
           </div>
   
           <!-- 2. Pusat Bantuan (WA) -->
-          <div class="flex flex-col items-center gap-1 group cursor-pointer" onclick="window.open('https://wa.me/6282260188765', '_blank')">
-              <span class="bg-slate-800 text-white text-[8px] font-bold px-2 py-1 rounded-md shadow-md opacity-0 group-hover:opacity-100 transition">Bantuan</span>
-              <button class="w-9 h-9 bg-white text-emerald-500 rounded-full flex items-center justify-center shadow-lg border border-emerald-100 group-hover:scale-110 transition">
-                  <span class="text-base">💬</span>
+          <div class="flex flex-col items-center gap-1 group">
+              <span id="label-bantuan" class="bg-slate-800 text-white text-[8px] font-bold px-2 py-1 rounded-md shadow-md opacity-0 transition-opacity duration-300">Bantuan</span>
+              <button onclick="handleFabClick('bantuan')" class="w-10 h-10 bg-white text-emerald-500 rounded-full flex items-center justify-center shadow-lg border border-emerald-100 active:scale-90 transition">
+                  <span class="text-lg">💬</span>
               </button>
           </div>
   
           <!-- 3. Traktir Kopi -->
-          <div class="flex flex-col items-center gap-1 group cursor-pointer" onclick="bukaTraktir()">
-              <span class="bg-slate-800 text-white text-[8px] font-bold px-2 py-1 rounded-md shadow-md opacity-0 group-hover:opacity-100 transition">Kopi</span>
-              <button class="w-9 h-9 bg-white text-orange-500 rounded-full flex items-center justify-center shadow-lg border border-orange-100 group-hover:scale-110 transition">
-                  <span class="text-base">☕</span>
+          <div class="flex flex-col items-center gap-1 group">
+              <span id="label-kopi" class="bg-slate-800 text-white text-[8px] font-bold px-2 py-1 rounded-md shadow-md opacity-0 transition-opacity duration-300">Kopi</span>
+              <button onclick="handleFabClick('kopi')" class="w-10 h-10 bg-white text-orange-500 rounded-full flex items-center justify-center shadow-lg border border-orange-100 active:scale-90 transition">
+                  <span class="text-lg">☕</span>
               </button>
           </div>
       </div>
   
-      <!-- Tombol Induk (Diperkecil & Posisi Lebih Bawah) -->
-      <button onclick="toggleFAB()" id="btn-fab-induk" class="w-12 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all duration-300">
+      <!-- Tombol Induk -->
+      <button onclick="toggleFAB()" id="btn-fab-induk" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all duration-300">
           <svg id="icon-fab" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
           </svg>
