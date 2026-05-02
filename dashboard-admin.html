@@ -57,6 +57,7 @@
 
   <main class="w-full px-5 pt-6 max-w-5xl mx-auto overflow-x-hidden">
     
+    <!-- KARTU IDENTITAS PROFIL -->
     <div class="bg-white p-5 rounded-[1.5rem] mb-6 shadow-sm border-l-8 border-blue-900 flex items-center justify-between">
       <div>
         <p id="labelRole" class="text-[9px] text-blue-600 uppercase tracking-widest font-black mb-0.5">MEMUAT...</p>
@@ -66,7 +67,32 @@
       <div id="iconRole" class="bg-blue-50 p-3 rounded-2xl text-2xl shadow-inner">👑</div>
     </div>
 
-      <div class="grid grid-cols-2 gap-3 mb-8">
+    <!-- ================================================================= -->
+    <!-- PANEL SULTAN: KONTROL SISTEM (Hanya Muncul Untuk Super Admin) -->
+    <!-- ================================================================= -->
+    <div id="panel-sultan" class="hidden bg-slate-900 rounded-3xl p-5 mb-6 shadow-xl relative overflow-hidden border border-slate-700">
+        <div class="absolute -right-10 -top-10 w-32 h-32 bg-orange-500 rounded-full opacity-20 blur-3xl"></div>
+        <div class="relative z-10 flex justify-between items-center">
+            <div>
+                <h3 class="font-black text-[13px] text-orange-400 uppercase tracking-widest flex items-center gap-2 mb-1">
+                    <span>👑</span> Otoritas Sultan
+                </h3>
+                <p class="text-[9px] text-slate-400 font-bold leading-tight">Kunci aplikasi siPeKa<br>dari aktivitas input Kader.</p>
+            </div>
+            
+            <!-- Tombol Saklar -->
+            <div class="flex flex-col items-end gap-2">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="toggle-maintenance" class="sr-only peer" onchange="ubahStatusSistem(this)">
+                    <div class="w-14 h-7 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-500 shadow-inner"></div>
+                </label>
+                <span id="label-status-sistem" class="text-[9px] font-black uppercase bg-green-500/20 text-green-400 px-3 py-1 rounded-full tracking-widest border border-green-500/30">AMAN</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- KARTU MENU NAVIGASI (GRID) -->
+    <div class="grid grid-cols-2 gap-3 mb-8">
       <button onclick="window.location.href='master-wilayah.html'" class="admin-card bg-white p-4 rounded-[1.5rem] border border-blue-100 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all">
         <div class="text-3xl mb-2">🗺️</div>
         <p class="text-[11px] font-bold text-slate-700">Master Wilayah</p>
