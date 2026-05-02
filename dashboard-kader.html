@@ -152,7 +152,74 @@
   </footer>
 
   <script src="script.js"></script>
-<script>
+
+  <!-- ========================================================= -->
+  <!-- FAB (FLOATING ACTION BUTTON) -->
+  <!-- ========================================================= -->
+  <div class="fixed bottom-24 right-6 z-[100] flex flex-col items-end gap-3">
+      <div id="menu-fab" class="hidden flex-col items-end gap-3 transition-all duration-300 transform translate-y-4 opacity-0">
+          
+          <!-- Tentang Aplikasi (Pindah ke tentang.html) -->
+          <button onclick="window.location.href='tentang.html'" class="flex items-center gap-3 group">
+              <span class="bg-slate-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-md">Tentang Aplikasi</span>
+              <div class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center shadow-lg border border-blue-100">ℹ️</div>
+          </button>
+
+          <!-- Pusat Bantuan (WA) -->
+          <button onclick="window.open('https://wa.me/6282260188765', '_blank')" class="flex items-center gap-3 group">
+              <span class="bg-slate-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-md">Pusat Bantuan (Q&A)</span>
+              <div class="w-10 h-10 bg-white text-emerald-500 rounded-full flex items-center justify-center shadow-lg border border-emerald-100">💬</div>
+          </button>
+
+          <!-- Traktir Kopi -->
+          <button onclick="bukaTraktir()" class="flex items-center gap-3 group">
+              <span class="bg-slate-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-md">Traktir Kopi Dev</span>
+              <div class="w-10 h-10 bg-white text-orange-500 rounded-full flex items-center justify-center shadow-lg border border-orange-100">☕</div>
+          </button>
+      </div>
+
+      <!-- Tombol Utama FAB -->
+      <button onclick="toggleFAB()" id="btn-fab-induk" class="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-transform">
+          <svg id="icon-fab" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
+      </button>
+  </div>
+
+  <!-- POPUP TRAKTIR KOPI -->
+  <div id="modal-traktir" class="hidden fixed inset-0 z-[250] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
+          <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span class="text-4xl">☕</span>
+          </div>
+          <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-1">Traktir Kopi</h3>
+          <p class="text-xs font-bold text-slate-500 mb-6 leading-relaxed">
+              Jika siPeKa sangat membantu tugas Ibu, boleh dong traktir developer secangkir kopi biar makin semangat bikin fiturnya! 🥰
+          </p>
+          <div class="space-y-3">
+              <button onclick="window.open('https://saweria.co/dianbudiana', '_blank')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest active:scale-95 transition">
+                  🎁 Lewat Saweria
+              </button>
+              <button onclick="tutupTraktir()" class="w-full bg-slate-100 text-slate-700 font-black py-3 rounded-xl text-xs uppercase tracking-widest active:scale-95 transition">
+                  Nanti Saja
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <script>
+      function toggleFAB() {
+          const menu = document.getElementById('menu-fab');
+          const icon = document.getElementById('icon-fab');
+          if (menu.classList.contains('hidden')) {
+              menu.classList.remove('hidden');
+              setTimeout(() => { menu.classList.remove('translate-y-4', 'opacity-0'); icon.style.transform = 'rotate(45deg)'; }, 10);
+          } else {
+              menu.classList.add('translate-y-4', 'opacity-0'); icon.style.transform = 'rotate(0deg)';
+              setTimeout(() => { menu.classList.add('hidden'); }, 300);
+          }
+      }
+      function bukaTraktir() { document.getElementById("modal-traktir").classList.remove("hidden"); toggleFAB(); }
+      function tutupTraktir() { document.getElementById("modal-traktir").classList.add("hidden"); }
+  
   // Panggil fungsi global dari script.js saat halaman dimuat
   window.addEventListener('load', () => {
       cekLogin();      // Pastikan sudah login
