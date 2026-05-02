@@ -40,9 +40,19 @@ function pantauMaintenance() {
 
   // 4. Jika kader sedang di dalam Dashboard, baru tembak Tembok Raksasa
   fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({ action: "check_maintenance" })
-  })
+        method: "POST",
+        mode: "no-cors", // Kita paksa kirim tanpa nunggu balasan ketat
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ action: "check_maintenance" })
+      })
+      .then(() => {
+        // Karena mode 'no-cors', kita tidak bisa baca JSON-nya langsung.
+        // Solusinya: Kita panggil ulang dengan cara standar atau biarkan saja 
+        // jika hanya untuk memicu trigger.
+        
+        // TAPI untuk membaca STATUS (ON/OFF), kita pakai cara aman ini:
+        return fetch(API_URL + "?action=check_maintenance"); 
+      })
     .then(res => res.json())
     .then(data => {
       // JIKA REMOT DI-ON-KAN DARI GOOGLE SHEETS
