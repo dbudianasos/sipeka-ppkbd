@@ -61,11 +61,12 @@ function initFormLapbul() {
     });
 }
 
-// 2. LOAD DATA SAAT BULAN DIPILIH (FIX LOADING ABADI)
+// 2. LOAD DATA SAAT BULAN DIPILIH (FIX KONEKSI BAGIAN V)
 function loadDataBulanDipilih() {
     const bln = document.getElementById("lap-bulan").value;
     const thn = document.getElementById("lap-tahun").value;
     const kec = localStorage.getItem("kecamatan").toUpperCase();
+    const desa = localStorage.getItem("desa").toUpperCase(); // Butuh desa untuk get_data_cetak_v
 
     if(!bln) {
         document.getElementById("area-form").classList.add("hidden");
@@ -76,10 +77,11 @@ function loadDataBulanDipilih() {
     // Tampilkan Loading
     document.getElementById("loader-lapbul").classList.remove("hidden");
     
-    fetch(`${API_URL}?action=get_register_ab&kecamatan=${kec}&tahun=${thn}&bulan=${bln}`)
+    // SINTAKS YANG BENAR: Panggil get_data_cetak_v
+    fetch(`${API_URL}?action=get_data_cetak_v&kecamatan=${kec}&desa=${desa}&tahun=${thn}&bulan=${bln}`)
     .then(res => res.json())
-    .then(dataAB => {
-        DATA_V_SERVER = dataAB;
+    .then(data => {
+        DATA_V_SERVER = data; // Data masuk ke penampung
         renderSemuaSection();
         renderBagianV();
         
@@ -92,38 +94,54 @@ function loadDataBulanDipilih() {
         alert("Gagal menarik data. Pastikan koneksi stabil.");
     })
     .finally(() => {
-        // JURUS PAMUNGKAS: Apapun yang terjadi (berhasil/gagal), matikan loading!
         document.getElementById("loader-lapbul").classList.add("hidden");
     });
 }
 
-// 3. RENDER INPUT ROMAWI I - IV
+// 3. RENDER INPUT ROMAWI I - IV (FIX TAMPILAN BAGIAN I)
 function renderSemuaSection() {
     const dLalu = DATA_INIT_LAPBUL.data_kader_lalu || {};
     
+    // ==========================================
+    // BAGIAN I: KEADAAN UMUM (DENGAN LABEL JELAS)
+    // ==========================================
     const labelI = ["PPKBD", "SUB PPKBD", "Kelompok KB KS", "Kelompok BKB", "Kelompok BKR", "Kelompok BKL", "Kelompok UPPKA"];
-    let htmlI = "";
+    
+    // Bikin Header Kolom Dulu
+    let htmlI = `
+        <div class="col-span-2 grid grid-cols-2 gap-3 mb-1">
+            <div class="text-[9px] font-bold text-center text-slate-500 uppercase bg-slate-100 p-1.5 rounded-lg border border-slate-200">JUMLAH YANG ADA</div>
+            <div class="text-[9px] font-bold text-center text-blue-600 uppercase bg-blue-50 p-1.5 rounded-lg border border-blue-200">YANG DILAPORKAN</div>
+        </div>
+    `;
+
     labelI.forEach((lab, i) => {
         const valAda = dLalu[`i_ada_${i}`] || 0;
         const valLap = dLalu[`i_lap_${i}`] || 0;
         htmlI += `
-        <div class="col-span-2 text-[10px] font-black text-slate-400 uppercase mt-2">${lab}</div>
-        <input type="number" id="i-ada-${i}" value="${valAda}" class="p-2 border rounded-lg text-center font-bold" placeholder="Ada">
-        <input type="number" id="i-lap-${i}" value="${valLap}" class="p-2 border rounded-lg text-center font-bold" placeholder="Lapor">`;
+        <div class="col-span-2 text-[11px] font-black text-slate-700 uppercase mt-2 border-b border-slate-100 pb-1">${i+1}. ${lab}</div>
+        <input type="number" id="i-ada-${i}" value="${valAda}" class="p-2 border border-slate-300 bg-slate-50 rounded-lg text-center font-bold text-slate-600 shadow-inner" placeholder="Ada">
+        <input type="number" id="i-lap-${i}" value="${valLap}" class="p-2 border-2 border-blue-200 focus:border-blue-500 bg-white rounded-lg text-center font-black text-blue-900 shadow-sm" placeholder="Lapor">`;
     });
     document.getElementById("sec-1").innerHTML = htmlI;
 
+    // ==========================================
+    // BAGIAN II: OPERASIONAL
+    // ==========================================
     const labelII = ["Frekuensi Rakor Desa", "Frekuensi KIE/Penyuluhan", "Tokoh Masyarakat Aktif KIE"];
     let htmlII = "";
     labelII.forEach((lab, i) => {
         htmlII += `
         <div class="flex justify-between items-center gap-4 bg-slate-50 p-2 rounded-lg">
             <span class="text-[10px] font-bold text-slate-600 uppercase">${lab}</span>
-            <input type="number" id="ii-${i}" value="${dLalu[`ii_${i}`] || 0}" class="w-16 p-2 border rounded-lg text-center font-black">
+            <input type="number" id="ii-${i}" value="${dLalu[`ii_${i}`] || 0}" class="w-16 p-2 border border-slate-300 rounded-lg text-center font-black text-blue-900">
         </div>`;
     });
     document.getElementById("sec-2").innerHTML = htmlII;
 
+    // ==========================================
+    // BAGIAN III: KETAHANAN (BKB, BKR, BKL)
+    // ==========================================
     const tipeIII = ["BKB", "BKR", "BKL"];
     const labelIII = ["Sasaran Kelompok", "Anggota Kelompok", "Anggota Berstatus PUS", "PUS Anggota Peserta KB", "Frekuensi Pertemuan"];
     let htmlIII = "";
@@ -135,20 +153,23 @@ function renderSemuaSection() {
             const key = `${t.toLowerCase()}_${i}`;
             htmlIII += `<div class="flex justify-between items-center bg-white p-2 rounded-lg border border-blue-50 shadow-sm">
                 <span class="text-[9px] font-bold text-slate-500 uppercase">${lab}</span>
-                <input type="number" id="iii-${key}" value="${dLalu[`iii_${key}`] || 0}" class="w-16 p-1 border rounded text-center font-bold text-blue-900">
+                <input type="number" id="iii-${key}" value="${dLalu[`iii_${key}`] || 0}" class="w-16 p-1 border border-blue-200 rounded text-center font-bold text-blue-900">
             </div>`;
         });
         htmlIII += `</div></div>`;
     });
     document.getElementById("sec-3").innerHTML = htmlIII;
 
+    // ==========================================
+    // BAGIAN IV: UPPKA
+    // ==========================================
     const labelIV = ["Anggota Kelompok UPPKA", "Kelompok UPPKA PUS", "Kelompok UPPKA PUS ber-KB", "Pertemuan UPPKA"];
     let htmlIV = "";
     labelIV.forEach((lab, i) => {
         htmlIV += `
         <div class="flex justify-between items-center bg-orange-50 p-2 rounded-lg border border-orange-100 mb-2">
             <span class="text-[10px] font-bold text-orange-800 uppercase">${lab}</span>
-            <input type="number" id="iv-${i}" value="${dLalu[`iv_${i}`] || 0}" class="w-16 p-2 border rounded-lg text-center font-black text-orange-900">
+            <input type="number" id="iv-${i}" value="${dLalu[`iv_${i}`] || 0}" class="w-16 p-2 border border-orange-200 rounded-lg text-center font-black text-orange-900">
         </div>`;
     });
     document.getElementById("sec-4").innerHTML = htmlIV;
