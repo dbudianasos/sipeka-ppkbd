@@ -1,68 +1,128 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tentang siPeKa</title>
-  <link rel="icon" type="image/png" href="logo-sipeka.png">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-  <style> body { font-family: 'Poppins', sans-serif; } </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tentang siPeKa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .orange-gradient { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-  
-  <header class="sticky top-0 z-50 bg-blue-900 py-4 px-5 rounded-b-[1.5rem] shadow-lg text-white flex items-center gap-4">
-    <button onclick="history.back()" class="bg-white/10 p-2 rounded-xl active:scale-95 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-    </button>
-    <div>
-        <h1 class="font-black text-base uppercase">Tentang siPeKa</h1>
-        <p class="text-[9px] text-blue-200 uppercase tracking-widest font-bold">Informasi Sistem</p>
-    </div>
-  </header>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-  <main class="p-5 max-w-md mx-auto space-y-5 pb-10">
-      
-      <!-- LOGO -->
-      <div class="bg-white rounded-3xl p-6 text-center border border-slate-200 shadow-sm mt-4">
-          <div class="w-24 h-24 bg-blue-900 rounded-[2rem] flex items-center justify-center mx-auto mb-4 shadow-lg border-4 border-blue-100">
-              <img src="logo-sipeka.png" alt="SIPEKA" class="h-9 md:h-11 w-auto">
-          </div>
-          <h2 class="text-lg font-black text-slate-800 uppercase">Aplikasi Pelaporan Kinerja<br>PPKBD</h2>
-          <p class="text-xs font-bold text-blue-600 mt-2 bg-blue-50 py-1 px-3 rounded-full inline-block">Versi 1.0.0 (BETA)</p>
-      </div>
+    <!-- Header / Tombol Kembali -->
+    <header class="p-6 flex items-center justify-between sticky top-0 bg-slate-50/80 backdrop-blur-md z-10">
+        <button onclick="window.history.back()" class="w-10 h-10 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-400 active:scale-90 transition border border-slate-100">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+            </svg>
+        </button>
+        <span class="text-[10px] font-black text-blue-900 uppercase tracking-[0.2em]">Informasi Aplikasi</span>
+        <div class="w-10"></div>
+    </header>
 
-      <!-- DESKRIPSI -->
-      <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm">
-          <p class="text-[11px] font-bold text-slate-600 text-justify leading-relaxed">
-              <b>siPeKa</b> adalah inovasi digital berbasis Web Apps yang dirancang khusus untuk mempermudah tugas administrasi Pembantu Pembina Keluarga Berencana Desa (PPKBD). Tinggalkan cara lama, beralih ke digital yang lebih cepat, akurat, dan tanpa ribet.
-          </p>
-      </div>
+    <main class="flex-1 px-6 pb-12 max-w-lg mx-auto">
+        <!-- Brand Identity -->
+        <div class="text-center mb-10">
+            <!-- Logo dengan Background Oranye Khas siPeKa -->
+            <div class="w-24 h-24 orange-gradient text-white rounded-[2.5rem] flex items-center justify-center mx-auto mb-5 shadow-2xl shadow-orange-500/30 border-4 border-white">
+                <span class="text-4xl font-black tracking-tighter">sP</span>
+            </div>
+            <h1 class="text-3xl font-black text-blue-900 leading-tight tracking-tighter uppercase">siPeKa PPKBD</h1>
+            <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest leading-relaxed">
+                Sistem Pemantauan Kinerja Kader<br>Kabupaten Bekasi
+            </p>
+            <div class="inline-flex items-center gap-2 mt-4 px-4 py-1.5 bg-blue-50 border border-blue-100 rounded-full">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+                <span class="text-[9px] font-black text-blue-900 uppercase tracking-tighter">Versi 2.0.0 Stable</span>
+            </div>
+        </div>
 
-      <!-- FITUR UNGGULAN -->
-      <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Fitur Unggulan</h3>
-      <div class="space-y-3">
-          <div class="bg-white p-4 rounded-2xl flex gap-3 border border-slate-200 shadow-sm items-center">
-              <div class="text-2xl">🤖</div>
-              <div><h4 class="text-xs font-black text-slate-800">Auto-Copy Bulan Lalu</h4><p class="text-[9px] text-slate-500 font-bold">Tidak perlu ngetik ulang dari nol. Angka bulan lalu otomatis tersalin.</p></div>
-          </div>
-          <div class="bg-white p-4 rounded-2xl flex gap-3 border border-slate-200 shadow-sm items-center">
-              <div class="text-2xl">🧮</div>
-              <div><h4 class="text-xs font-black text-slate-800">Hitung Kumulatif (S/D) Otomatis</h4><p class="text-[9px] text-slate-500 font-bold">Capaian S/D bulan ini dihitung otomatis oleh server tanpa repot pakai kalkulator.</p></div>
-          </div>
-          <div class="bg-white p-4 rounded-2xl flex gap-3 border border-slate-200 shadow-sm items-center">
-              <div class="text-2xl">🖨️</div>
-              <div><h4 class="text-xs font-black text-slate-800">Cetak PDF 1 Lembar</h4><p class="text-[9px] text-slate-500 font-bold">Hasil cetak dijamin presisi 100% sama dengan format dinas (F4/Legal).</p></div>
-          </div>
-      </div>
+        <!-- Deskripsi Singkat -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 mb-6">
+            <p class="text-[11px] font-medium text-slate-500 leading-relaxed text-center italic">
+                "Inovasi digital untuk memodernisasi administrasi dan meningkatkan efektivitas kinerja Kader PPKBD dalam mewujudkan keluarga berkualitas di Kabupaten Bekasi."
+            </p>
+        </div>
 
-      <!-- PENGEMBANG -->
-      <div class="bg-slate-800 rounded-3xl p-5 text-white text-center mt-8">
-          <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dikembangkan Oleh</p>
-          <h2 class="text-sm font-black text-blue-400 uppercase">Dian Budiana</h2>
-          <p class="text-[10px] text-slate-300 mt-1">UPTD PP Wilayah V Kabupaten Bekasi</p>
-      </div>
+        <!-- Fitur Unggulan (Dikembangkan) -->
+        <h2 class="text-[10px] font-black text-blue-900 uppercase tracking-[0.2em] mb-4 ml-2">Fitur Unggulan</h2>
+        <div class="space-y-3">
+            
+            <!-- Item Fitur 1 -->
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-start gap-4">
+                <div class="w-10 h-10 bg-blue-50 rounded-2xl flex items-center justify-center text-xl shrink-0">📅</div>
+                <div>
+                    <h3 class="text-[11px] font-black text-blue-900 uppercase">Manajemen Rencana Kerja (Renja)</h3>
+                    <p class="text-[10px] font-medium text-slate-500 leading-relaxed mt-1">Penyusunan target kegiatan mingguan dan bulanan yang lebih terukur, sistematis, dan terarah.</p>
+                </div>
+            </div>
 
-  </main>
+            <!-- Item Fitur 2 -->
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-start gap-4">
+                <div class="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center text-xl shrink-0">📷</div>
+                <div>
+                    <h3 class="text-[11px] font-black text-blue-900 uppercase">Visum Digital & Dokumentasi</h3>
+                    <p class="text-[10px] font-medium text-slate-500 leading-relaxed mt-1">Pelaporan kinerja real-time langsung dari lapangan, diperkuat dengan upload foto dokumentasi kegiatan yang akurat.</p>
+                </div>
+            </div>
+
+            <!-- Item Fitur 3 -->
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-start gap-4">
+                <div class="w-10 h-10 bg-purple-50 rounded-2xl flex items-center justify-center text-xl shrink-0">📊</div>
+                <div>
+                    <h3 class="text-[11px] font-black text-blue-900 uppercase">Monitoring Capaian Real-Time</h3>
+                    <p class="text-[10px] font-medium text-slate-500 leading-relaxed mt-1">Pantau grafik progres kinerja secara visual untuk memastikan seluruh target bulanan tercapai 100%.</p>
+                </div>
+            </div>
+
+            <!-- Item Fitur 4 -->
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-start gap-4">
+                <div class="w-10 h-10 bg-orange-50 rounded-2xl flex items-center justify-center text-xl shrink-0">🖨️</div>
+                <div>
+                    <h3 class="text-[11px] font-black text-blue-900 uppercase">Otomasi Laporan Resmi (R/I/PPKBD)</h3>
+                    <p class="text-[10px] font-medium text-slate-500 leading-relaxed mt-1">Generate dan cetak Visum harian hingga Form laporan bulanan resmi tanpa perlu tulis tangan manual lagi.</p>
+                </div>
+            </div>
+
+            <!-- Item Fitur 5 -->
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-start gap-4">
+                <div class="w-10 h-10 bg-amber-50 rounded-2xl flex items-center justify-center text-xl shrink-0">📱</div>
+                <div>
+                    <h3 class="text-[11px] font-black text-blue-900 uppercase">Antarmuka Responsif & Simpel</h3>
+                    <p class="text-[10px] font-medium text-slate-500 leading-relaxed mt-1">Desain UI yang modern namun tetap ringan dan mudah digunakan oleh seluruh jenjang usia Kader.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Developer Section -->
+        <div class="mt-10 p-6 bg-slate-900 rounded-[2.5rem] text-white relative overflow-hidden">
+            <div class="absolute right-0 top-0 w-32 h-32 bg-blue-500/10 rounded-full -translate-y-16 translate-x-16 blur-3xl"></div>
+            <h2 class="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-4">Developed By</h2>
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-2xl border border-white/10 shadow-inner">
+                    👤
+                </div>
+                <div>
+                    <p class="text-sm font-black tracking-tight">Dian Budiana</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">UPTD Pengendalian Penduduk Wilayah V</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="p-8 text-center">
+        <p class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">&copy; 2026 SIPEKA DEV TEAM • KABUPATEN BEKASI</p>
+    </footer>
+
 </body>
 </html>
