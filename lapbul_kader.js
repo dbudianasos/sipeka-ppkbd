@@ -466,10 +466,6 @@ function siapkanCetakPDF() {
     document.getElementById("wadah-download-pdf").classList.remove("hidden");
 }
 
-    document.getElementById("modal-preview").classList.remove("hidden");
-    document.getElementById("wadah-download-pdf").classList.remove("hidden");
-}
-
 // B. FUNGSI EKSEKUSI DOWNLOAD (TRIK GANTI NAMA FILE & VISUM MODE)
 function eksekusiDownloadPDF() {
     const bln = document.getElementById("lap-bulan").value;
