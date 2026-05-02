@@ -264,7 +264,7 @@ function simpanDraftKader() {
 }
 
 // 6. GENERATE PDF (FORMAT F4)
-// A. FUNGSI UNTUK MEMBUKA PREVIEW (LAYOUT 1 LEMBAR + FOOTER KHUSUS)
+// A. FUNGSI UNTUK MEMBUKA PREVIEW (HAPUS FOOTER & RAPATKAN TABEL)
 function siapkanCetakPDF() {
     const bln = document.getElementById("lap-bulan").value;
     const thn = document.getElementById("lap-tahun").value;
@@ -280,17 +280,16 @@ function siapkanCetakPDF() {
         const key = tipe.toLowerCase();
         return `
             <tr>
-                <td style="border:1px solid black; padding:3px; text-align:left;">Kelompok ${tipe}</td>
-                <td style="border:1px solid black; padding:3px;">${getVal(`iii-${key}_0`)}</td>
-                <td style="border:1px solid black; padding:3px;">${getVal(`iii-${key}_1`)}</td>
-                <td style="border:1px solid black; padding:3px;">${getVal(`iii-${key}_2`)}</td>
-                <td style="border:1px solid black; padding:3px;">${getVal(`iii-${key}_3`)}</td>
-                <td style="border:1px solid black; padding:3px;">${getVal(`iii-${key}_4`)}</td>
+                <td style="border:1px solid black; padding:2px; text-align:left;">Kelompok ${tipe}</td>
+                <td style="border:1px solid black; padding:2px;">${getVal(`iii-${key}_0`)}</td>
+                <td style="border:1px solid black; padding:2px;">${getVal(`iii-${key}_1`)}</td>
+                <td style="border:1px solid black; padding:2px;">${getVal(`iii-${key}_2`)}</td>
+                <td style="border:1px solid black; padding:2px;">${getVal(`iii-${key}_3`)}</td>
+                <td style="border:1px solid black; padding:2px;">${getVal(`iii-${key}_4`)}</td>
             </tr>
         `;
     };
 
-    // BANGUN STRUKTUR KERTAS (DIPADATKAN AGAR MUAT 1 LEMBAR)
     area.innerHTML = `
         <div style="font-family: Arial, sans-serif; color: black; background: white;">
             <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 10px;">
@@ -308,17 +307,17 @@ function siapkanCetakPDF() {
             <p style="font-size: 10px; font-weight: bold; margin: 5px 0 2px 0;">I. KEADAAN UMUM</p>
             <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center;">
                 <tr style="background:#f8f9fa;">
-                    <th style="border:1px solid black; padding:3px; width: 5%;">NO</th>
-                    <th style="border:1px solid black; padding:3px; text-align:left;">URAIAN</th>
-                    <th style="border:1px solid black; padding:3px; width: 20%;">YANG ADA</th>
-                    <th style="border:1px solid black; padding:3px; width: 20%;">YANG DILAPORKAN</th>
+                    <th style="border:1px solid black; padding:2px; width: 5%;">NO</th>
+                    <th style="border:1px solid black; padding:2px; text-align:left;">URAIAN</th>
+                    <th style="border:1px solid black; padding:2px; width: 20%;">YANG ADA</th>
+                    <th style="border:1px solid black; padding:2px; width: 20%;">YANG DILAPORKAN</th>
                 </tr>
                 ${["PPKBD", "SUB PPKBD", "Kelompok KB KS", "Kelompok BKB", "Kelompok BKR", "Kelompok BKL", "Kelompok UPPKA"].map((lab, i) => `
                     <tr>
-                        <td style="border:1px solid black; padding:3px;">${i+1}</td>
-                        <td style="border:1px solid black; padding:3px; text-align:left;">${lab}</td>
-                        <td style="border:1px solid black; padding:3px;">${getVal(`i-ada-${i}`)}</td>
-                        <td style="border:1px solid black; padding:3px;">${getVal(`i-lap-${i}`)}</td>
+                        <td style="border:1px solid black; padding:2px;">${i+1}</td>
+                        <td style="border:1px solid black; padding:2px; text-align:left;">${lab}</td>
+                        <td style="border:1px solid black; padding:2px;">${getVal(`i-ada-${i}`)}</td>
+                        <td style="border:1px solid black; padding:2px;">${getVal(`i-lap-${i}`)}</td>
                     </tr>
                 `).join('')}
             </table>
@@ -327,24 +326,24 @@ function siapkanCetakPDF() {
             <p style="font-size: 10px; font-weight: bold; margin: 5px 0 2px 0;">II. KEGIATAN OPERASIONAL</p>
             <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center;">
                 <tr style="background:#f8f9fa;">
-                    <th style="border:1px solid black; padding:3px; width: 5%;">NO</th>
-                    <th style="border:1px solid black; padding:3px; width: 75%; text-align:left;">KEGIATAN</th>
-                    <th style="border:1px solid black; padding:3px; width: 20%;">JUMLAH</th>
+                    <th style="border:1px solid black; padding:2px; width: 5%;">NO</th>
+                    <th style="border:1px solid black; padding:2px; width: 75%; text-align:left;">KEGIATAN</th>
+                    <th style="border:1px solid black; padding:2px; width: 20%;">JUMLAH</th>
                 </tr>
                 <tr>
-                    <td style="border:1px solid black; padding:3px;">1</td>
-                    <td style="border:1px solid black; padding:3px; text-align:left;">Jumlah frekuensi rapat koordinasi tingkat Desa/Kelurahan</td>
-                    <td style="border:1px solid black; padding:3px;">${getVal('ii-0')}</td>
+                    <td style="border:1px solid black; padding:2px;">1</td>
+                    <td style="border:1px solid black; padding:2px; text-align:left;">Jumlah frekuensi rapat koordinasi tingkat Desa/Kelurahan</td>
+                    <td style="border:1px solid black; padding:2px;">${getVal('ii-0')}</td>
                 </tr>
                 <tr>
-                    <td style="border:1px solid black; padding:3px;">2</td>
-                    <td style="border:1px solid black; padding:3px; text-align:left;">Jumlah frekuensi KIE/Penyuluhan</td>
-                    <td style="border:1px solid black; padding:3px;">${getVal('ii-1')}</td>
+                    <td style="border:1px solid black; padding:2px;">2</td>
+                    <td style="border:1px solid black; padding:2px; text-align:left;">Jumlah frekuensi KIE/Penyuluhan</td>
+                    <td style="border:1px solid black; padding:2px;">${getVal('ii-1')}</td>
                 </tr>
                 <tr>
-                    <td style="border:1px solid black; padding:3px;">3</td>
-                    <td style="border:1px solid black; padding:3px; text-align:left;">Jumlah Tokoh masyarakat/agama yang aktif melakukan KIE KB</td>
-                    <td style="border:1px solid black; padding:3px;">${getVal('ii-2')}</td>
+                    <td style="border:1px solid black; padding:2px;">3</td>
+                    <td style="border:1px solid black; padding:2px; text-align:left;">Jumlah Tokoh masyarakat/agama yang aktif melakukan KIE KB</td>
+                    <td style="border:1px solid black; padding:2px;">${getVal('ii-2')}</td>
                 </tr>
             </table>
 
@@ -352,12 +351,12 @@ function siapkanCetakPDF() {
             <p style="font-size: 10px; font-weight: bold; margin: 5px 0 2px 0;">III. KETAHANAN KELUARGA</p>
             <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center;">
                 <tr style="background:#f8f9fa;">
-                    <th style="border:1px solid black; padding:3px;">KELOMPOK</th>
-                    <th style="border:1px solid black; padding:3px;">SASARAN</th>
-                    <th style="border:1px solid black; padding:3px;">ANGGOTA KELOMPOK</th>
-                    <th style="border:1px solid black; padding:3px;">ANGGOTA PUS</th>
-                    <th style="border:1px solid black; padding:3px;">ANGGOTA PUS BER-KB</th>
-                    <th style="border:1px solid black; padding:3px;">FREKUENSI PERTEMUAN</th>
+                    <th style="border:1px solid black; padding:2px;">KELOMPOK</th>
+                    <th style="border:1px solid black; padding:2px;">SASARAN</th>
+                    <th style="border:1px solid black; padding:2px;">ANGGOTA KELOMPOK</th>
+                    <th style="border:1px solid black; padding:2px;">ANGGOTA PUS</th>
+                    <th style="border:1px solid black; padding:2px;">ANGGOTA PUS BER-KB</th>
+                    <th style="border:1px solid black; padding:2px;">FREKUENSI PERTEMUAN</th>
                 </tr>
                 ${renderBina('BKB')}
                 ${renderBina('BKR')}
@@ -368,16 +367,16 @@ function siapkanCetakPDF() {
             <p style="font-size: 10px; font-weight: bold; margin: 5px 0 2px 0;">IV. KESEJAHTERAAN KELUARGA (UPPKA)</p>
             <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center;">
                 <tr style="background:#f8f9fa;">
-                    <th style="border:1px solid black; padding:3px;">ANGGOTA UPPKA</th>
-                    <th style="border:1px solid black; padding:3px;">ANGGOTA UPPKA PUS</th>
-                    <th style="border:1px solid black; padding:3px;">ANGGOTA PUS BER-KB</th>
-                    <th style="border:1px solid black; padding:3px;">FREKUENSI PERTEMUAN</th>
+                    <th style="border:1px solid black; padding:2px;">ANGGOTA UPPKA</th>
+                    <th style="border:1px solid black; padding:2px;">ANGGOTA UPPKA PUS</th>
+                    <th style="border:1px solid black; padding:2px;">ANGGOTA PUS BER-KB</th>
+                    <th style="border:1px solid black; padding:2px;">FREKUENSI PERTEMUAN</th>
                 </tr>
                 <tr>
-                    <td style="border:1px solid black; padding:3px;">${getVal('iv-0')}</td>
-                    <td style="border:1px solid black; padding:3px;">${getVal('iv-1')}</td>
-                    <td style="border:1px solid black; padding:3px;">${getVal('iv-2')}</td>
-                    <td style="border:1px solid black; padding:3px;">${getVal('iv-3')}</td>
+                    <td style="border:1px solid black; padding:2px;">${getVal('iv-0')}</td>
+                    <td style="border:1px solid black; padding:2px;">${getVal('iv-1')}</td>
+                    <td style="border:1px solid black; padding:2px;">${getVal('iv-2')}</td>
+                    <td style="border:1px solid black; padding:2px;">${getVal('iv-3')}</td>
                 </tr>
             </table>
 
@@ -389,22 +388,22 @@ function siapkanCetakPDF() {
             </div>
             <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center;">
                 <tr style="background:#f8f9fa;">
-                    <th style="border:1px solid black; padding:3px;">NO</th>
-                    <th style="border:1px solid black; padding:3px;">METODE</th>
-                    <th style="border:1px solid black; padding:3px;">TARGET</th>
-                    <th style="border:1px solid black; padding:3px;">BLN INI</th>
-                    <th style="border:1px solid black; padding:3px;">S/D INI</th>
-                    <th style="border:1px solid black; padding:3px;">SISA</th>
+                    <th style="border:1px solid black; padding:2px;">NO</th>
+                    <th style="border:1px solid black; padding:2px;">METODE</th>
+                    <th style="border:1px solid black; padding:2px;">TARGET</th>
+                    <th style="border:1px solid black; padding:2px;">BLN INI</th>
+                    <th style="border:1px solid black; padding:2px;">S/D INI</th>
+                    <th style="border:1px solid black; padding:2px;">SISA</th>
                 </tr>
                 ${Array.from(document.querySelectorAll("#v-tabel-alkon > div")).map((div, i) => {
                     const spans = div.querySelectorAll("span.text-xs");
                     return `<tr>
-                        <td style="border:1px solid black; padding:3px;">${i+1}</td>
-                        <td style="border:1px solid black; padding:3px; text-align:left;">${div.querySelector("span.text-left").innerText}</td>
-                        <td style="border:1px solid black; padding:3px;">${spans[0].innerText}</td>
-                        <td style="border:1px solid black; padding:3px;">${spans[1].innerText}</td>
-                        <td style="border:1px solid black; padding:3px;">${spans[2].innerText}</td>
-                        <td style="border:1px solid black; padding:3px;">${spans[3].innerText}</td>
+                        <td style="border:1px solid black; padding:2px;">${i+1}</td>
+                        <td style="border:1px solid black; padding:2px; text-align:left;">${div.querySelector("span.text-left").innerText}</td>
+                        <td style="border:1px solid black; padding:2px;">${spans[0].innerText}</td>
+                        <td style="border:1px solid black; padding:2px;">${spans[1].innerText}</td>
+                        <td style="border:1px solid black; padding:2px;">${spans[2].innerText}</td>
+                        <td style="border:1px solid black; padding:2px;">${spans[3].innerText}</td>
                     </tr>`;
                 }).join('')}
             </table>
@@ -422,12 +421,6 @@ function siapkanCetakPDF() {
                     </td>
                 </tr>
             </table>
-
-            <!-- FOOTER KHUSUS SIPEKA -->
-            <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 5px; font-size: 8px; color: #666; display: flex; justify-content: space-between;">
-                <span>Cetak Mandiri dari Aplikasi siPeKa (https://sipeka-ppkbd.vercel.app)</span>
-                <span>Waktu Cetak: ${new Date().toLocaleString('id-ID')} WIB</span>
-            </div>
         </div>
     `;
 
@@ -435,11 +428,25 @@ function siapkanCetakPDF() {
     document.getElementById("wadah-download-pdf").classList.remove("hidden");
 }
 
-// B. FUNGSI EKSEKUSI DOWNLOAD (MODE VISUM / NATIVE BROWSER)
+// B. FUNGSI EKSEKUSI DOWNLOAD (TRIK GANTI NAMA FILE & VISUM MODE)
 function eksekusiDownloadPDF() {
-    // Karena kita sudah pakai CSS @media print, 
-    // kita cukup panggil perintah cetak bawaan HP/Browser.
+    const bln = document.getElementById("lap-bulan").value;
+    const desa = localStorage.getItem("desa").toUpperCase().replace(/\s+/g, '_');
+    const namaKaderFile = localStorage.getItem("nama").replace(/\s+/g, '_'); 
+    
+    // 1. Simpan nama halaman web yang asli
+    const judulAsli = document.title;
+    
+    // 2. Ganti judul web sementara jadi nama file yang kita mau
+    document.title = `LAPBUL_${bln}_${desa}_${namaKaderFile}`;
+    
+    // 3. Panggil fungsi cetak bawaan browser
     window.print();
+    
+    // 4. Kasih jeda 2 detik, lalu kembalikan judul web ke aslinya
+    setTimeout(() => {
+        document.title = judulAsli;
+    }, 2000);
 }
 
 // C. FUNGSI TUTUP MODAL
