@@ -1777,17 +1777,16 @@ function backupLogKeCSV() {
 // ============================================================================
 // 10. FITUR TOMBOL MELAYANG (FAB) & AUTO-CHAT WA
 // ============================================================================
-let lastFabClicked = null;
-
 function handleFabClick(type) {
     const label = document.getElementById("label-" + type);
 
     if (lastFabClicked !== type) {
-        // Klik Pertama: Munculkan Label
+        // Klik Pertama: Sembunyikan label lain, munculkan label ini
         document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
         label.classList.remove('opacity-0');
         lastFabClicked = type;
         
+        // Timer Reset
         setTimeout(() => {
             if(lastFabClicked === type) {
                 label.classList.add('opacity-0');
@@ -1796,9 +1795,9 @@ function handleFabClick(type) {
         }, 3000);
     } 
     else {
-        // Klik Kedua: Jalankan Aksi
+        // Klik Kedua: Eksekusi Aksi
         if (type === 'tentang') window.location.href = 'tentang.html';
-        if (type === 'bantuan') kirimPesanWA(); // Panggil fungsi Auto-Chat
+        if (type === 'bantuan') kirimPesanWA();
         if (type === 'kopi') bukaTraktir();
         
         label.classList.add('opacity-0');
@@ -1806,13 +1805,12 @@ function handleFabClick(type) {
     }
 }
 
-// FUNGSI AUTO-CHAT WA (CHATBOT SEDERHANA)
 function kirimPesanWA() {
     const nama = localStorage.getItem("nama") || "Kader siPeKa";
     const desa = localStorage.getItem("desa") || "-";
     const kec = localStorage.getItem("kecamatan") || "-";
     
-    // Pesan Otomatis (Gunakan %0A untuk baris baru)
+    // Pesan Otomatis Chatbot
     const pesan = `Halo Pak Dian, saya *${nama}* dari *Desa ${desa}, Kec. ${kec}*. %0A%0ASehubungan dengan penggunaan aplikasi *siPeKa*, ada yang ingin saya tanyakan mengenai: %0A...`;
     
     const urlWA = `https://wa.me/6282260188765?text=${pesan}`;
@@ -1826,7 +1824,7 @@ function toggleFAB() {
     
     if (menu.classList.contains('hidden')) {
         menu.classList.remove('hidden');
-        if(instruksi) instruksi.classList.remove('hidden'); // Munculkan instruksi "Klik 2x"
+        if(instruksi) instruksi.classList.remove('hidden'); 
         setTimeout(() => {
             menu.classList.remove('translate-y-4', 'opacity-0');
             icon.style.transform = 'rotate(45deg)';
@@ -1834,23 +1832,13 @@ function toggleFAB() {
     } else {
         menu.classList.add('translate-y-4', 'opacity-0');
         icon.style.transform = 'rotate(0deg)';
-        if(instruksi) instruksi.classList.add('hidden'); // Sembunyikan instruksi
+        if(instruksi) instruksi.classList.add('hidden'); 
         document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
         lastFabClicked = null;
         setTimeout(() => { menu.classList.add('hidden'); }, 300);
     }
 }
 
-// Fungsi Modal Traktir Kopi (Hanya pastikan sudah ada di script.js)
-function bukaTraktir() {
-    const modal = document.getElementById("modal-traktir");
-    if (modal) modal.classList.remove("hidden");
-}
-
-function tutupTraktir() {
-    const modal = document.getElementById("modal-traktir");
-    if (modal) modal.classList.add("hidden");
-}
 // ============================================================================
 // 11. PENGGERAK UTAMA (DOM CONTENT LOADED)
 // ============================================================================
