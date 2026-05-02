@@ -27,9 +27,18 @@ let translateY = 0;
 // ============================================================================
 function pantauMaintenance() {
   const nik = localStorage.getItem("nik");
-  // Kalau bos besar (Bapak) yang login, bebasin aja nggak usah di-cek
+  
+  // 1. Kalau bos besar (Bapak) yang login, bebasin aja nggak usah di-cek
   if (nik === "3207160604930002") return; 
 
+  // 2. Cek apakah ini halaman login (index.html)
+  const isLoginPage = window.location.pathname.includes("index.html") || window.location.pathname.endsWith("/");
+  
+  // 3. JIKA DI HALAMAN LOGIN, HENTIKAN RADAR! 
+  // Biarkan fungsi login() yang mengurus peringatannya saat tombol Masuk diklik.
+  if (isLoginPage) return; 
+
+  // 4. Jika kader sedang di dalam Dashboard, baru tembak Tembok Raksasa
   fetch(`${API_URL}?action=check_maintenance`)
     .then(res => res.json())
     .then(data => {
