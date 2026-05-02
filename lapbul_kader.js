@@ -434,25 +434,37 @@ function siapkanCetakPDF() {
                 </tr>
             </table>
 
-            <!-- TANDA TANGAN (page-break-inside avoid agar tidak loncat sembarangan) -->
-            <table style="width: 100%; margin-top: 5px; text-align: left; page-break-inside: avoid;">
+            <!-- TANDA TANGAN (Sistem Tabel 2 Baris agar Sejajar Sempurna) -->
+            <table style="width: 100%; margin-top: 15px; text-align: left; page-break-inside: avoid; font-size: 10px;">
                 <tr>
-                    <td width="60%" style="vertical-align: top;">
-                        Mengetahui<br>
+                    <!-- Baris 1: Jabatan & Ruang Kosong TTD (diatur dengan padding-bottom 60px) -->
+                    <td width="60%" style="vertical-align: top; padding-bottom: 60px;">
+                        Mengetahui,<br>
                         ${ttd.jabatan || 'Kepala UPTD PP Wilayah V'}<br>
-                        ${ttd.wilayah || 'Kecamatan Cikarang Barat - Setu'}<br><br><br>
+                        ${ttd.wilayah || 'Kecamatan Cikarang Barat - Setu'}
+                    </td>
+                    <td style="vertical-align: top; padding-bottom: 60px;">
+                        Bekasi,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${bln} ${thn}<br>
+                        PPKBD ${desa}
+                    </td>
+                </tr>
+                <tr>
+                    <!-- Baris 2: Nama yang dijamin 100% sejajar lurus -->
+                    <td style="vertical-align: top;">
                         <b><u>${ttd.nama || '................................'}</u></b><br>
                         <b>NIP. ${ttd.nip || '................................'}</b>
                     </td>
                     <td style="vertical-align: top;">
-                        Bekasi,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${bln} ${thn}<br>
-                        PPKBD ${desa}<br><br><br>
                         <b><u>${namaKader}</u></b>
                     </td>
                 </tr>
             </table>
         </div>
     `;
+
+    document.getElementById("modal-preview").classList.remove("hidden");
+    document.getElementById("wadah-download-pdf").classList.remove("hidden");
+}
 
     document.getElementById("modal-preview").classList.remove("hidden");
     document.getElementById("wadah-download-pdf").classList.remove("hidden");
