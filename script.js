@@ -14,6 +14,7 @@ let dataRenjaGlobal = [];
 let GLOBAL_WILAYAH = []; 
 let DATA_USERS_ALL = []; 
 let myChartInstance = null;
+let lastFabClicked = null;
 
 // Variabel Zooming Foto
 let currentScale = 1;
@@ -1776,6 +1777,39 @@ function backupLogKeCSV() {
 // ============================================================================
 // 10. FITUR TOMBOL MELAYANG (FAB) & MODAL UI
 // ============================================================================
+function handleFabClick(type) {
+    const labelId = "label-" + type;
+    const label = document.getElementById(labelId);
+
+    // Jika ini klik pertama pada tombol tersebut
+    if (lastFabClicked !== type) {
+        // Sembunyikan semua label dulu
+        document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
+        
+        // Munculkan label yang diklik
+        label.classList.remove('opacity-0');
+        lastFabClicked = type;
+        
+        // Reset otomatis setelah 3 detik jika tidak diklik lagi
+        setTimeout(() => {
+            if(lastFabClicked === type) {
+                label.classList.add('opacity-0');
+                lastFabClicked = null;
+            }
+        }, 3000);
+    } 
+    // Jika ini klik kedua (atau label sudah muncul)
+    else {
+        if (type === 'tentang') window.location.href = 'tentang.html';
+        if (type === 'bantuan') window.open('https://wa.me/6282260188765', '_blank');
+        if (type === 'kopi') bukaTraktir();
+        
+        // Reset status
+        label.classList.add('opacity-0');
+        lastFabClicked = null;
+    }
+}
+
 function toggleFAB() {
     const menu = document.getElementById('menu-fab');
     const icon = document.getElementById('icon-fab');
@@ -1784,11 +1818,14 @@ function toggleFAB() {
         menu.classList.remove('hidden');
         setTimeout(() => {
             menu.classList.remove('translate-y-4', 'opacity-0');
-            icon.style.transform = 'rotate(45deg)'; // Ikon (+) jadi (x)
+            icon.style.transform = 'rotate(45deg)';
         }, 10);
     } else {
         menu.classList.add('translate-y-4', 'opacity-0');
-        icon.style.transform = 'rotate(0deg)'; 
+        icon.style.transform = 'rotate(0deg)';
+        // Reset label saat menu ditutup
+        document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
+        lastFabClicked = null;
         setTimeout(() => { menu.classList.add('hidden'); }, 300);
     }
 }
