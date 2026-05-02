@@ -153,11 +153,16 @@
 
   <script src="script.js"></script>
 
-  <!-- TOMBOL MELAYANG (FAB) - VERSI INTERAKTIF -->
-  <div class="fixed bottom-6 right-4 z-[100] flex flex-col items-center gap-3">
+  <!-- TOMBOL MELAYANG (FAB) - AREA KLIK FIX -->
+  <div class="fixed bottom-6 right-4 z-[100] flex flex-col items-center">
       
+      <!-- Label Instruksi (Sekarang di atas tombol + agar tidak menutupi area klik) -->
+      <span id="label-instruksi" class="hidden bg-blue-900 text-white text-[8px] font-black px-3 py-1.5 rounded-full shadow-lg border border-blue-400 animate-pulse mb-3">
+          KLIK 2x UNTUK PILIH
+      </span>
+  
       <!-- Menu Anak -->
-      <div id="menu-fab" class="hidden flex flex-col items-center gap-3 transition-all duration-300 transform translate-y-4 opacity-0">
+      <div id="menu-fab" class="hidden flex flex-col items-center gap-3 transition-all duration-300 transform translate-y-4 opacity-0 mb-3">
           
           <!-- Tentang -->
           <div class="flex flex-col items-center gap-1">
@@ -178,17 +183,10 @@
           </div>
       </div>
   
-      <!-- Tombol Induk & Label Instruksi -->
-      <div class="flex items-center gap-3">
-          <!-- Label ini akan muncul saat menu terbuka -->
-          <span id="label-instruksi" class="hidden bg-blue-900 text-white text-[8px] font-black px-3 py-1.5 rounded-full shadow-lg border border-blue-400 animate-pulse">
-              KLIK 2x UNTUK PILIH
-          </span>
-          
-          <button onclick="toggleFAB()" id="btn-fab-induk" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all duration-300">
-              <svg id="icon-fab" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
-          </button>
-      </div>
+      <!-- Tombol Induk -->
+      <button onclick="toggleFAB()" id="btn-fab-induk" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-xl active:scale-90 transition-all duration-300">
+          <svg id="icon-fab" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" /></svg>
+      </button>
   </div>
 
   <script>
