@@ -98,16 +98,18 @@ function loadDataBulanDipilih() {
     });
 }
 
-// 3. RENDER INPUT ROMAWI I - IV (FIX TAMPILAN BAGIAN I)
+// 3. RENDER INPUT ROMAWI I - IV (FIX TAMPILAN & UX ANGKA 0)
 function renderSemuaSection() {
     const dLalu = DATA_INIT_LAPBUL.data_kader_lalu || {};
     
+    // 💡 JURUS UX SULTAN: Hapus 0 saat diklik, kembali 0 jika dibiarkan kosong
+    const UX_ANGKA = `onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') this.value='0';"`;
+
     // ==========================================
-    // BAGIAN I: KEADAAN UMUM (DENGAN LABEL JELAS)
+    // BAGIAN I: KEADAAN UMUM
     // ==========================================
     const labelI = ["PPKBD", "SUB PPKBD", "Kelompok KB KS", "Kelompok BKB", "Kelompok BKR", "Kelompok BKL", "Kelompok UPPKA"];
     
-    // Bikin Header Kolom Dulu
     let htmlI = `
         <div class="col-span-2 grid grid-cols-2 gap-3 mb-1">
             <div class="text-[9px] font-bold text-center text-slate-500 uppercase bg-slate-100 p-1.5 rounded-lg border border-slate-200">JUMLAH YANG ADA</div>
@@ -120,8 +122,8 @@ function renderSemuaSection() {
         const valLap = dLalu[`i_lap_${i}`] || 0;
         htmlI += `
         <div class="col-span-2 text-[11px] font-black text-slate-700 uppercase mt-2 border-b border-slate-100 pb-1">${i+1}. ${lab}</div>
-        <input type="number" id="i-ada-${i}" value="${valAda}" class="p-2 border border-slate-300 bg-slate-50 rounded-lg text-center font-bold text-slate-600 shadow-inner" placeholder="Ada">
-        <input type="number" id="i-lap-${i}" value="${valLap}" class="p-2 border-2 border-blue-200 focus:border-blue-500 bg-white rounded-lg text-center font-black text-blue-900 shadow-sm" placeholder="Lapor">`;
+        <input type="number" id="i-ada-${i}" value="${valAda}" class="p-2 border border-slate-300 bg-slate-50 rounded-lg text-center font-bold text-slate-600 shadow-inner" placeholder="Ada" ${UX_ANGKA}>
+        <input type="number" id="i-lap-${i}" value="${valLap}" class="p-2 border-2 border-blue-200 focus:border-blue-500 bg-white rounded-lg text-center font-black text-blue-900 shadow-sm" placeholder="Lapor" ${UX_ANGKA}>`;
     });
     document.getElementById("sec-1").innerHTML = htmlI;
 
@@ -134,7 +136,7 @@ function renderSemuaSection() {
         htmlII += `
         <div class="flex justify-between items-center gap-4 bg-slate-50 p-2 rounded-lg">
             <span class="text-[10px] font-bold text-slate-600 uppercase">${lab}</span>
-            <input type="number" id="ii-${i}" value="${dLalu[`ii_${i}`] || 0}" class="w-16 p-2 border border-slate-300 rounded-lg text-center font-black text-blue-900">
+            <input type="number" id="ii-${i}" value="${dLalu[`ii_${i}`] || 0}" class="w-16 p-2 border border-slate-300 rounded-lg text-center font-black text-blue-900" ${UX_ANGKA}>
         </div>`;
     });
     document.getElementById("sec-2").innerHTML = htmlII;
@@ -153,7 +155,7 @@ function renderSemuaSection() {
             const key = `${t.toLowerCase()}_${i}`;
             htmlIII += `<div class="flex justify-between items-center bg-white p-2 rounded-lg border border-blue-50 shadow-sm">
                 <span class="text-[9px] font-bold text-slate-500 uppercase">${lab}</span>
-                <input type="number" id="iii-${key}" value="${dLalu[`iii_${key}`] || 0}" class="w-16 p-1 border border-blue-200 rounded text-center font-bold text-blue-900">
+                <input type="number" id="iii-${key}" value="${dLalu[`iii_${key}`] || 0}" class="w-16 p-1 border border-blue-200 rounded text-center font-bold text-blue-900" ${UX_ANGKA}>
             </div>`;
         });
         htmlIII += `</div></div>`;
@@ -169,7 +171,7 @@ function renderSemuaSection() {
         htmlIV += `
         <div class="flex justify-between items-center bg-orange-50 p-2 rounded-lg border border-orange-100 mb-2">
             <span class="text-[10px] font-bold text-orange-800 uppercase">${lab}</span>
-            <input type="number" id="iv-${i}" value="${dLalu[`iv_${i}`] || 0}" class="w-16 p-2 border border-orange-200 rounded-lg text-center font-black text-orange-900">
+            <input type="number" id="iv-${i}" value="${dLalu[`iv_${i}`] || 0}" class="w-16 p-2 border border-orange-200 rounded-lg text-center font-black text-orange-900" ${UX_ANGKA}>
         </div>`;
     });
     document.getElementById("sec-4").innerHTML = htmlIV;
