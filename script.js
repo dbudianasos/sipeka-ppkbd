@@ -1774,7 +1774,39 @@ function backupLogKeCSV() {
 }
 
 // ============================================================================
-// 10. PENGGERAK UTAMA (DOM CONTENT LOADED)
+// 10. FITUR TOMBOL MELAYANG (FAB) & MODAL UI
+// ============================================================================
+function toggleFAB() {
+    const menu = document.getElementById('menu-fab');
+    const icon = document.getElementById('icon-fab');
+    
+    if (menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+        setTimeout(() => {
+            menu.classList.remove('translate-y-4', 'opacity-0');
+            icon.style.transform = 'rotate(45deg)'; // Ikon (+) jadi (x)
+        }, 10);
+    } else {
+        menu.classList.add('translate-y-4', 'opacity-0');
+        icon.style.transform = 'rotate(0deg)'; 
+        setTimeout(() => { menu.classList.add('hidden'); }, 300);
+    }
+}
+
+function bukaTraktir() {
+    const modal = document.getElementById("modal-traktir");
+    if (modal) {
+        modal.classList.remove("hidden");
+        toggleFAB(); // Tutup menu melayang setelah modal buka
+    }
+}
+
+function tutupTraktir() {
+    const modal = document.getElementById("modal-traktir");
+    if (modal) modal.classList.add("hidden");
+}
+// ============================================================================
+// 11. PENGGERAK UTAMA (DOM CONTENT LOADED)
 // ============================================================================
 // Ini adalah "Mesin Starter" untuk memicu semua fungsi saat halaman selesai dimuat.
 // ⚠️ Saya sudah menggabungkan fungsi Drag Foto (yang nyelip di tengah) ke sini.
@@ -1826,3 +1858,5 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("touchend", stopAction);
   }
 });
+
+
