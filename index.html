@@ -65,6 +65,34 @@
   if (typeof tampilkanMotivasi === 'function') tampilkanMotivasi();
 </script>
 <script src="script.js"></script>
+
+<!-- LOADING ANIMASI KHAS SIPEKA -->
+    <div id="loader-login" class="hidden fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-md flex flex-col items-center justify-center text-white">
+        <div class="relative flex justify-center items-center">
+            <div class="absolute w-24 h-24 border-4 border-blue-300 rounded-full animate-ping"></div>
+            <div class="w-20 h-20 bg-blue-600 rounded-[1.5rem] flex items-center justify-center shadow-2xl animate-bounce border-4 border-white">
+                <span class="text-white font-black text-xs uppercase tracking-tighter">siPeKa</span>
+            </div>
+        </div>
+        <p class="mt-8 text-[10px] font-black uppercase tracking-[0.2em] animate-pulse text-blue-100">Memverifikasi Data...</p>
+    </div>
+
+    <!-- POPUP MAINTENANCE SULTAN -->
+    <div id="modal-maintenance" class="hidden fixed inset-0 z-[250] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-md">
+                <span class="text-4xl">🚧</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest mb-2">Sistem Sedang Sibuk</h3>
+            <p id="pesan-maintenance" class="text-xs font-bold text-slate-500 mb-6 leading-relaxed">
+                Aplikasi siPeKa sedang dalam proses perbaikan/peningkatan fitur. Mohon kembali beberapa saat lagi.
+            </p>
+            <button onclick="tutupMaintenance()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-black py-3 rounded-xl text-xs uppercase tracking-widest active:scale-95 transition">
+                Mengerti
+            </button>
+        </div>
+    </div>
+  
 <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
     &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
     Aplikasi Pelaporan Kinerja PPKBD
