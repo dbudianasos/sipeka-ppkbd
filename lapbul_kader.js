@@ -431,57 +431,11 @@ function siapkanCetakPDF() {
     document.getElementById("wadah-download-pdf").classList.remove("hidden");
 }
 
-// B. FUNGSI EKSEKUSI DOWNLOAD (VERSI ANTI-GEPENG & ANTI-LEMOT)
+// B. FUNGSI EKSEKUSI DOWNLOAD (MODE VISUM / NATIVE BROWSER)
 function eksekusiDownloadPDF() {
-    const btn = document.querySelector("#wadah-download-pdf button");
-    const teksAsli = btn.innerHTML;
-    
-    // Ganti tombol jadi loading
-    btn.innerHTML = `⏳ MENYIAPKAN KERTAS...`;
-    btn.disabled = true;
-
-    const bln = document.getElementById("lap-bulan").value;
-    const desa = localStorage.getItem("desa").toUpperCase();
-    const namaKaderFile = localStorage.getItem("nama").replace(/\s+/g, '_'); 
-    
-    const element = document.getElementById("area-kertas-preview");
-    
-    // [JURUS 1] Paksa ukuran elemen menjadi Kaku (Kertas F4 = 800px)
-    // Kita simpan gaya aslinya biar nanti bisa dibalikin
-    const styleAsli = element.getAttribute("style") || "";
-    element.style.width = "800px";
-    element.style.maxWidth = "800px";
-    element.style.margin = "0 auto";
-
-    // [JURUS 2] Kasih Jeda 0.5 detik (500 ms) agar browser selesai menggambar tabel
-    setTimeout(() => {
-        btn.innerHTML = `⏳ MEMPROSES PDF...`; // Update status
-
-        const opt = {
-            margin: [5, 5, 5, 5],
-            filename: `LAPBUL_${bln}_${desa}_${namaKaderFile}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
-                windowWidth: 800, // Kunci lebar kamera
-                width: 800        // Kunci lebar canvas foto
-            }, 
-            jsPDF: { unit: 'mm', format: 'legal', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(element).save().then(() => {
-            // Kembalikan tombol seperti semula
-            btn.innerHTML = teksAsli;
-            btn.disabled = false;
-            
-            // Kembalikan ukuran kertas preview agar menyesuaikan layar lagi
-            element.setAttribute("style", styleAsli);
-            
-            // Tutup preview otomatis
-            tutupPreview();
-        });
-    }, 500); // <-- Jeda waktu tunggu
+    // Karena kita sudah pakai CSS @media print, 
+    // kita cukup panggil perintah cetak bawaan HP/Browser.
+    window.print();
 }
 
 // C. FUNGSI TUTUP MODAL
