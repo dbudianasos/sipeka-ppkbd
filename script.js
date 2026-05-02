@@ -1,11 +1,10 @@
-
-const API_URL = "https://script.google.com/macros/s/AKfycbzXt4isvjY5KrSZi37IedLKHGzCwiL1dMoB4N6IeSyKyTJXruTpjMuhWdm3RvJyCGQqEA/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbzXt4isvjY5KrSZi37IedLKHGzCwiL1dMoB4N6IeSyKyTJXruTpjMuhWdm3RvJyCGQqEA/exec"; 
 
 // Variable Global
-let base64Foto = ""; 
+let base64Foto = ""; 
 let dataRiwayatGlobal = [];
-let dataRenjaGlobal = []; 
-let GLOBAL_WILAYAH = []; 
+let dataRenjaGlobal = []; 
+let GLOBAL_WILAYAH = []; 
 let DATA_USERS_ALL = []; // Untuk penampung filter user
 let myChartInstance = null;
 let currentScale = 1;
@@ -38,8 +37,10 @@ function login() {
 
     // 3. CEK SAKLAR MAINTENANCE DULU
     if (data.status === "maintenance") {
-      document.getElementById("pesan-maintenance").innerText = data.pesan;
-      document.getElementById("modal-maintenance").classList.remove("hidden");
+      const pesanEl = document.getElementById("pesan-maintenance");
+      const modalEl = document.getElementById("modal-maintenance");
+      if(pesanEl) pesanEl.innerText = data.pesan;
+      if(modalEl) modalEl.classList.remove("hidden");
       info.innerText = ""; // Bersihkan info
       return; // Hentikan proses masuk
     }
@@ -64,8 +65,14 @@ function login() {
   });
 }
 
-function cekLogin() {
-// ... (biarkan sisa kode di bawahnya utuh seperti aslinya) ...
+// FUNGSI UNTUK MENUTUP POPUP MAINTENANCE
+function tutupMaintenance() {
+  const modalMaint = document.getElementById("modal-maintenance");
+  if (modalMaint) modalMaint.classList.add("hidden");
+}
+
+// =====================================================================
+
 
 function cekLogin() {
   const nik = localStorage.getItem("nik");
