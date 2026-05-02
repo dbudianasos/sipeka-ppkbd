@@ -10,6 +10,30 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
       body { font-family: 'Poppins', sans-serif; }
+      /* --- TAMBAHKAN KODE INI KE DALAM <style> --- */
+      @media print {
+          body * { visibility: hidden; }
+          #modal-preview, #modal-preview * { visibility: visible; }
+          #modal-preview {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+              background: white;
+              padding: 0;
+          }
+          #area-kertas-preview {
+              width: 100%;
+              box-shadow: none !important;
+              padding: 0 !important;
+          }
+          /* Sembunyikan tombol silang dan tombol print saat mencetak */
+          #modal-header-print, #wadah-download-pdf { display: none !important; }
+          
+          /* Paksa Ukuran Kertas Mendekati F4/Legal */
+          @page { size: legal portrait; margin: 10mm; }
+      }
+      /* ------------------------------------------ */
       /* Gaya Khusus Area Print (Tersembunyi di layar, Muncul di PDF) */
       #area-print { display: none; background: white; color: black; font-family: 'Arial', sans-serif; }
       #area-print.cetak-aktif { display: block; position: fixed; top: 0; left: 0; z-index: -100; width: 210mm; padding: 10mm 15mm; }
@@ -185,12 +209,26 @@
   <div id="modal-preview" class="fixed inset-0 z-[150] hidden bg-slate-900/90 backdrop-blur-sm p-4 overflow-y-auto">
       <div class="max-w-4xl mx-auto">
           <div class="bg-white rounded-3xl shadow-2xl overflow-hidden mb-20 mt-4">
-              <!-- Header Modal -->
-              <div class="bg-slate-100 p-4 border-b flex justify-between items-center sticky top-0 z-10 shadow-sm">
-                  <h3 class="font-black text-slate-800 text-xs uppercase tracking-widest">Pratinjau Laporan</h3>
-                  <button onclick="tutupPreview()" class="text-slate-400 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
-                  </button>
+              <!-- Header Modal & Instruksi -->
+              <div id="modal-header-print" class="bg-slate-100 border-b sticky top-0 z-10 shadow-sm">
+                  <div class="p-4 flex justify-between items-center bg-white">
+                      <h3 class="font-black text-slate-800 text-xs uppercase tracking-widest">Pratinjau Cetak</h3>
+                      <button onclick="tutupPreview()" class="text-slate-400 hover:text-red-500 transition p-2 bg-slate-100 rounded-full shadow-inner">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                  </div>
+                  <!-- Papan Petunjuk Kader -->
+                  <div class="bg-blue-50 p-3 flex gap-3 text-[10px] items-start border-t border-blue-100">
+                      <span class="text-xl">💡</span>
+                      <div class="text-blue-900">
+                          <p class="font-black mb-1">CARA SIMPAN PDF:</p>
+                          <ul class="list-decimal pl-4 font-bold text-blue-700 space-y-1">
+                              <li>Klik tombol <b class="text-emerald-600">CETAK / SIMPAN</b> di bawah.</li>
+                              <li>Ubah tujuan printer menjadi <b>"Simpan sebagai PDF"</b>.</li>
+                              <li>Pilih ukuran kertas <b>Legal / F4</b>.</li>
+                          </ul>
+                      </div>
+                  </div>
               </div>
               
               <!-- Area Kertas (Preview PDF) -->
