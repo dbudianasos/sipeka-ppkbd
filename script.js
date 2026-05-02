@@ -1777,18 +1777,17 @@ function backupLogKeCSV() {
 // ============================================================================
 // 10. FITUR TOMBOL MELAYANG (FAB) & AUTO-CHAT WA
 // ============================================================================
-
-// Gunakan variabel lastFabClicked yang sudah dipindah ke Global (Paling Atas)
 function handleFabClick(type) {
     const label = document.getElementById("label-" + type);
     if (!label) return;
 
     if (lastFabClicked !== type) {
-        // Klik Pertama: Munculkan Keterangan
+        // Klik Pertama: Munculkan Label (Petunjuk Nama Menu)
         document.querySelectorAll('[id^="label-"]').forEach(el => el.classList.add('opacity-0'));
         label.classList.remove('opacity-0');
         lastFabClicked = type;
         
+        // Reset jika tidak ada aksi lanjut
         setTimeout(() => {
             if(lastFabClicked === type) {
                 label.classList.add('opacity-0');
@@ -1797,43 +1796,26 @@ function handleFabClick(type) {
         }, 3000);
     } 
     else {
-        // Klik Kedua: Jalankan Aksi
+        // Klik Kedua: Eksekusi Aksi Utama
         if (type === 'tentang') window.location.href = 'tentang.html';
         if (type === 'bantuan') kirimPesanWA();
-        if (type === 'kopi') {
-            console.log("Membuka Modal Kopi..."); // Cek di console jika gagal
-            bukaTraktir();
-        }
+        if (type === 'kopi') bukaTraktir(); // Panggil fungsi modal kopi
         
         label.classList.add('opacity-0');
         lastFabClicked = null;
     }
 }
 
-function bukaTraktir() {
-    const modal = document.getElementById("modal-traktir");
-    if (modal) {
-        modal.classList.remove("hidden");
-        // Reset menu FAB agar tidak menutupi modal
-        const menu = document.getElementById('menu-fab');
-        const icon = document.getElementById('icon-fab');
-        const instruksi = document.getElementById('label-instruksi');
-        
-        if (menu) menu.classList.add('translate-y-4', 'opacity-0');
-        if (icon) icon.style.transform = 'rotate(0deg)';
-        if (instruksi) instruksi.classList.add('hidden');
-        
-        setTimeout(() => { 
-            if (menu) menu.classList.add('hidden'); 
-        }, 300);
-    } else {
-        console.error("Elemen modal-traktir tidak ditemukan!");
-    }
-}
-
-function tutupTraktir() {
-    const modal = document.getElementById("modal-traktir");
-    if (modal) modal.classList.add("hidden");
+function kirimPesanWA() {
+    const nama = localStorage.getItem("nama") || "Kader siPeKa";
+    const desa = localStorage.getItem("desa") || "-";
+    const kec = localStorage.getItem("kecamatan") || "-";
+    
+    // Pesan Otomatis Chatbot
+    const pesan = `Halo Pak Dian, saya *${nama}* dari *Desa ${desa}, Kec. ${kec}*. %0A%0ASehubungan dengan penggunaan aplikasi *siPeKa*, ada yang ingin saya tanyakan mengenai: %0A...`;
+    
+    const urlWA = `https://wa.me/6282260188765?text=${pesan}`;
+    window.open(urlWA, '_blank');
 }
 
 function toggleFAB() {
@@ -1856,6 +1838,27 @@ function toggleFAB() {
         lastFabClicked = null;
         setTimeout(() => { menu.classList.add('hidden'); }, 300);
     }
+}
+
+function bukaTraktir() {
+    const modal = document.getElementById("modal-traktir");
+    if (modal) {
+        modal.classList.remove("hidden");
+        // Otomatis tutup menu FAB biar layar fokus ke modal
+        const menu = document.getElementById('menu-fab');
+        const icon = document.getElementById('icon-fab');
+        const instruksi = document.getElementById('label-instruksi');
+        
+        if (menu) menu.classList.add('translate-y-4', 'opacity-0');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+        if (instruksi) instruksi.classList.add('hidden');
+        setTimeout(() => { if (menu) menu.classList.add('hidden'); }, 300);
+    }
+}
+
+function tutupTraktir() {
+    const modal = document.getElementById("modal-traktir");
+    if (modal) modal.classList.add("hidden");
 }
 
 // ============================================================================
