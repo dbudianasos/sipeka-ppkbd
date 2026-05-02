@@ -36,7 +36,7 @@ function pantauMaintenance() {
   // --- UBAH JADI POST DI SINI ---
   fetch(API_URL, {
     method: "POST",
-    body: new URLSearchParams({ action: "toggle_maintenance" })
+    body: new URLSearchParams({ action: "check_status_sistem" })
   })
     .then(res => res.json())
     .then(data => {
@@ -172,7 +172,7 @@ function initDashboard() {
       // --- UBAH JADI POST DI SINI ---
       fetch(API_URL, {
         method: "POST",
-        body: new URLSearchParams({ action: "toggle_maintenance" })
+        body: new URLSearchParams({ action: "check_status_sistem" })
       })
         .then(res => res.json())
         .then(data => {
