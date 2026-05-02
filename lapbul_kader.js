@@ -264,86 +264,162 @@ function simpanDraftKader() {
 }
 
 // 6. GENERATE PDF (FORMAT F4)
-// A. FUNGSI UNTUK MEMBUKA PREVIEW
+// A. FUNGSI UNTUK MEMBUKA PREVIEW (LENGKAP ROMAWI I - V)
 function siapkanCetakPDF() {
     const bln = document.getElementById("lap-bulan").value;
     const thn = document.getElementById("lap-tahun").value;
     const ttd = DATA_INIT_LAPBUL.ttd_admin || {};
     const namaKader = localStorage.getItem("nama");
     const desa = localStorage.getItem("desa").toUpperCase();
+    const kec = localStorage.getItem("kecamatan").toUpperCase();
     
-    // Helper ambil value input
+    // Helper untuk narik nilai dari form
     const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : 0;
 
     const area = document.getElementById("area-kertas-preview");
     
-    // Bangun Struktur Tabel Persis Format Resmi
+    // Helper pembuat baris tabel Bagian III biar rapi
+    const renderBina = (tipe) => {
+        const key = tipe.toLowerCase();
+        return `
+            <tr>
+                <td style="border:1px solid black; padding:4px; text-align:left;">Kelompok ${tipe}</td>
+                <td style="border:1px solid black; padding:4px;">${getVal(`iii-${key}_0`)}</td>
+                <td style="border:1px solid black; padding:4px;">${getVal(`iii-${key}_1`)}</td>
+                <td style="border:1px solid black; padding:4px;">${getVal(`iii-${key}_2`)}</td>
+                <td style="border:1px solid black; padding:4px;">${getVal(`iii-${key}_3`)}</td>
+                <td style="border:1px solid black; padding:4px;">${getVal(`iii-${key}_4`)}</td>
+            </tr>
+        `;
+    };
+
+    // BANGUN STRUKTUR KERTAS F4 (LENGKAP I s/d V)
     area.innerHTML = `
-        <div style="font-family: Arial; line-height: 1.4; color: black;">
+        <div style="font-family: Arial, sans-serif; color: black; background: white; padding: 10px;">
             <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 10px; margin-bottom: 15px;">
-                <h2 style="margin: 0; font-size: 16px; font-weight: bold;">LAPORAN PENGELOLAAN PROGRAM KB</h2>
-                <h2 style="margin: 0; font-size: 16px; font-weight: bold;">PEMBANTU PEMBINA KELUARGA BERENCANA DESA (PPKBD)</h2>
+                <h2 style="margin: 0; font-size: 14px; font-weight: bold;">LAPORAN PENGELOLAAN PROGRAM KB</h2>
+                <h2 style="margin: 0; font-size: 14px; font-weight: bold;">PEMBANTU PEMBINA KELUARGA BERENCANA DESA (PPKBD)</h2>
             </div>
 
-            <table style="width: 100%; font-size: 12px; margin-bottom: 15px; font-weight: bold;">
-                <tr><td width="15%">NAMA</td><td width="45%">: ${namaKader}</td><td width="15%">BULAN</td><td>: ${bln} ${thn}</td></tr>
+            <table style="width: 100%; font-size: 11px; margin-bottom: 10px; font-weight: bold;">
+                <tr><td width="15%">NAMA</td><td width="45%">: ${namaKader}</td><td width="15%">BULAN</td><td>: ${bln}</td></tr>
                 <tr><td>DESA</td><td>: ${desa}</td><td>TAHUN</td><td>: ${thn}</td></tr>
-                <tr><td>KECAMATAN</td><td>: ${localStorage.getItem("kecamatan").toUpperCase()}</td></tr>
+                <tr><td>KECAMATAN</td><td>: ${kec}</td></tr>
             </table>
 
-            <p style="font-size: 12px; font-weight: bold; margin-bottom: 5px;">I. KEADAAN UMUM</p>
-            <table class="tabel-print" style="width:100%; border-collapse:collapse; font-size:11px; text-align:center;">
+            <!-- I. KEADAAN UMUM -->
+            <p style="font-size: 11px; font-weight: bold; margin: 10px 0 5px 0;">I. KEADAAN UMUM</p>
+            <table style="width:100%; border-collapse:collapse; font-size:10px; text-align:center;">
                 <tr style="background:#eee;">
-                    <th style="border:1px solid black; padding:5px;">NO</th>
-                    <th style="border:1px solid black; padding:5px;">URAIAN</th>
-                    <th style="border:1px solid black; padding:5px;">YANG ADA</th>
-                    <th style="border:1px solid black; padding:5px;">YANG DILAPORKAN</th>
+                    <th style="border:1px solid black; padding:4px;">NO</th>
+                    <th style="border:1px solid black; padding:4px;">URAIAN</th>
+                    <th style="border:1px solid black; padding:4px;">YANG ADA</th>
+                    <th style="border:1px solid black; padding:4px;">YANG DILAPORKAN</th>
                 </tr>
                 ${["PPKBD", "SUB PPKBD", "Kelompok KB KS", "Kelompok BKB", "Kelompok BKR", "Kelompok BKL", "Kelompok UPPKA"].map((lab, i) => `
                     <tr>
-                        <td style="border:1px solid black; padding:5px;">${i+1}</td>
-                        <td style="border:1px solid black; padding:5px; text-align:left;">${lab}</td>
-                        <td style="border:1px solid black; padding:5px;">${getVal(`i-ada-${i}`)}</td>
-                        <td style="border:1px solid black; padding:5px;">${getVal(`i-lap-${i}`)}</td>
+                        <td style="border:1px solid black; padding:4px;">${i+1}</td>
+                        <td style="border:1px solid black; padding:4px; text-align:left;">${lab}</td>
+                        <td style="border:1px solid black; padding:4px;">${getVal(`i-ada-${i}`)}</td>
+                        <td style="border:1px solid black; padding:4px;">${getVal(`i-lap-${i}`)}</td>
                     </tr>
                 `).join('')}
             </table>
 
-            <p style="font-size: 12px; font-weight: bold; margin: 15px 0 5px 0;">V. PEMBINAAN PUS DAN KESERTAAN BER KB</p>
-            <div style="font-size: 11px; margin-bottom: 5px;">
+            <!-- II. KEGIATAN OPERASIONAL -->
+            <p style="font-size: 11px; font-weight: bold; margin: 10px 0 5px 0;">II. KEGIATAN OPERASIONAL</p>
+            <table style="width:100%; border-collapse:collapse; font-size:10px; text-align:center;">
+                <tr style="background:#eee;">
+                    <th style="border:1px solid black; padding:4px; width: 5%;">NO</th>
+                    <th style="border:1px solid black; padding:4px; width: 75%; text-align:left;">KEGIATAN</th>
+                    <th style="border:1px solid black; padding:4px; width: 20%;">JUMLAH</th>
+                </tr>
+                <tr>
+                    <td style="border:1px solid black; padding:4px;">1</td>
+                    <td style="border:1px solid black; padding:4px; text-align:left;">Jumlah frekuensi rapat koordinasi tingkat Desa/Kelurahan</td>
+                    <td style="border:1px solid black; padding:4px;">${getVal('ii-0')}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid black; padding:4px;">2</td>
+                    <td style="border:1px solid black; padding:4px; text-align:left;">Jumlah frekuensi KIE/Penyuluhan</td>
+                    <td style="border:1px solid black; padding:4px;">${getVal('ii-1')}</td>
+                </tr>
+                <tr>
+                    <td style="border:1px solid black; padding:4px;">3</td>
+                    <td style="border:1px solid black; padding:4px; text-align:left;">Jumlah Tokoh masyarakat/agama yang aktif melakukan KIE KB</td>
+                    <td style="border:1px solid black; padding:4px;">${getVal('ii-2')}</td>
+                </tr>
+            </table>
+
+            <!-- III. KETAHANAN KELUARGA -->
+            <p style="font-size: 11px; font-weight: bold; margin: 10px 0 5px 0;">III. KETAHANAN KELUARGA</p>
+            <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center;">
+                <tr style="background:#eee;">
+                    <th style="border:1px solid black; padding:4px;">KELOMPOK</th>
+                    <th style="border:1px solid black; padding:4px;">SASARAN</th>
+                    <th style="border:1px solid black; padding:4px;">ANGGOTA KELOMPOK</th>
+                    <th style="border:1px solid black; padding:4px;">ANGGOTA PUS</th>
+                    <th style="border:1px solid black; padding:4px;">ANGGOTA PUS BER-KB</th>
+                    <th style="border:1px solid black; padding:4px;">FREKUENSI PERTEMUAN</th>
+                </tr>
+                ${renderBina('BKB')}
+                ${renderBina('BKR')}
+                ${renderBina('BKL')}
+            </table>
+
+            <!-- IV. KESEJAHTERAAN KELUARGA (UPPKA) -->
+            <p style="font-size: 11px; font-weight: bold; margin: 10px 0 5px 0;">IV. KESEJAHTERAAN KELUARGA (UPPKA)</p>
+            <table style="width:100%; border-collapse:collapse; font-size:10px; text-align:center;">
+                <tr style="background:#eee;">
+                    <th style="border:1px solid black; padding:4px;">ANGGOTA UPPKA</th>
+                    <th style="border:1px solid black; padding:4px;">ANGGOTA UPPKA PUS</th>
+                    <th style="border:1px solid black; padding:4px;">ANGGOTA PUS BER-KB</th>
+                    <th style="border:1px solid black; padding:4px;">FREKUENSI PERTEMUAN</th>
+                </tr>
+                <tr>
+                    <td style="border:1px solid black; padding:4px;">${getVal('iv-0')}</td>
+                    <td style="border:1px solid black; padding:4px;">${getVal('iv-1')}</td>
+                    <td style="border:1px solid black; padding:4px;">${getVal('iv-2')}</td>
+                    <td style="border:1px solid black; padding:4px;">${getVal('iv-3')}</td>
+                </tr>
+            </table>
+
+            <!-- V. PUS DAN KESERTAAN KB -->
+            <p style="font-size: 11px; font-weight: bold; margin: 10px 0 5px 0;">V. PEMBINAAN PUS DAN KESERTAAN BER KB</p>
+            <div style="font-size: 10px; margin-bottom: 5px;">
                 1. Jumlah pasangan usia subur (PUS) : <b>${document.getElementById("v-pus").innerText}</b><br>
                 2. PPM/Target peserta KB Baru : <b>${document.getElementById("v-ppm").innerText}</b>
             </div>
-            <table class="tabel-print" style="width:100%; border-collapse:collapse; font-size:10px; text-align:center;">
+            <table style="width:100%; border-collapse:collapse; font-size:9px; text-align:center;">
                 <tr style="background:#eee;">
-                    <th style="border:1px solid black;">NO</th>
-                    <th style="border:1px solid black;">METODE</th>
-                    <th style="border:1px solid black;">TARGET</th>
-                    <th style="border:1px solid black;">BLN INI</th>
-                    <th style="border:1px solid black;">S/D INI</th>
-                    <th style="border:1px solid black;">SISA</th>
+                    <th style="border:1px solid black; padding:4px;">NO</th>
+                    <th style="border:1px solid black; padding:4px;">METODE</th>
+                    <th style="border:1px solid black; padding:4px;">TARGET</th>
+                    <th style="border:1px solid black; padding:4px;">BLN INI</th>
+                    <th style="border:1px solid black; padding:4px;">S/D INI</th>
+                    <th style="border:1px solid black; padding:4px;">SISA</th>
                 </tr>
                 ${Array.from(document.querySelectorAll("#v-tabel-alkon > div")).map((div, i) => {
                     const spans = div.querySelectorAll("span.text-xs");
                     return `<tr>
                         <td style="border:1px solid black; padding:4px;">${i+1}</td>
                         <td style="border:1px solid black; padding:4px; text-align:left;">${div.querySelector("span.text-left").innerText}</td>
-                        <td style="border:1px solid black;">${spans[0].innerText}</td>
-                        <td style="border:1px solid black;">${spans[1].innerText}</td>
-                        <td style="border:1px solid black;">${spans[2].innerText}</td>
-                        <td style="border:1px solid black;">${spans[3].innerText}</td>
+                        <td style="border:1px solid black; padding:4px;">${spans[0].innerText}</td>
+                        <td style="border:1px solid black; padding:4px;">${spans[1].innerText}</td>
+                        <td style="border:1px solid black; padding:4px;">${spans[2].innerText}</td>
+                        <td style="border:1px solid black; padding:4px;">${spans[3].innerText}</td>
                     </tr>`;
                 }).join('')}
             </table>
 
-            <table style="width: 100%; font-size: 12px; margin-top: 30px; text-align: center;">
+            <table style="width: 100%; font-size: 11px; margin-top: 20px; text-align: center;">
                 <tr>
                     <td width="50%">
                         Mengetahui,<br>${ttd.jabatan || 'Kepala UPTD'}<br><br><br><br>
                         <b><u>${ttd.nama || '...................'}</u></b><br>NIP. ${ttd.nip || '...................'}
                     </td>
                     <td>
-                        Bekasi, ${new Date().toLocaleDateString('id-ID')}<br>PPKBD ${desa}<br><br><br><br>
+                        Bekasi, ..................................<br>PPKBD ${desa}<br><br><br><br>
                         <b><u>${namaKader}</u></b>
                     </td>
                 </tr>
@@ -351,31 +427,47 @@ function siapkanCetakPDF() {
         </div>
     `;
 
-    // Munculkan Modal & Tombol Download
     document.getElementById("modal-preview").classList.remove("hidden");
     document.getElementById("wadah-download-pdf").classList.remove("hidden");
 }
 
-// B. FUNGSI DOWNLOAD (DARI AREA PREVIEW)
+// B. FUNGSI EKSEKUSI DOWNLOAD (DARI DALAM PREVIEW)
 function eksekusiDownloadPDF() {
+    const btn = document.querySelector("#wadah-download-pdf button");
+    const teksAsli = btn.innerHTML;
+    
+    // Ganti tombol jadi loading biar kader tahu sistem lagi kerja
+    btn.innerHTML = `⏳ MEMPROSES PDF...`;
+    btn.disabled = true;
+
     const bln = document.getElementById("lap-bulan").value;
     const desa = localStorage.getItem("desa").toUpperCase();
+    
+    // Bersihkan nama kader dari spasi untuk nama file (Misal: "Dian Budiana" -> "Dian_Budiana")
+    const namaKaderFile = localStorage.getItem("nama").replace(/\s+/g, '_'); 
+    
     const element = document.getElementById("area-kertas-preview");
     
     const opt = {
-        margin: [10, 10, 10, 10],
-        filename: `LAPBUL_${bln}_${desa}.pdf`,
+        margin: [5, 5, 5, 5],
+        filename: `LAPBUL_${bln}_${desa}_${namaKaderFile}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        // windowWidth: 800 ini JURUS SAKTI biar PDF gak gepeng/hancur saat diakses via HP
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 800 }, 
         jsPDF: { unit: 'mm', format: 'legal', orientation: 'portrait' }
     };
 
     html2pdf().set(opt).from(element).save().then(() => {
-        alert("✅ Laporan Berhasil Diunduh!");
+        // Balikin tombol seperti semula
+        btn.innerHTML = teksAsli;
+        btn.disabled = false;
+        
+        // Tutup preview otomatis (ini sekaligus jadi tanda file berhasil didownload)
         tutupPreview();
     });
 }
 
+// C. FUNGSI TUTUP MODAL
 function tutupPreview() {
     document.getElementById("modal-preview").classList.add("hidden");
     document.getElementById("wadah-download-pdf").classList.add("hidden");
