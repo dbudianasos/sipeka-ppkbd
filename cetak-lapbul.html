@@ -11,12 +11,12 @@
   <style>
       body { font-family: 'Poppins', sans-serif; }
       
-      /* --- KODE CSS MODE CETAK (ANTI BAYANGAN & ANTI 2 LEMBAR) --- */
+      /* --- CSS MODE CETAK NATIVE (ANTI 2 LEMBAR) --- */
       @media print {
-          /* Matikan margin bawaan browser agar URL dan Tanggal bawaan hilang */
-          @page { size: auto; margin: 0mm; } 
+          /* Margin otomatis menyesuaikan printer, ukuran diset auto agar tidak maksa 2 halaman */
+          @page { size: auto; margin: 5mm; } 
           
-          body { margin: 0; padding: 0; background: white; }
+          body { margin: 0; background: white; }
           body * { visibility: hidden; }
           
           #modal-preview, #modal-preview * { visibility: visible; }
@@ -25,26 +25,27 @@
               left: 0;
               top: 0;
               width: 100%;
+              height: auto !important; /* PENTING: Jangan dipaksa panjang */
               background: white;
               padding: 0;
+              overflow: visible !important;
           }
 
-          /* Hapus bayangan (shadow) dan lengkungan (rounded) bawaan web */
+          /* Hapus bayangan (shadow) bawaan web */
           #modal-preview > div > div {
               box-shadow: none !important;
               border-radius: 0 !important;
               margin: 0 !important;
           }
 
-          /* Jadikan padding elemen ini sebagai margin kertas asli */
+          /* Hilangkan padding web saat dicetak agar kertas maksimal */
           #area-kertas-preview {
               width: 100%;
-              padding: 10mm 15mm !important; 
+              padding: 0 !important; 
               box-shadow: none !important;
-              min-height: auto !important;
           }
 
-          /* Sembunyikan header modal & tombol print saat mencetak */
+          /* Sembunyikan tombol & petunjuk saat dicetak */
           #modal-header-print, #wadah-download-pdf { display: none !important; }
       }
   </style>
