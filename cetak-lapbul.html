@@ -11,10 +11,17 @@
   <style>
       body { font-family: 'Poppins', sans-serif; }
       
-      /* --- CSS MODE CETAK NATIVE (ANTI 2 LEMBAR) --- */
+      /* --- CSS MODE CETAK NATIVE (PAKSA F4/LEGAL & ANTI 2 LEMBAR) --- */
       @media print {
-          /* Margin otomatis menyesuaikan printer, ukuran diset auto agar tidak maksa 2 halaman */
-          @page { size: auto; margin: 5mm; } 
+          /* 
+             JURUS KUNCI KERTAS:
+             - size: 215.9mm 330.2mm adalah ukuran presisi kertas F4 (Folio) 
+             - margin: 5mm untuk memberi ruang aman agar tidak kepotong 
+          */
+          @page { 
+              size: 215.9mm 330.2mm portrait; 
+              margin: 5mm; 
+          } 
           
           body { margin: 0; background: white; }
           body * { visibility: hidden; }
@@ -25,7 +32,7 @@
               left: 0;
               top: 0;
               width: 100%;
-              height: auto !important; /* PENTING: Jangan dipaksa panjang */
+              height: auto !important;
               background: white;
               padding: 0;
               overflow: visible !important;
@@ -38,7 +45,7 @@
               margin: 0 !important;
           }
 
-          /* Hilangkan padding web saat dicetak agar kertas maksimal */
+          /* Hilangkan padding web saat dicetak agar area kertas maksimal */
           #area-kertas-preview {
               width: 100%;
               padding: 0 !important; 
