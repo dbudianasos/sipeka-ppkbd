@@ -10,9 +10,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
       body { font-family: 'Poppins', sans-serif; }
-      /* --- TAMBAHKAN KODE INI KE DALAM <style> --- */
+      
+      /* --- KODE CSS MODE CETAK (ANTI BAYANGAN & ANTI 2 LEMBAR) --- */
       @media print {
+          /* Matikan margin bawaan browser agar URL dan Tanggal bawaan hilang */
+          @page { size: auto; margin: 0mm; } 
+          
+          body { margin: 0; padding: 0; background: white; }
           body * { visibility: hidden; }
+          
           #modal-preview, #modal-preview * { visibility: visible; }
           #modal-preview {
               position: absolute;
@@ -22,24 +28,25 @@
               background: white;
               padding: 0;
           }
+
+          /* Hapus bayangan (shadow) dan lengkungan (rounded) bawaan web */
+          #modal-preview > div > div {
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              margin: 0 !important;
+          }
+
+          /* Jadikan padding elemen ini sebagai margin kertas asli */
           #area-kertas-preview {
               width: 100%;
+              padding: 10mm 15mm !important; 
               box-shadow: none !important;
-              padding: 0 !important;
+              min-height: auto !important;
           }
-          /* Sembunyikan tombol silang dan tombol print saat mencetak */
+
+          /* Sembunyikan header modal & tombol print saat mencetak */
           #modal-header-print, #wadah-download-pdf { display: none !important; }
-          
-          /* Paksa Ukuran Kertas Mendekati F4/Legal */
-          @page { size: legal portrait; margin: 10mm; }
       }
-      /* ------------------------------------------ */
-      /* Gaya Khusus Area Print (Tersembunyi di layar, Muncul di PDF) */
-      #area-print { display: none; background: white; color: black; font-family: 'Arial', sans-serif; }
-      #area-print.cetak-aktif { display: block; position: fixed; top: 0; left: 0; z-index: -100; width: 210mm; padding: 10mm 15mm; }
-      .tabel-print { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 15px; }
-      .tabel-print th, .tabel-print td { border: 1px solid black; padding: 4px; text-align: center; }
-      .tabel-print td.text-left { text-align: left; }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-24">
