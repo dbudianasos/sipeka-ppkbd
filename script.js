@@ -39,7 +39,10 @@ function pantauMaintenance() {
   if (isLoginPage) return; 
 
   // 4. Jika kader sedang di dalam Dashboard, baru tembak Tembok Raksasa
-  fetch(`${API_URL}?action=check_maintenance`)
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({ action: "check_maintenance" })
+  })
     .then(res => res.json())
     .then(data => {
       // JIKA REMOT DI-ON-KAN DARI GOOGLE SHEETS
@@ -172,8 +175,11 @@ function initDashboard() {
     if (panelSultan) {
       panelSultan.classList.remove("hidden"); // Munculkan panel
       
-      // Tarik status asli dari Google Sheets saat dashboard baru dibuka
-      fetch(`${API_URL}?action=check_maintenance`)
+      // --- UBAH JADI POST DI SINI ---
+      fetch(API_URL, {
+        method: "POST",
+        body: new URLSearchParams({ action: "check_maintenance" })
+      })
         .then(res => res.json())
         .then(data => {
             const toggle = document.getElementById("toggle-maintenance");
