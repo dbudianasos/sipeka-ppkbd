@@ -14,30 +14,58 @@ let startX, startY;
 let translateX = 0;
 let translateY = 0;
 
-// ================= 1. LOGIN & SATPAM DIGITAL (FIXED) =================
+// ================= 1. LOGIN & SATPAM DIGITAL (FIXED + MAINTENANCE) =================
 function login() {
-  const nik = document.getElementById("nik").value;
-  const password = document.getElementById("password").value;
-  const info = document.getElementById("info");
-  if (!nik || !password) { info.innerText = "NIK & Password wajib diisi!"; return; }
-  info.innerText = "⏳ Memverifikasi...";
-  fetch(API_URL, {
-    method: "POST",
-    body: new URLSearchParams({ action: "login", nik: nik, password: password })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.status === "success") {
-      localStorage.setItem("nik", data.nik);
-      localStorage.setItem("nama", data.nama);
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("kecamatan", data.kecamatan);
-      localStorage.setItem("desa", data.desa);
-      localStorage.setItem("foto", data.foto || "");
-      window.location.href = data.role.includes("admin") ? "dashboard-admin.html" : "dashboard-kader.html";
-    } else { info.innerText = "NIK atau Password Salah!"; }
-  });
+  const nik = document.getElementById("nik").value;
+  const password = document.getElementById("password").value;
+  const info = document.getElementById("info");
+
+  if (!nik || !password) { info.innerText = "NIK & Password wajib diisi!"; return; }
+
+  // 1. Munculkan Animasi Loading Khas siPeKa
+  const loader = document.getElementById("loader-login");
+  if (loader) loader.classList.remove("hidden");
+  info.innerText = "⏳ Memverifikasi...";
+
+  fetch(API_URL, {
+    method: "POST",
+    body: new URLSearchParams({ action: "login", nik: nik, password: password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    // 2. Matikan Animasi Loading
+    if (loader) loader.classList.add("hidden");
+
+    // 3. CEK SAKLAR MAINTENANCE DULU
+    if (data.status === "maintenance") {
+      document.getElementById("pesan-maintenance").innerText = data.pesan;
+      document.getElementById("modal-maintenance").classList.remove("hidden");
+      info.innerText = ""; // Bersihkan info
+      return; // Hentikan proses masuk
+    }
+
+    // 4. JIKA NORMAL & SUKSES LOGIN
+    if (data.status === "success") {
+      localStorage.setItem("nik", data.nik);
+      localStorage.setItem("nama", data.nama);
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("kecamatan", data.kecamatan);
+      localStorage.setItem("desa", data.desa);
+      localStorage.setItem("foto", data.foto || "");
+      window.location.href = data.role.includes("admin") ? "dashboard-admin.html" : "dashboard-kader.html";
+    } else { 
+      info.innerText = "NIK atau Password Salah!"; 
+    }
+  })
+  .catch(err => {
+    if (loader) loader.classList.add("hidden");
+    info.innerText = "❌ Gagal koneksi ke server.";
+    console.error(err);
+  });
 }
+
+function cekLogin() {
+// ... (biarkan sisa kode di bawahnya utuh seperti aslinya) ...
 
 function cekLogin() {
   const nik = localStorage.getItem("nik");
