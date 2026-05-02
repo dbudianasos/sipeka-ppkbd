@@ -177,33 +177,30 @@ function renderSemuaSection() {
     document.getElementById("sec-4").innerHTML = htmlIV;
 }
 
-// --- 4. RENDER BAGIAN V (SINKRON DENGAN get_data_cetak_v) ---
+// --- 4. RENDER BAGIAN V (SINKRON DENGAN KUMULATIF MURNI) ---
 function renderBagianV() {
-    // Ambil pembagi dari data awal yang ditarik saat halaman buka
     const pembagi = DATA_INIT_LAPBUL.target_pembagi || 1;
     document.getElementById("label-pembagi").innerText = pembagi;
     document.getElementById("label-pembagi2").innerText = pembagi;
 
-    // DATA_V_SERVER sekarang isinya adalah { capaian: {...}, referensi: {...} }
-    const cap = DATA_V_SERVER.capaian || {};
+    // Ambil data yang sudah dipisah dari server
+    const capBln = DATA_V_SERVER.capaian_bulan || {};
+    const capSd = DATA_V_SERVER.capaian_sd || {};
     const ref = DATA_V_SERVER.referensi || {};
     const ppm = ref.ppm || {};
 
-    // 1. Hitung PUS & Total Target yang sudah dibagi jumlah PPKBD
     const totalPUS = Math.round((parseInt(ref.pus) || 0) / pembagi);
     
     let totalPPM = 0;
     let listAlkon = [];
     const alkonKeys = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
 
-    // 2. Olah data tiap Alkon
     alkonKeys.forEach(k => {
         const targetKader = Math.round((parseInt(ppm[k]) || 0) / pembagi);
-        const baruBlnIni = Math.round((parseInt(cap[k]) || 0) / pembagi);
+        const baruBlnIni = Math.round((parseInt(capBln[k]) || 0) / pembagi);
         
-        // Sementara S/D ini kita samakan dengan bulan ini 
-        // (Nanti bisa dikembangkan untuk tarik kumulatif murni)
-        const baruSDIni = baruBlnIni; 
+        // JURUS PAMUNGKAS: Kumulatif Murni!
+        const baruSDIni = Math.round((parseInt(capSd[k]) || 0) / pembagi); 
 
         listAlkon.push({
             nama: k.toUpperCase(),
@@ -391,8 +388,8 @@ function siapkanCetakPDF() {
                     <th style="border:1px solid black; padding:2px;">NO</th>
                     <th style="border:1px solid black; padding:2px;">METODE</th>
                     <th style="border:1px solid black; padding:2px;">TARGET</th>
-                    <th style="border:1px solid black; padding:2px;">BLN INI</th>
-                    <th style="border:1px solid black; padding:2px;">S/D INI</th>
+                    <th style="border:1px solid black; padding:2px;">BULAN INI</th>
+                    <th style="border:1px solid black; padding:2px;">S/D BULAN INI</th>
                     <th style="border:1px solid black; padding:2px;">SISA</th>
                 </tr>
                 ${Array.from(document.querySelectorAll("#v-tabel-alkon > div")).map((div, i) => {
