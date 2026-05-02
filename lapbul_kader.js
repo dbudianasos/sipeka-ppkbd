@@ -261,7 +261,7 @@ function simpanDraftKader() {
 }
 
 // 6. GENERATE PDF (FORMAT F4)
-// A. FUNGSI UNTUK MEMBUKA PREVIEW (FORMAT RESMI 100% ORI)
+// A. FUNGSI UNTUK MEMBUKA PREVIEW (FORMAT RESMI 100% ORI + PRESS 1 LEMBAR)
 function siapkanCetakPDF() {
     const bln = document.getElementById("lap-bulan").value;
     const thn = document.getElementById("lap-tahun").value;
@@ -273,7 +273,6 @@ function siapkanCetakPDF() {
     const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value : 0;
     const area = document.getElementById("area-kertas-preview");
 
-    // Persiapan Hitung Baris Total (JUMLAH) di Bagian V
     let sumTarget = 0, sumBln = 0, sumSd = 0, sumSisa = 0;
     let barisAlkonHTML = "";
     
@@ -282,7 +281,6 @@ function siapkanCetakPDF() {
         const spans = div.querySelectorAll("span.text-xs");
         const namaAlkon = div.querySelector("span.text-left").innerText;
         
-        // Custom nama alkon agar sama persis dengan blangko
         let namaAsli = namaAlkon;
         if(namaAlkon === "KDM") namaAsli = "KONDOM";
         if(namaAlkon === "IMP") namaAsli = "IMPLANT";
@@ -297,17 +295,16 @@ function siapkanCetakPDF() {
 
         barisAlkonHTML += `
             <tr>
-                <td style="border:1px solid black; padding:3px;">${i+1}</td>
-                <td style="border:1px solid black; padding:3px; text-align:left;">${namaAsli}</td>
-                <td style="border:1px solid black; padding:3px;">${tgt}</td>
-                <td style="border:1px solid black; padding:3px;">${blnIni}</td>
-                <td style="border:1px solid black; padding:3px;">${sdIni}</td>
-                <td style="border:1px solid black; padding:3px;">${sisa}</td>
+                <td style="border:1px solid black; padding:2px;">${i+1}</td>
+                <td style="border:1px solid black; padding:2px; text-align:left;">${namaAsli}</td>
+                <td style="border:1px solid black; padding:2px;">${tgt}</td>
+                <td style="border:1px solid black; padding:2px;">${blnIni}</td>
+                <td style="border:1px solid black; padding:2px;">${sdIni}</td>
+                <td style="border:1px solid black; padding:2px;">${sisa}</td>
             </tr>
         `;
     });
 
-    // DAFTAR PERTANYAAN BAGIAN III (Telah di-Transpose)
     const labelIII = [
         "Jumlah keluarga yang menjadi sasaran kelompok kegiatan",
         "Jumlah keluarga yang menjadi anggota kelompok kegiatan",
@@ -316,7 +313,6 @@ function siapkanCetakPDF() {
         "Jumlah pertemuan/penyuluhan kelompok kegiatan"
     ];
 
-    // DAFTAR PERTANYAAN BAGIAN IV
     const labelIV = [
         "Jumlah keluarga yang menjadi anggota kelompok UPPKA",
         "Jumlah Kelompok UPPKA yang masih PUS",
@@ -324,18 +320,18 @@ function siapkanCetakPDF() {
         "Jumlah pertemuan kelompok UPPKA"
     ];
 
-    // MULAILAH MERAKIT KERTAS ORI
+    // MULAILAH MERAKIT KERTAS ORI (Spasi Dipress)
     area.innerHTML = `
         <div style="font-family: Arial, sans-serif; color: black; background: white; font-size: 10px;">
             
-            <!-- HEADER -->
-            <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 10px;">
-                <h2 style="margin: 0; font-size: 14px; font-weight: bold;">LAPORAN PENGELOLAAN PROGRAM KB</h2>
-                <h2 style="margin: 0; font-size: 14px; font-weight: bold;">PEMBANTU PEMBINA KELUARGA BERENCANA DESA (PPKBD)</h2>
+            <!-- HEADER (Spasi Diperkecil) -->
+            <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 2px; margin-bottom: 5px;">
+                <h2 style="margin: 0; font-size: 13px; font-weight: bold;">LAPORAN PENGELOLAAN PROGRAM KB</h2>
+                <h2 style="margin: 0; font-size: 13px; font-weight: bold;">PEMBANTU PEMBINA KELUARGA BERENCANA DESA (PPKBD)</h2>
             </div>
 
             <!-- IDENTITAS -->
-            <table style="width: 100%; font-size: 10px; margin-bottom: 10px;">
+            <table style="width: 100%; font-size: 10px; margin-bottom: 4px;">
                 <tr><td width="15%">NAMA</td><td width="40%">: ${namaKader}</td><td width="45%" rowspan="4" style="text-align:right; vertical-align:bottom;">BULAN:&nbsp;&nbsp;&nbsp;${bln} ${thn}</td></tr>
                 <tr><td>DESA BINAAN</td><td>: ${desa}</td></tr>
                 <tr><td>KECAMATAN</td><td>: ${kec}</td></tr>
@@ -343,115 +339,114 @@ function siapkanCetakPDF() {
             </table>
 
             <!-- I. KEADAAN UMUM -->
-            <p style="margin: 5px 0 2px 0;">I. &nbsp;&nbsp; KEADAAN UMUM</p>
+            <p style="margin: 3px 0 1px 0; font-weight: bold;">I. &nbsp;&nbsp; KEADAAN UMUM</p>
             <table style="width:100%; border-collapse:collapse; text-align:center;">
                 <tr>
-                    <td style="border:1px solid black; padding:3px; width: 5%;">NO</td>
-                    <td style="border:1px solid black; padding:3px; text-align:center;">URAIAN</td>
-                    <td style="border:1px solid black; padding:3px; width: 20%;">JUMLAH YANG ADA</td>
-                    <td style="border:1px solid black; padding:3px; width: 20%;">JUMLAH YANG DILAPORKAN</td>
+                    <td style="border:1px solid black; padding:2px; width: 5%;">NO</td>
+                    <td style="border:1px solid black; padding:2px; text-align:center;">URAIAN</td>
+                    <td style="border:1px solid black; padding:2px; width: 20%;">JUMLAH YANG ADA</td>
+                    <td style="border:1px solid black; padding:2px; width: 20%;">JUMLAH YANG DILAPORKAN</td>
                 </tr>
                 ${["PPKBD", "SUB PPKBD", "Kelompok KB KS", "Kelompok BKB", "Kelompok BKR", "Kelompok BKL", "Kelompok UPPKA"].map((lab, i) => `
                     <tr>
-                        <td style="border:1px solid black; padding:3px;">${i+1}</td>
-                        <td style="border:1px solid black; padding:3px; text-align:left;">${lab}</td>
-                        <td style="border:1px solid black; padding:3px;">${getVal(`i-ada-${i}`)}</td>
-                        <td style="border:1px solid black; padding:3px;">${getVal(`i-lap-${i}`)}</td>
+                        <td style="border:1px solid black; padding:2px;">${i+1}</td>
+                        <td style="border:1px solid black; padding:2px; text-align:left;">${lab}</td>
+                        <td style="border:1px solid black; padding:2px;">${getVal(`i-ada-${i}`)}</td>
+                        <td style="border:1px solid black; padding:2px;">${getVal(`i-lap-${i}`)}</td>
                     </tr>
                 `).join('')}
             </table>
 
             <!-- II. KEGIATAN OPERASIONAL -->
-            <p style="margin: 10px 0 2px 0;">II. &nbsp; KEGIATAN OPERASIONAL</p>
+            <p style="margin: 4px 0 1px 0; font-weight: bold;">II. &nbsp; KEGIATAN OPERASIONAL</p>
             <table style="width:100%; border-collapse:collapse; text-align:center;">
                 <tr>
-                    <td style="border:1px solid black; padding:3px; width: 5%;">NO</td>
-                    <td style="border:1px solid black; padding:3px; text-align:center;">KEGIATAN</td>
-                    <td style="border:1px solid black; padding:3px; width: 20%;">JUMLAH</td>
+                    <td style="border:1px solid black; padding:2px; width: 5%;">NO</td>
+                    <td style="border:1px solid black; padding:2px; text-align:center;">KEGIATAN</td>
+                    <td style="border:1px solid black; padding:2px; width: 20%;">JUMLAH</td>
                 </tr>
-                <tr><td style="border:1px solid black; padding:3px;">1</td><td style="border:1px solid black; padding:3px; text-align:left;">Jumlah frekuensi rapat koordinasi tingkat Desa/Kelurahan</td><td style="border:1px solid black; padding:3px;">${getVal('ii-0')}</td></tr>
-                <tr><td style="border:1px solid black; padding:3px;">2</td><td style="border:1px solid black; padding:3px; text-align:left;">Jumlah frekuensi KIE/Penyuluhan</td><td style="border:1px solid black; padding:3px;">${getVal('ii-1')}</td></tr>
-                <tr><td style="border:1px solid black; padding:3px;">3</td><td style="border:1px solid black; padding:3px; text-align:left;">Jumlah Tokoh masyarakat/agama yang aktif melakukan KIE KB</td><td style="border:1px solid black; padding:3px;">${getVal('ii-2')}</td></tr>
+                <tr><td style="border:1px solid black; padding:2px;">1</td><td style="border:1px solid black; padding:2px; text-align:left;">Jumlah frekuensi rapat koordinasi tingkat Desa/Kelurahan</td><td style="border:1px solid black; padding:2px;">${getVal('ii-0')}</td></tr>
+                <tr><td style="border:1px solid black; padding:2px;">2</td><td style="border:1px solid black; padding:2px; text-align:left;">Jumlah frekuensi KIE/Penyuluhan</td><td style="border:1px solid black; padding:2px;">${getVal('ii-1')}</td></tr>
+                <tr><td style="border:1px solid black; padding:2px;">3</td><td style="border:1px solid black; padding:2px; text-align:left;">Jumlah Tokoh masyarakat/agama yang aktif melakukan KIE KB</td><td style="border:1px solid black; padding:2px;">${getVal('ii-2')}</td></tr>
             </table>
 
-            <!-- III. PEMBINAAN KETAHANAN KELUARGA (VERSI TRANSPOSE ORI) -->
-            <p style="margin: 10px 0 2px 0;">III. PEMBINAAN KETAHANAN KELUARGA</p>
+            <!-- III. PEMBINAAN KETAHANAN KELUARGA -->
+            <p style="margin: 4px 0 1px 0; font-weight: bold;">III. PEMBINAAN KETAHANAN KELUARGA</p>
             <table style="width:100%; border-collapse:collapse; text-align:center;">
                 <tr>
-                    <td style="border:1px solid black; padding:3px; width: 5%;">NO</td>
-                    <td style="border:1px solid black; padding:3px; text-align:center;">URAIAN</td>
-                    <td style="border:1px solid black; padding:3px; width: 10%;">BKB</td>
-                    <td style="border:1px solid black; padding:3px; width: 10%;">BKR</td>
-                    <td style="border:1px solid black; padding:3px; width: 10%;">BKL</td>
+                    <td style="border:1px solid black; padding:2px; width: 5%;">NO</td>
+                    <td style="border:1px solid black; padding:2px; text-align:center;">URAIAN</td>
+                    <td style="border:1px solid black; padding:2px; width: 10%;">BKB</td>
+                    <td style="border:1px solid black; padding:2px; width: 10%;">BKR</td>
+                    <td style="border:1px solid black; padding:2px; width: 10%;">BKL</td>
                 </tr>
                 ${labelIII.map((lab, i) => `
                     <tr>
-                        <td style="border:1px solid black; padding:3px;">${i+1}</td>
-                        <td style="border:1px solid black; padding:3px; text-align:left;">${lab}</td>
-                        <td style="border:1px solid black; padding:3px;">${getVal(`iii-bkb_${i}`)}</td>
-                        <td style="border:1px solid black; padding:3px;">${getVal(`iii-bkr_${i}`)}</td>
-                        <td style="border:1px solid black; padding:3px;">${getVal(`iii-bkl_${i}`)}</td>
+                        <td style="border:1px solid black; padding:2px;">${i+1}</td>
+                        <td style="border:1px solid black; padding:2px; text-align:left;">${lab}</td>
+                        <td style="border:1px solid black; padding:2px;">${getVal(`iii-bkb_${i}`)}</td>
+                        <td style="border:1px solid black; padding:2px;">${getVal(`iii-bkr_${i}`)}</td>
+                        <td style="border:1px solid black; padding:2px;">${getVal(`iii-bkl_${i}`)}</td>
                     </tr>
                 `).join('')}
             </table>
 
             <!-- IV. PEMBINAAN KESEJAHTERAAN KELUARGA -->
-            <p style="margin: 10px 0 2px 0;">IV. PEMBINAAN KESEJAHTERAAN KELUARGA</p>
+            <p style="margin: 4px 0 1px 0; font-weight: bold;">IV. PEMBINAAN KESEJAHTERAAN KELUARGA</p>
             <table style="width:100%; border-collapse:collapse; text-align:center;">
                 <tr>
-                    <td style="border:1px solid black; padding:3px; width: 5%;">NO</td>
-                    <td style="border:1px solid black; padding:3px; text-align:center;">URAIAN</td>
-                    <td style="border:1px solid black; padding:3px; width: 20%;">JUMLAH</td>
+                    <td style="border:1px solid black; padding:2px; width: 5%;">NO</td>
+                    <td style="border:1px solid black; padding:2px; text-align:center;">URAIAN</td>
+                    <td style="border:1px solid black; padding:2px; width: 20%;">JUMLAH</td>
                 </tr>
                 ${labelIV.map((lab, i) => `
                     <tr>
-                        <td style="border:1px solid black; padding:3px;">${i+1}</td>
-                        <td style="border:1px solid black; padding:3px; text-align:left;">${lab}</td>
-                        <td style="border:1px solid black; padding:3px;">${getVal(`iv-${i}`)}</td>
+                        <td style="border:1px solid black; padding:2px;">${i+1}</td>
+                        <td style="border:1px solid black; padding:2px; text-align:left;">${lab}</td>
+                        <td style="border:1px solid black; padding:2px;">${getVal(`iv-${i}`)}</td>
                     </tr>
                 `).join('')}
             </table>
 
             <!-- V. PEMBINAAN PUS DAN KESERTAAN BER KB -->
-            <p style="margin: 10px 0 2px 0;">V. &nbsp; PEMBINAAN PUS DAN KESERTAAN BER KB</p>
-            <table style="width:100%; border:none; margin-bottom: 5px;">
+            <p style="margin: 4px 0 1px 0; font-weight: bold;">V. &nbsp; PEMBINAAN PUS DAN KESERTAAN BER KB</p>
+            <table style="width:100%; border:none; margin-bottom: 2px;">
                 <tr><td width="3%">1.</td><td width="35%">Jumlah pasangan usia subur (PUS)</td><td>: ${document.getElementById("v-pus").innerText}</td></tr>
                 <tr><td>2.</td><td>PPM/Target peserta KB Baru</td><td>: ${document.getElementById("v-ppm").innerText}</td></tr>
             </table>
 
             <table style="width:100%; border-collapse:collapse; text-align:center;">
                 <tr>
-                    <td style="border:1px solid black; padding:3px;">NO</td>
-                    <td style="border:1px solid black; padding:3px;">JENIS KONTRASEPSI</td>
-                    <td style="border:1px solid black; padding:3px;">TARGET AKSEPTOR BARU</td>
-                    <td style="border:1px solid black; padding:3px;">PESERTA KB BARU BULAN INI</td>
-                    <td style="border:1px solid black; padding:3px;">PESERTA KB BARU S/D BULAN INI</td>
-                    <td style="border:1px solid black; padding:3px;">SISA TARGET</td>
+                    <td style="border:1px solid black; padding:2px;">NO</td>
+                    <td style="border:1px solid black; padding:2px;">JENIS KONTRASEPSI</td>
+                    <td style="border:1px solid black; padding:2px;">TARGET AKSEPTOR BARU</td>
+                    <td style="border:1px solid black; padding:2px;">PESERTA KB BARU BULAN INI</td>
+                    <td style="border:1px solid black; padding:2px;">PESERTA KB BARU S/D BULAN INI</td>
+                    <td style="border:1px solid black; padding:2px;">SISA TARGET</td>
                 </tr>
                 ${barisAlkonHTML}
-                <!-- BARIS JUMLAH -->
                 <tr>
-                    <td colspan="2" style="border:1px solid black; padding:3px; font-weight:bold;">JUMLAH</td>
-                    <td style="border:1px solid black; padding:3px;">${sumTarget}</td>
-                    <td style="border:1px solid black; padding:3px;">${sumBln}</td>
-                    <td style="border:1px solid black; padding:3px;">${sumSd}</td>
-                    <td style="border:1px solid black; padding:3px;">${sumSisa}</td>
+                    <td colspan="2" style="border:1px solid black; padding:2px; font-weight:bold;">JUMLAH</td>
+                    <td style="border:1px solid black; padding:2px;">${sumTarget}</td>
+                    <td style="border:1px solid black; padding:2px;">${sumBln}</td>
+                    <td style="border:1px solid black; padding:2px;">${sumSd}</td>
+                    <td style="border:1px solid black; padding:2px;">${sumSisa}</td>
                 </tr>
             </table>
 
-            <!-- TANDA TANGAN -->
-            <table style="width: 100%; margin-top: 15px; text-align: left;">
+            <!-- TANDA TANGAN (page-break-inside avoid agar tidak loncat sembarangan) -->
+            <table style="width: 100%; margin-top: 5px; text-align: left; page-break-inside: avoid;">
                 <tr>
                     <td width="60%" style="vertical-align: top;">
                         Mengetahui<br>
                         ${ttd.jabatan || 'Kepala UPTD PP Wilayah V'}<br>
-                        ${ttd.wilayah || 'Kecamatan Cikarang Barat - Setu'}<br><br><br><br>
+                        ${ttd.wilayah || 'Kecamatan Cikarang Barat - Setu'}<br><br><br>
                         <b><u>${ttd.nama || '................................'}</u></b><br>
                         <b>NIP. ${ttd.nip || '................................'}</b>
                     </td>
                     <td style="vertical-align: top;">
                         Bekasi,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${bln} ${thn}<br>
-                        PPKBD ${desa}<br><br><br><br><br>
+                        PPKBD ${desa}<br><br><br>
                         <b><u>${namaKader}</u></b>
                     </td>
                 </tr>
