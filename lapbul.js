@@ -1335,68 +1335,113 @@ function prosesSimpanAB(statusFinal) {
 
 
 //=================================================================================
-// G. LOGIKA REGISTER CU
+// G. LOGIKA REGISTER CU (Peserta KB Aktif)
 //=================================================================================
-// Fungsi Tarik Data dari Master/Register
+
+// 1. Fungsi Tarik Data dari Master/Register
 function tarikDataCU() {
   var desa = document.getElementById("cu_desa").value;
   var bulan = document.getElementById("cu_bulan").value;
 
   if (!desa || !bulan) {
-    Swal.fire("Peringatan", "Pilih Desa dan Bulan terlebih dahulu!", "warning");
+    Swal.fire("Peringatan", "Silakan pilih Desa dan Bulan terlebih dahulu!", "warning");
     return;
   }
 
-  Swal.fire({ title: 'Menarik Data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+  Swal.fire({
+    title: 'Menarik Data...',
+    text: 'Menyinkronkan data dengan server siPeKa...',
+    allowOutsideClick: false,
+    didOpen: () => { Swal.showLoading() }
+  });
 
-  // Ubah scriptURL dengan variabel URL Web App GAS Bapak
-  fetch(scriptURL + "?action=get_cu&desa=" + desa + "&bulan=" + bulan)
+  // PENTING: scriptURL mengambil dari script.js Bapak
+  fetch(scriptURL + "?action=get_cu&desa=" + encodeURIComponent(desa) + "&bulan=" + encodeURIComponent(bulan))
     .then(response => response.json())
     .then(res => {
       Swal.close();
       if (res.status === "success") {
         var d = res.data;
-        // Tampilkan Form
+        
+        // Tampilkan Form dengan animasi ringan
         document.getElementById("form_cu").style.display = "block";
+        document.getElementById("form_cu").scrollIntoView({ behavior: "smooth" });
         
-        // Isi Form dengan data dari GAS (Indeks disesuaikan dengan kolom A-W di Sheets)
-        document.getElementById("cu_no").value = d[0];
-        document.getElementById("cu_tahun").value = d[1];
-        document.getElementById("cu_kecamatan").value = d[2];
-        document.getElementById("cu_pus").value = d[4];
+        // --- MAPPING DATA KE FORM (Sesuai Urutan Kolom A s.d W) ---
+        // Identitas & PUS
+        document.getElementById("cu_no").value = d[0] || "";
+        document.getElementById("cu_tahun").value = d[1] || new Date().getFullYear();
+        document.getElementById("cu_kecamatan").value = d[2] || "SETU";
+        document.getElementById("cu_pus").value = d[4] || 0;
         
-        document.getElementById("cu_iud_p").value = d[5];
-        document.getElementById("cu_iud_s").value = d[6];
-        document.getElementById("cu_imp_p").value = d[13];
-        document.getElementById("cu_imp_s").value = d[14];
-        document.getElementById("cu_pil_p").value = d[17];
-        document.getElementById("cu_pil_s").value = d[18];
+        // IUD (P & S)
+        document.getElementById("cu_iud_p").value = d[5] || 0;
+        document.getElementById("cu_iud_s").value = d[6] || 0;
         
-        document.getElementById("cu_hamil").value = d[19];
-        document.getElementById("cu_ias").value = d[20];
-        document.getElementById("cu_iat").value = d[21];
-        document.getElementById("cu_tial").value = d[22];
+        // MOW (P & S)
+        document.getElementById("cu_mow_p").value = d[7] || 0;
+        document.getElementById("cu_mow_s").value = d[8] || 0;
         
-        Swal.fire("Berhasil", "Data Baseline berhasil ditarik. Silakan sesuaikan angka jika ada perubahan di lapangan.", "success");
+        // MOP (P & S)
+        document.getElementById("cu_mop_p").value = d[9] || 0;
+        document.getElementById("cu_mop_s").value = d[10] || 0;
+        
+        // KDM / KONDOM (P & S)
+        document.getElementById("cu_kdm_p").value = d[11] || 0;
+        document.getElementById("cu_kdm_s").value = d[12] || 0;
+        
+        // IMPLAN (P & S)
+        document.getElementById("cu_imp_p").value = d[13] || 0;
+        document.getElementById("cu_imp_s").value = d[14] || 0;
+        
+        // SUNTIK (P & S)
+        document.getElementById("cu_stk_p").value = d[15] || 0;
+        document.getElementById("cu_stk_s").value = d[16] || 0;
+        
+        // PIL (P & S)
+        document.getElementById("cu_pil_p").value = d[17] || 0;
+        document.getElementById("cu_pil_s").value = d[18] || 0;
+        
+        // BUKAN PESERTA KB
+        document.getElementById("cu_hamil").value = d[19] || 0;
+        document.getElementById("cu_ias").value = d[20] || 0;
+        document.getElementById("cu_iat").value = d[21] || 0;
+        document.getElementById("cu_tial").value = d[22] || 0;
+        
+        // Notifikasi Sukses Tarik
+        Swal.fire({
+          icon: 'success',
+          title: 'Data Ditemukan',
+          text: 'Data Baseline berhasil ditarik. Silakan sesuaikan angka jika ada perubahan riil di lapangan sebelum menyimpan.',
+          confirmButtonColor: '#e67e22'
+        });
       } else {
         Swal.fire("Error", res.message, "error");
       }
     })
     .catch(error => {
       Swal.close();
-      Swal.fire("Gagal", "Koneksi ke server bermasalah.", "error");
+      console.error(error);
+      Swal.fire("Gagal", "Koneksi ke server bermasalah. Pastikan internet Anda stabil.", "error");
     });
 }
 
-// Fungsi Simpan Data Baru/Update ke Register_CU
+// 2. Fungsi Simpan Data Baru/Update ke Register_CU
 function simpanDataCU() {
-  Swal.fire({ title: 'Menyimpan Data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+  Swal.fire({
+    title: 'Menyimpan Data...',
+    text: 'Merekam ke database siPeKa...',
+    allowOutsideClick: false,
+    didOpen: () => { Swal.showLoading() }
+  });
 
-  // Ambil Admin yang sedang login (Sesuaikan dengan variabel session aplikasi Bapak)
+  // Ambil NIK atau Nama Admin yang sedang login (Fallback jika belum login)
   var adminLogin = localStorage.getItem("namaUser") || "Admin Kecamatan"; 
 
   var formData = new FormData();
   formData.append("action", "save_cu");
+  
+  // Data Dasar
   formData.append("desa", document.getElementById("cu_desa").value);
   formData.append("bulan", document.getElementById("cu_bulan").value);
   formData.append("no", document.getElementById("cu_no").value);
@@ -1404,21 +1449,35 @@ function simpanDataCU() {
   formData.append("kecamatan", document.getElementById("cu_kecamatan").value);
   formData.append("pus", document.getElementById("cu_pus").value);
   
-  // Masukkan data Alkon
+  // Data Alkon
   formData.append("iud_p", document.getElementById("cu_iud_p").value);
   formData.append("iud_s", document.getElementById("cu_iud_s").value);
+  
+  formData.append("mow_p", document.getElementById("cu_mow_p").value);
+  formData.append("mow_s", document.getElementById("cu_mow_s").value);
+  
+  formData.append("mop_p", document.getElementById("cu_mop_p").value);
+  formData.append("mop_s", document.getElementById("cu_mop_s").value);
+  
+  formData.append("kdm_p", document.getElementById("cu_kdm_p").value);
+  formData.append("kdm_s", document.getElementById("cu_kdm_s").value);
+  
   formData.append("imp_p", document.getElementById("cu_imp_p").value);
   formData.append("imp_s", document.getElementById("cu_imp_s").value);
+  
+  formData.append("stk_p", document.getElementById("cu_stk_p").value);
+  formData.append("stk_s", document.getElementById("cu_stk_s").value);
+  
   formData.append("pil_p", document.getElementById("cu_pil_p").value);
   formData.append("pil_s", document.getElementById("cu_pil_s").value);
-  // Pastikan menambahkan formData untuk MOW, MOP, KDM, STK jika sudah ditambahkan di HTML
   
-  // Masukkan data Non-KB
+  // Data Bukan KB
   formData.append("hamil", document.getElementById("cu_hamil").value);
   formData.append("ias", document.getElementById("cu_ias").value);
   formData.append("iat", document.getElementById("cu_iat").value);
   formData.append("tial", document.getElementById("cu_tial").value);
   
+  // Meta Tracking
   formData.append("admin_input", adminLogin);
 
   fetch(scriptURL, { method: "POST", body: formData })
@@ -1426,14 +1485,22 @@ function simpanDataCU() {
     .then(res => {
       Swal.close();
       if (res.status === "success") {
-        Swal.fire("Tersimpan!", "Data CU berhasil direkam ke dalam Register CU.", "success");
-        // Opsional: document.getElementById("form_cu").reset(); // Kosongkan form setelah sukses
+        Swal.fire({
+          icon: 'success',
+          title: 'Tersimpan!',
+          text: 'Data Register CU berhasil direkam ke database.',
+          confirmButtonColor: '#16a34a' // Warna hijau
+        }).then(() => {
+          // Opsional: Sembunyikan form kembali setelah simpan sukses
+          // document.getElementById("form_cu").style.display = "none";
+        });
       } else {
         Swal.fire("Gagal", res.message, "error");
       }
     })
     .catch(error => {
       Swal.close();
-      Swal.fire("Error", "Gagal mengirim data.", "error");
+      console.error(error);
+      Swal.fire("Error", "Gagal mengirim data. Silakan periksa koneksi Anda.", "error");
     });
 }
