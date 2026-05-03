@@ -1,5 +1,5 @@
 // --- VARIABEL GLOBAL ---
-const API_URL = "URL_WEB_APP_GAS_BAPAK_DI_SINI"; // Ganti ini saat implementasi
+const API_URL = "https://script.google.com/macros/s/AKfycbzXt4isvjY5KrSZi37IedLKHGzCwiL1dMoB4N6IeSyKyTJXruTpjMuhWdm3RvJyCGQqEA/exec"; // Ganti ini saat implementasi
 const ALKON_CU = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
 const NON_KB = ["hamil", "ias", "iat", "tial"];
 
@@ -7,7 +7,7 @@ let IS_CU_EDITABLE = false;
 let DAFTAR_DESA_CU = [];
 
 // DAFTAR NIK VIP YANG BISA BYPASS GEMBOK CU
-const VIP_NIKS = ["3216180000000001", "3216190000000002"]; // <-- Masukkan NIK Bapak di sini
+const VIP_NIKS = ["3207160604930002", "3216190000000002"]; // <-- Masukkan NIK Bapak di sini
 
 document.addEventListener("DOMContentLoaded", () => {
     initFilterDinamic();
