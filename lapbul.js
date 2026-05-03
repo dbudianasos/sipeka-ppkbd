@@ -1332,3 +1332,108 @@ function prosesSimpanAB(statusFinal) {
         alert("Terjadi kesalahan jaringan saat mencoba menyimpan.");
     });
 }
+
+
+//=================================================================================
+// G. LOGIKA REGISTER CU
+//=================================================================================
+// Fungsi Tarik Data dari Master/Register
+function tarikDataCU() {
+  var desa = document.getElementById("cu_desa").value;
+  var bulan = document.getElementById("cu_bulan").value;
+
+  if (!desa || !bulan) {
+    Swal.fire("Peringatan", "Pilih Desa dan Bulan terlebih dahulu!", "warning");
+    return;
+  }
+
+  Swal.fire({ title: 'Menarik Data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+
+  // Ubah scriptURL dengan variabel URL Web App GAS Bapak
+  fetch(scriptURL + "?action=get_cu&desa=" + desa + "&bulan=" + bulan)
+    .then(response => response.json())
+    .then(res => {
+      Swal.close();
+      if (res.status === "success") {
+        var d = res.data;
+        // Tampilkan Form
+        document.getElementById("form_cu").style.display = "block";
+        
+        // Isi Form dengan data dari GAS (Indeks disesuaikan dengan kolom A-W di Sheets)
+        document.getElementById("cu_no").value = d[0];
+        document.getElementById("cu_tahun").value = d[1];
+        document.getElementById("cu_kecamatan").value = d[2];
+        document.getElementById("cu_pus").value = d[4];
+        
+        document.getElementById("cu_iud_p").value = d[5];
+        document.getElementById("cu_iud_s").value = d[6];
+        document.getElementById("cu_imp_p").value = d[13];
+        document.getElementById("cu_imp_s").value = d[14];
+        document.getElementById("cu_pil_p").value = d[17];
+        document.getElementById("cu_pil_s").value = d[18];
+        
+        document.getElementById("cu_hamil").value = d[19];
+        document.getElementById("cu_ias").value = d[20];
+        document.getElementById("cu_iat").value = d[21];
+        document.getElementById("cu_tial").value = d[22];
+        
+        Swal.fire("Berhasil", "Data Baseline berhasil ditarik. Silakan sesuaikan angka jika ada perubahan di lapangan.", "success");
+      } else {
+        Swal.fire("Error", res.message, "error");
+      }
+    })
+    .catch(error => {
+      Swal.close();
+      Swal.fire("Gagal", "Koneksi ke server bermasalah.", "error");
+    });
+}
+
+// Fungsi Simpan Data Baru/Update ke Register_CU
+function simpanDataCU() {
+  Swal.fire({ title: 'Menyimpan Data...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+
+  // Ambil Admin yang sedang login (Sesuaikan dengan variabel session aplikasi Bapak)
+  var adminLogin = localStorage.getItem("namaUser") || "Admin Kecamatan"; 
+
+  var formData = new FormData();
+  formData.append("action", "save_cu");
+  formData.append("desa", document.getElementById("cu_desa").value);
+  formData.append("bulan", document.getElementById("cu_bulan").value);
+  formData.append("no", document.getElementById("cu_no").value);
+  formData.append("tahun", document.getElementById("cu_tahun").value);
+  formData.append("kecamatan", document.getElementById("cu_kecamatan").value);
+  formData.append("pus", document.getElementById("cu_pus").value);
+  
+  // Masukkan data Alkon
+  formData.append("iud_p", document.getElementById("cu_iud_p").value);
+  formData.append("iud_s", document.getElementById("cu_iud_s").value);
+  formData.append("imp_p", document.getElementById("cu_imp_p").value);
+  formData.append("imp_s", document.getElementById("cu_imp_s").value);
+  formData.append("pil_p", document.getElementById("cu_pil_p").value);
+  formData.append("pil_s", document.getElementById("cu_pil_s").value);
+  // Pastikan menambahkan formData untuk MOW, MOP, KDM, STK jika sudah ditambahkan di HTML
+  
+  // Masukkan data Non-KB
+  formData.append("hamil", document.getElementById("cu_hamil").value);
+  formData.append("ias", document.getElementById("cu_ias").value);
+  formData.append("iat", document.getElementById("cu_iat").value);
+  formData.append("tial", document.getElementById("cu_tial").value);
+  
+  formData.append("admin_input", adminLogin);
+
+  fetch(scriptURL, { method: "POST", body: formData })
+    .then(response => response.json())
+    .then(res => {
+      Swal.close();
+      if (res.status === "success") {
+        Swal.fire("Tersimpan!", "Data CU berhasil direkam ke dalam Register CU.", "success");
+        // Opsional: document.getElementById("form_cu").reset(); // Kosongkan form setelah sukses
+      } else {
+        Swal.fire("Gagal", res.message, "error");
+      }
+    })
+    .catch(error => {
+      Swal.close();
+      Swal.fire("Error", "Gagal mengirim data.", "error");
+    });
+}
