@@ -1,191 +1,276 @@
-// --- VARIABEL GLOBAL ---
-const API_URL = "https://script.google.com/macros/s/AKfycbzXt4isvjY5KrSZi37IedLKHGzCwiL1dMoB4N6IeSyKyTJXruTpjMuhWdm3RvJyCGQqEA/exec"; // Ganti ini saat implementasi
+// ============================================================
+// 📁 CU-GRID.JS - MODUL SIPEKA SMART GRID CU
+// ============================================================
+
 const ALKON_CU = ["iud", "mow", "mop", "kdm", "imp", "stk", "pil"];
 const NON_KB = ["hamil", "ias", "iat", "tial"];
-
+let DATA_CU_TEMP = []; 
 let IS_CU_EDITABLE = false;
-let DAFTAR_DESA_CU = [];
+let ADA_PERUBAHAN = false;
 
-// DAFTAR NIK VIP YANG BISA BYPASS GEMBOK CU
-const VIP_NIKS = ["3207160604930002", "3216190000000002"]; // <-- Masukkan NIK Bapak di sini
+// 🔑 BYPASS VIP (Ganti/Tambah NIK Bapak dan Pimpinan di sini)
+const VIP_NIKS = ["3207160604930002", "3216190000000002"]; 
 
 document.addEventListener("DOMContentLoaded", () => {
-    initFilterDinamic();
+    if (typeof cekLogin === "function") cekLogin();
+    initFilterDinamicCU();
 });
 
-// 1. SETUP TAHUN DAN KECAMATAN DINAMIS
-function initFilterDinamic() {
+// --- 1. INISIASI FILTER DINAMIS ---
+function initFilterDinamicCU() {
     const selThn = document.getElementById("cu-tahun");
-    const selKec = document.getElementById("cu-kecamatan");
     const selBln = document.getElementById("cu-bulan");
+    const selKec = document.getElementById("cu-kecamatan");
     
-    // Set Tahun Otomatis
     const thnSkg = new Date().getFullYear();
     let optThn = "";
-    for(let y = thnSkg - 1; y <= thnSkg + 2; y++) { 
-        optThn += `<option value="${y}" ${y === thnSkg ? 'selected' : ''}>${y}</option>`; 
-    }
+    for(let y = thnSkg - 1; y <= thnSkg + 2; y++) { optThn += `<option value="${y}" ${y === thnSkg ? 'selected' : ''}>${y}</option>`; }
     selThn.innerHTML = optThn;
-    
-    // Set Bulan Otomatis
-    const daftarBulan = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
-    selBln.value = daftarBulan[new Date().getMonth()];
+    selBln.value = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"][new Date().getMonth()];
 
-    // Tarik Kecamatan Dinamis dari GAS
-    fetch(`${API_URL}?action=get_semua_kecamatan`)
+    fetch(`${scriptURL}?action=get_semua_kecamatan`) // Pastikan scriptURL diambil dari script.js
     .then(res => res.json())
     .then(listKec => {
         let opsiKec = `<option value="">-- PILIH KECAMATAN --</option>`;
         listKec.forEach(k => { opsiKec += `<option value="${k}">${k}</option>`; });
         selKec.innerHTML = opsiKec;
-        
-        cekOtorisasiKecamatan(); // Cek siapa yang login
-    })
-    .catch(err => {
-        selKec.innerHTML = `<option value="">-- GAGAL MEMUAT --</option>`;
-        console.error(err);
-    });
+        selKec.disabled = false;
+        cekOtorisasiCU(); 
+    }).catch(err => { selKec.innerHTML = `<option value="">❌ GAGAL MEMUAT</option>`; });
 }
 
-// 2. CEK HAK AKSES & JALUR VIP
-function cekOtorisasiKecamatan() {
+function cekOtorisasiCU() {
     const role = (localStorage.getItem("role") || "").toLowerCase().trim();
     const kecUser = (localStorage.getItem("kecamatan") || "").toUpperCase();
     const nikUser = localStorage.getItem("nik") || "";
     const selKec = document.getElementById("cu-kecamatan");
 
-    // Jika Admin Lokal, Kunci Dropdown ke Kecamatannya saja
     if (role.includes("admin_kec") || role.includes("admin_desa")) {
         selKec.value = kecUser;
         selKec.disabled = true;
         selKec.classList.add("bg-slate-200", "cursor-not-allowed");
     }
 
-    // CEK JALUR VIP ATAU SUPER ADMIN
     if (role === "super_admin" || VIP_NIKS.includes(nikUser)) {
         IS_CU_EDITABLE = true;
-        renderTombolAksi(true); // Gembok Terbuka
+        renderTombolAksi(true);
     } else {
         IS_CU_EDITABLE = false;
-        renderTombolAksi(false); // Gembok Tertutup
+        renderTombolAksi(false);
     }
 }
 
-function renderTombolAksi(isTerbuka) {
+function renderTombolAksi(isOpen) {
     const wadah = document.getElementById("wadah-tombol-vip");
-    if (isTerbuka) {
-        wadah.innerHTML = `<button onclick="simpanBulkCU()" class="bg-emerald-500 hover:bg-emerald-400 text-white text-[10px] font-black px-6 py-2.5 rounded-xl transition active:scale-95 uppercase tracking-widest shadow-lg flex items-center gap-2"><span>💾</span> Simpan Final</button>`;
+    if (isOpen) {
+        wadah.innerHTML = `<button onclick="simpanBulkCU()" class="bg-emerald-500 hover:bg-emerald-400 text-white text-[10px] font-black px-5 py-2.5 rounded-xl transition active:scale-95 uppercase tracking-widest shadow-lg flex items-center gap-2"><span>💾</span> Simpan Laporan</button>`;
+        document.getElementById("btn-do-pintar").classList.remove("hidden");
     } else {
-        wadah.innerHTML = `<button onclick="mintaPinCU()" class="bg-orange-500 hover:bg-orange-400 text-white text-[10px] font-black px-6 py-2.5 rounded-xl transition active:scale-95 uppercase tracking-widest shadow-lg flex items-center gap-2"><span>🔒</span> Buka Gembok</button>`;
+        wadah.innerHTML = `<button onclick="mintaPinCU()" class="bg-orange-500 hover:bg-orange-400 text-white text-[10px] font-black px-5 py-2.5 rounded-xl transition active:scale-95 uppercase tracking-widest shadow-lg flex items-center gap-2"><span>🔒</span> Buka Gembok</button>`;
+        document.getElementById("btn-do-pintar").classList.add("hidden");
     }
 }
 
 function mintaPinCU() {
-    // Fungsi simulasi Minta PIN. Bisa pakai getKodeRahasia Bapak nanti.
-    let pin = prompt("Masukkan PIN Harian untuk membuka edit data:");
-    if (pin === "1234") { // Ganti logika PIN sesuai kebutuhan
+    let pin = prompt("Data Terkunci. Masukkan PIN Harian Otorisasi:");
+    // LOGIKA PIN (Silakan sesuaikan dengan PIN harian BAPAK)
+    if (pin === "1234") { 
         IS_CU_EDITABLE = true;
         renderTombolAksi(true);
-        generateGridCU(); // Render ulang agar input bisa diketik
+        renderTabelGridCU(); 
         Swal.fire("Berhasil", "Akses Edit Dibuka", "success");
     } else {
         Swal.fire("Gagal", "PIN Salah", "error");
     }
 }
 
-// 3. GENERATE GRID (SIMULASI MENGAMBIL DATA DESA DINAMIS)
-function generateGridCU() {
+// --- 2. TARIK DATA DARI GAS ---
+function tarikDataGridCU() {
+    if (ADA_PERUBAHAN && !confirm("Ada perubahan yang belum disimpan. Yakin ingin memuat ulang?")) return;
+
     const kec = document.getElementById("cu-kecamatan").value;
-    if(!kec) return Swal.fire("Peringatan", "Kecamatan belum dimuat/dipilih", "warning");
+    const thn = document.getElementById("cu-tahun").value;
+    const bln = document.getElementById("cu-bulan").value;
+    
+    if(!kec) return Swal.fire("Peringatan", "Kecamatan belum dipilih", "warning");
 
-    Swal.fire({ title: 'Menyiapkan Grid...', text: 'Melakukan auto-kalkulasi dari Bulan Lalu dan Data AB...', didOpen: () => Swal.showLoading() });
+    tampilkanLoader("Menarik Saldo & Menghitung Data AB...");
 
-    // SIMULASI API CALL (Di backend GAS nanti: Tarik Desa, Tarik Saldo, Tarik AB, Gabungkan)
-    fetch(`${API_URL}?action=get_desa_by_kecamatan&kecamatan=${kec}`)
+    fetch(`${scriptURL}?action=get_cu_grid&kecamatan=${kec}&tahun=${thn}&bulan=${bln}`)
     .then(res => res.json())
-    .then(listDesa => {
-        DAFTAR_DESA_CU = listDesa; // Menyimpan nama desa dari server
-        renderTabelGrid();
-        document.getElementById("area-grid-cu").classList.remove("hidden");
-        Swal.close();
+    .then(res => {
+        sembunyikanLoader();
+        if(res.status === "success") {
+            DATA_CU_TEMP = res.data; 
+            ADA_PERUBAHAN = false;
+            renderTabelGridCU();
+            document.getElementById("area-grid-cu").classList.remove("hidden");
+        } else {
+            Swal.fire("Gagal", res.message, "error");
+        }
     }).catch(err => {
-        // MOCKUP DATA JIKA API_URL BELUM DIISI (Agar Bapak bisa test UI nya)
-        DAFTAR_DESA_CU = ["CIJENGKOL", "BURANGKENG", "CIBENING", "CILEDUG", "LUBANG BUAYA", "TAMAN SARI"];
-        renderTabelGrid();
-        document.getElementById("area-grid-cu").classList.remove("hidden");
-        Swal.close();
+        sembunyikanLoader();
+        Swal.fire("Error", "Gagal menghubungi server siPeKa.", "error");
     });
 }
 
-function renderTabelGrid() {
+// --- 3. RENDER GRID (DENGAN CLEAR ON FOCUS) ---
+function renderTabelGridCU() {
     const tbody = document.getElementById("tbody-grid-cu");
     let html = "";
-    
-    // Status Disable Input jika gembok tertutup
     let state = IS_CU_EDITABLE ? "" : "disabled";
-    let cssLock = IS_CU_EDITABLE ? "bg-white text-blue-900" : "bg-slate-50 text-slate-400 cursor-not-allowed border-slate-100";
+    let cssInput = IS_CU_EDITABLE ? "text-blue-900 bg-white hover:bg-blue-50 focus:bg-white" : "bg-readonly";
 
-    DAFTAR_DESA_CU.forEach((desa, idx) => {
-        // ID input menggunakan index desa agar mudah ditarik datanya saat save
+    DATA_CU_TEMP.forEach((d, idx) => {
+        let isSpecial = (IS_CU_EDITABLE && (d.selisih !== 0)); // Penanda PUS tidak seimbang
+        let bgRow = isSpecial ? "bg-red-50/50" : "hover:bg-slate-50";
+
         html += `
-        <tr class="hover:bg-orange-50 transition border-b border-slate-100">
+        <tr class="${bgRow} transition border-b border-slate-100">
             <td class="p-2 text-center text-[10px] font-bold text-slate-400 paku-no">${idx + 1}</td>
-            <td class="p-2 font-black text-[10px] uppercase paku-desa text-slate-700">${desa}</td>
-            <td class="p-1 bg-blue-50/30 text-center"><input type="number" id="pus_${idx}" value="1000" ${state} class="grid-input w-16 ${cssLock}"></td>
+            <td class="p-2 font-black text-[10px] uppercase paku-desa text-slate-700 truncate max-w-[130px]">${d.desa}</td>
+            <td class="p-1 bg-blue-50/50 text-center font-black text-blue-900 text-[11px]">${d.pus}</td>
         `;
         
-        // Loop Render Alkon (P & S)
+        // Loop Alkon
         ALKON_CU.forEach(alkon => {
             html += `
-            <td class="p-1 text-center"><input type="number" id="${alkon}_p_${idx}" value="0" oninput="autoSumCU(${idx})" ${state} class="grid-input ${cssLock}"></td>
-            <td class="p-1 text-center"><input type="number" id="${alkon}_s_${idx}" value="0" oninput="autoSumCU(${idx})" ${state} class="grid-input ${cssLock}"></td>
+            <td class="p-1 text-center bg-white border-l border-slate-50"><input type="number" min="0" value="${d.alkon[alkon+'_p']}" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="updateDataCU(${idx}, 'alkon', '${alkon}_p', this.value)" ${state} class="grid-input ${cssInput}"></td>
+            <td class="p-1 text-center bg-white"><input type="number" min="0" value="${d.alkon[alkon+'_s']}" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="updateDataCU(${idx}, 'alkon', '${alkon}_s', this.value)" ${state} class="grid-input ${cssInput}"></td>
             `;
         });
 
-        // Kolom Total KB (Readonly, Auto Sum)
-        html += `<td class="p-2 text-center bg-emerald-50"><span id="totalkb_${idx}" class="font-black text-emerald-700 text-[11px]">0</span></td>`;
+        // Total KB 
+        html += `<td class="p-2 text-center bg-emerald-50"><span id="totalkb_${idx}" class="font-black text-emerald-700 text-[11px]">${d.total_kb}</span></td>`;
 
-        // Loop Render Non-KB
+        // Loop Non-KB
         NON_KB.forEach(non => {
-            html += `<td class="p-1 text-center bg-red-50/20"><input type="number" id="${non}_${idx}" value="0" ${state} class="grid-input ${IS_CU_EDITABLE ? 'bg-white text-red-900 focus:border-red-500' : cssLock}"></td>`;
+            let cssNon = IS_CU_EDITABLE ? "text-red-900 bg-red-50/30 hover:bg-red-100" : "bg-readonly";
+            html += `<td class="p-1 text-center border-l border-white"><input type="number" min="0" value="${d.non_kb[non]}" onfocus="clearZero(this)" onblur="restoreZero(this)" oninput="updateDataCU(${idx}, 'non_kb', '${non}', this.value)" ${state} class="grid-input ${cssNon}"></td>`;
         });
 
-        html += `</tr>`;
+        // Selisih PUS (JUNGKAT JUNGKIT INDICATOR)
+        let warnaSelisih = d.selisih === 0 ? "text-slate-300" : (d.selisih > 0 ? "text-red-600 font-black" : "text-orange-600 font-black");
+        let teksSelisih = d.selisih > 0 ? `+${d.selisih} (Lebih)` : (d.selisih < 0 ? `${d.selisih} (Kurang)` : "PAS");
+        html += `<td class="p-2 text-center bg-slate-100"><span id="selisih_${idx}" class="text-[9px] ${warnaSelisih}">${teksSelisih}</span></td></tr>`;
     });
-
     tbody.innerHTML = html;
 }
 
-// 4. AUTO SUM TOTAL KB PER BARIS
-function autoSumCU(idx) {
-    let total = 0;
-    ALKON_CU.forEach(alkon => {
-        let p = parseInt(document.getElementById(`${alkon}_p_${idx}`).value) || 0;
-        let s = parseInt(document.getElementById(`${alkon}_s_${idx}`).value) || 0;
-        total += (p + s);
-    });
-    document.getElementById(`totalkb_${idx}`).innerText = total;
+// --- 4. LOGIKA INTERAKSI (CLEAR ON FOCUS & UPDATE) ---
+function clearZero(el) { if (el.value === "0" || el.value === 0) el.value = ""; }
+function restoreZero(el) { if (el.value === "") el.value = "0"; }
+
+function updateDataCU(idx, tipe, key, val) {
+    ADA_PERUBAHAN = true;
+    let num = parseInt(val) || 0;
+    if(num < 0) num = 0; // Anti minus
+    DATA_CU_TEMP[idx][tipe][key] = num;
+    kalkulasiBaris(idx);
 }
 
-// 5. MENGUMPULKAN DATA UNTUK DISIMPAN BULK
-function simpanBulkCU() {
-    let dataKirim = [];
-    
-    DAFTAR_DESA_CU.forEach((desa, idx) => {
-        let objDesa = { desa: desa, pus: document.getElementById(`pus_${idx}`).value };
-        
-        ALKON_CU.forEach(alkon => {
-            objDesa[`${alkon}_p`] = document.getElementById(`${alkon}_p_${idx}`).value;
-            objDesa[`${alkon}_s`] = document.getElementById(`${alkon}_s_${idx}`).value;
-        });
-        NON_KB.forEach(non => {
-            objDesa[non] = document.getElementById(`${non}_${idx}`).value;
-        });
-        
-        dataKirim.push(objDesa);
-    });
+function kalkulasiBaris(idx) {
+    let d = DATA_CU_TEMP[idx];
+    d.total_kb = Object.values(d.alkon).reduce((a,b) => a+b, 0);
+    d.total_non = Object.values(d.non_kb).reduce((a,b) => a+b, 0);
+    d.selisih = (d.total_kb + d.total_non) - d.pus;
 
-    console.log("Data siap dikirim ke GAS:", dataKirim);
-    Swal.fire("Berhasil", "Cek Console untuk melihat Array Data yang siap dikirim Bulk ke GAS.", "success");
-    // Di sini nanti kita pasang fetch API_URL action="save_bulk_cu"
+    document.getElementById(`totalkb_${idx}`).innerText = d.total_kb;
+    
+    let elSelisih = document.getElementById(`selisih_${idx}`);
+    if (d.selisih === 0) {
+        elSelisih.className = "text-[9px] text-emerald-600 font-black"; elSelisih.innerText = "PAS ✅";
+    } else if (d.selisih > 0) {
+        elSelisih.className = "text-[9px] text-red-600 font-black blink"; elSelisih.innerText = `+${d.selisih} (Lebih)`;
+    } else {
+        elSelisih.className = "text-[9px] text-orange-600 font-black"; elSelisih.innerText = `${d.selisih} (Kurang)`;
+    }
+}
+
+// --- 5. SIHIR DO PINTAR (AUTO-RASIONALISASI) ---
+function terapkanDOPintar() {
+    Swal.fire({
+        title: '✨ Auto-Rasionalisasi DO',
+        html: '<p class="text-xs mb-3">Berapa estimasi tren Drop Out (berhenti KB) se-Kecamatan bulan ini?</p>',
+        input: 'select',
+        inputOptions: { '0.01': 'Rendah (1%)', '0.02': 'Sedang (2%)', '0.03': 'Tinggi (3%)', '0.05': 'Sangat Tinggi (5%)' },
+        showCancelButton: true, confirmButtonColor: '#8b5cf6', cancelButtonColor: '#cbd5e1', confirmButtonText: 'Terapkan Sihir'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let persen = parseFloat(result.value);
+            ADA_PERUBAHAN = true;
+
+            DATA_CU_TEMP.forEach((d, idx) => {
+                let targetDO = Math.floor(d.total_kb * persen);
+                if (targetDO > 0) {
+                    let sisaDO = targetDO;
+
+                    // Fungsi Potong Prioritas Jangka Pendek
+                    const potong = (kunci) => {
+                        if (sisaDO <= 0) return;
+                        if (d.alkon[kunci] > 0) {
+                            let ptg = Math.min(d.alkon[kunci], sisaDO);
+                            d.alkon[kunci] -= ptg;
+                            sisaDO -= ptg;
+                        }
+                    };
+
+                    // EKSEKUSI PEMOTONGAN (MOW & MOP AMAN)
+                    potong('pil_p'); potong('pil_s');
+                    potong('stk_p'); potong('stk_s');
+                    potong('kdm_p'); potong('kdm_s');
+                    potong('imp_p'); potong('imp_s'); // Implan lapis terakhir
+
+                    let totalTerpotong = targetDO - sisaDO;
+
+                    // HUKUM KESEIMBANGAN PUS: Lempar DO ke IAT (Ingin Anak Ditunda)
+                    d.non_kb.iat += totalTerpotong;
+                    kalkulasiBaris(idx); // Update selisih
+                }
+            });
+
+            renderTabelGridCU();
+            Swal.fire("Sihir Berhasil!", "Data Drop Out telah didistribusikan ke Pil, Suntik, dan Kondom. Sisa potongan dialihkan ke IAT agar PUS tetap seimbang.", "success");
+        }
+    });
+}
+
+// --- 6. SIMPAN BULK KE GAS ---
+function simpanBulkCU() {
+    // Cek Keseimbangan PUS sebelum save
+    let adaError = DATA_CU_TEMP.some(d => d.selisih !== 0);
+    if(adaError) {
+        return Swal.fire("Tunggu Dulu!", "Masih ada desa yang selisih PUS-nya belum PAS (0). Periksa kolom paling kanan.", "warning");
+    }
+
+    tampilkanLoader("Menyimpan Data se-Kecamatan...");
+    
+    const payload = {
+        action: "save_bulk_cu",
+        kecamatan: document.getElementById("cu-kecamatan").value,
+        tahun: document.getElementById("cu-tahun").value,
+        bulan: document.getElementById("cu-bulan").value,
+        admin_nama: localStorage.getItem("nama") || "Admin VIP",
+        data_json: JSON.stringify(DATA_CU_TEMP)
+    };
+
+    fetch(scriptURL, { method: "POST", body: new URLSearchParams(payload) })
+    .then(res => res.json())
+    .then(res => {
+        sembunyikanLoader();
+        if(res.status === "success") {
+            ADA_PERUBAHAN = false;
+            Swal.fire("Tersimpan!", "Data Register CU berhasil di-Finalisasi.", "success");
+        } else { Swal.fire("Gagal", res.message, "error"); }
+    }).catch(err => { sembunyikanLoader(); Swal.fire("Error", "Gagal menyimpan.", "error"); });
+}
+
+// --- UTILS LOADER ---
+function tampilkanLoader(teks) {
+    const l = document.getElementById("loader-sipeka");
+    if(l) { document.getElementById("loader-text").innerText = teks; l.classList.remove("hidden"); }
+}
+function sembunyikanLoader() {
+    const l = document.getElementById("loader-sipeka");
+    if(l) l.classList.add("hidden");
 }
