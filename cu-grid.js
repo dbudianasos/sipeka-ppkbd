@@ -28,7 +28,7 @@ function initFilterDinamicCU() {
     selThn.innerHTML = optThn;
     selBln.value = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"][new Date().getMonth()];
 
-    fetch(`${scriptURL}?action=get_semua_kecamatan`) // Pastikan scriptURL diambil dari script.js
+    fetch(`${API_URL}?action=get_semua_kecamatan`) // Pastikan scriptURL diambil dari script.js
     .then(res => res.json())
     .then(listKec => {
         let opsiKec = `<option value="">-- PILIH KECAMATAN --</option>`;
@@ -96,7 +96,7 @@ function tarikDataGridCU() {
 
     tampilkanLoader("Menarik Saldo & Menghitung Data AB...");
 
-    fetch(`${scriptURL}?action=get_cu_grid&kecamatan=${kec}&tahun=${thn}&bulan=${bln}`)
+    fetch(`${API_URL}?action=get_cu_grid&kecamatan=${kec}&tahun=${thn}&bulan=${bln}`)
     .then(res => res.json())
     .then(res => {
         sembunyikanLoader();
@@ -254,7 +254,7 @@ function simpanBulkCU() {
         data_json: JSON.stringify(DATA_CU_TEMP)
     };
 
-    fetch(scriptURL, { method: "POST", body: new URLSearchParams(payload) })
+    fetch(API_URL, { method: "POST", body: new URLSearchParams(payload) })
     .then(res => res.json())
     .then(res => {
         sembunyikanLoader();
