@@ -1,4 +1,4 @@
-# SIPEKA - Sistem Informasi Pelaporan Kinerja
+# siPeKa - Aplikasi Pelaporan Kinerja PPKBD
 
 Aplikasi berbasis web untuk memudahkan pelaporan kinerja harian dan monitoring rencana kerja secara mandiri.
 
