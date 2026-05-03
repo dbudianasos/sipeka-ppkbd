@@ -7,9 +7,23 @@
   <link rel="icon" type="image/png" href="logo-sipeka.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-  <style> body { font-family: 'Poppins', sans-serif; } </style>
+  <!-- SweetAlert2 untuk Pop Up -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    /* Styling khusus input agar seragam dan rapi */
+    .sipeka-input {
+      width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem;
+      outline: none; transition: all 0.2s;
+    }
+    .sipeka-input:focus { border-color: #e67e22; box-shadow: 0 0 0 2px rgba(230, 126, 34, 0.2); }
+    .sipeka-label { display: block; font-size: 0.75rem; font-weight: 600; color: #4b5563; margin-bottom: 0.25rem; }
+    .alkon-card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem; }
+  </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-20">
+<body class="bg-slate-100 min-h-screen pb-20">
+
+  <!-- HEADER -->
   <header class="sticky top-0 z-50 bg-blue-900 py-4 px-5 rounded-b-[1.5rem] shadow-lg text-white flex justify-between items-center">
     <div class="flex items-center gap-3">
       <button onclick="window.location.href='menu-lapbul.html'" class="bg-white/10 p-2 rounded-xl active:scale-95 transition">
@@ -18,101 +32,165 @@
         </svg>
       </button>
       <div class="leading-tight">
-        <h1 class="font-bold text-base uppercase">Register CU</h1>
-        <p class="text-[9px] text-blue-200 uppercase tracking-widest font-bold">Form Register CU (Peserta KB Aktif)</p>
+        <h1 class="font-bold text-base uppercase tracking-wide">Register CU</h1>
+        <p class="text-[9px] text-orange-300 uppercase tracking-widest font-bold">Peserta KB Aktif Bulanan</p>
       </div>
-    </div>
-    
-    <div id="wadah-tombol-ab" class="flex gap-2">
-      <!-- Muncul via JS: Draft & Realist -->
     </div>
   </header>
-<main id="main-content" class="px-4 pt-6 max-w-5xl mx-auto space-y-4">
-<div class="card-sipeka">
-  
-  <!-- Panel Filter -->
-  <div class="filter-box">
-    <label>Desa:</label>
-    <select id="cu_desa">
-      <option value="">-- Pilih Desa --</option>
-      <option value="CIJENGKOL">Cijengkol</option>
-      <option value="BURANGKENG">Burangkeng</option>
-      <!-- Tambahkan desa lainnya -->
-    </select>
-    
-    <label>Bulan:</label>
-    <select id="cu_bulan">
-      <option value="JUNI">Juni</option>
-      <option value="JULI">Juli</option>
-      <!-- Tambahkan bulan lainnya -->
-    </select>
-    
-    <button onclick="tarikDataCU()" class="btn-sipeka-orange">Tarik Data Baseline</button>
-  </div>
 
-  <hr>
+  <main id="main-content" class="px-4 pt-6 max-w-4xl mx-auto space-y-6">
 
-  <!-- Form Input Data CU -->
-  <form id="form_cu" style="display:none;">
-    <!-- Sembunyikan data meta agar form tidak penuh -->
-    <input type="hidden" id="cu_no">
-    <input type="hidden" id="cu_tahun">
-    <input type="hidden" id="cu_kecamatan">
-
-    <div class="input-group">
-      <label>Total PUS:</label>
-      <input type="number" id="cu_pus" required>
+    <!-- PANEL FILTER -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      <h3 class="font-bold text-gray-800 mb-4 text-center border-b pb-3">Tarik Data Register CU</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <div>
+          <label class="sipeka-label">Pilih Desa</label>
+          <select id="cu_desa" class="sipeka-input bg-gray-50">
+            <option value="">-- Pilih Desa --</option>
+            <option value="CIJENGKOL">Cijengkol</option>
+            <option value="BURANGKENG">Burangkeng</option>
+            <option value="CIBENING">Cibening</option>
+            <option value="CILEDUG">Ciledug</option>
+            <option value="LUBANG BUAYA">Lubang Buaya</option>
+            <option value="TAMAN SARI">Taman Sari</option>
+            <option value="RAGEMANUNGGAL">Ragemanunggal</option>
+            <option value="MUKTI JAYA">Mukti Jaya</option>
+            <option value="KERTA RAHAYU">Kerta Rahayu</option>
+            <option value="CIKARAGEMAN">Cikarageman</option>
+            <option value="TAMAN RAHAYU">Taman Rahayu</option>
+          </select>
+        </div>
+        <div>
+          <label class="sipeka-label">Pilih Bulan</label>
+          <select id="cu_bulan" class="sipeka-input bg-gray-50">
+            <option value="JANUARI">Januari</option>
+            <option value="FEBRUARI">Februari</option>
+            <option value="MARET">Maret</option>
+            <option value="APRIL">April</option>
+            <option value="MEI">Mei</option>
+            <option value="JUNI">Juni</option>
+            <option value="JULI">Juli</option>
+            <option value="AGUSTUS">Agustus</option>
+            <option value="SEPTEMBER">September</option>
+            <option value="OKTOBER">Oktober</option>
+            <option value="NOVEMBER">November</option>
+            <option value="DESEMBER">Desember</option>
+          </select>
+        </div>
+        <div>
+          <button onclick="tarikDataCU()" class="w-full bg-[#e67e22] hover:bg-[#d35400] text-white font-bold py-2.5 rounded-lg shadow transition active:scale-95">
+            🔍 Tarik Data
+          </button>
+        </div>
+      </div>
     </div>
 
-    <h4>Data Alkon (P & S)</h4>
-    <div class="grid-alkon" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-      <!-- Contoh IUD -->
-      <div>
-        <label>IUD (P):</label><input type="number" id="cu_iud_p">
-        <label>IUD (S):</label><input type="number" id="cu_iud_s">
-      </div>
-      <!-- Contoh IMPLAN -->
-      <div>
-        <label>IMP (P):</label><input type="number" id="cu_imp_p">
-        <label>IMP (S):</label><input type="number" id="cu_imp_s">
-      </div>
-      <!-- Contoh PIL -->
-      <div>
-        <label>PIL (P):</label><input type="number" id="cu_pil_p">
-        <label>PIL (S):</label><input type="number" id="cu_pil_s">
-      </div>
-      <!-- Silakan Bapak tambahkan input MOW, MOP, KDM, STK dengan format yang sama -->
+    <!-- FORM INPUT DATA CU -->
+    <div id="form_cu" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5" style="display:none;">
+      <form>
+        <!-- Meta Hidden -->
+        <input type="hidden" id="cu_no">
+        <input type="hidden" id="cu_tahun">
+        <input type="hidden" id="cu_kecamatan">
+
+        <div class="mb-6 bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
+          <label class="block text-sm font-bold text-blue-900 mb-2">TOTAL PUS (Pasangan Usia Subur)</label>
+          <input type="number" id="cu_pus" class="sipeka-input text-center font-bold text-lg text-blue-700 bg-white" required>
+        </div>
+
+        <h4 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
+          <span class="bg-orange-100 text-orange-600 p-1.5 rounded-lg"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg></span>
+          Rincian Alkon (Peserta Aktif)
+        </h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div class="alkon-card">
+            <h5 class="font-bold text-sm text-gray-800 mb-2 border-b pb-1">IUD</h5>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="sipeka-label">Pemerintah</label><input type="number" id="cu_iud_p" class="sipeka-input"></div>
+              <div><label class="sipeka-label">Swasta</label><input type="number" id="cu_iud_s" class="sipeka-input"></div>
+            </div>
+          </div>
+          <div class="alkon-card">
+            <h5 class="font-bold text-sm text-gray-800 mb-2 border-b pb-1">MOW</h5>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="sipeka-label">Pemerintah</label><input type="number" id="cu_mow_p" class="sipeka-input"></div>
+              <div><label class="sipeka-label">Swasta</label><input type="number" id="cu_mow_s" class="sipeka-input"></div>
+            </div>
+          </div>
+          <div class="alkon-card">
+            <h5 class="font-bold text-sm text-gray-800 mb-2 border-b pb-1">MOP</h5>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="sipeka-label">Pemerintah</label><input type="number" id="cu_mop_p" class="sipeka-input"></div>
+              <div><label class="sipeka-label">Swasta</label><input type="number" id="cu_mop_s" class="sipeka-input"></div>
+            </div>
+          </div>
+          <div class="alkon-card">
+            <h5 class="font-bold text-sm text-gray-800 mb-2 border-b pb-1">KONDOM (KDM)</h5>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="sipeka-label">Pemerintah</label><input type="number" id="cu_kdm_p" class="sipeka-input"></div>
+              <div><label class="sipeka-label">Swasta</label><input type="number" id="cu_kdm_s" class="sipeka-input"></div>
+            </div>
+          </div>
+          <div class="alkon-card">
+            <h5 class="font-bold text-sm text-gray-800 mb-2 border-b pb-1">IMPLAN (IMP)</h5>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="sipeka-label">Pemerintah</label><input type="number" id="cu_imp_p" class="sipeka-input"></div>
+              <div><label class="sipeka-label">Swasta</label><input type="number" id="cu_imp_s" class="sipeka-input"></div>
+            </div>
+          </div>
+          <div class="alkon-card">
+            <h5 class="font-bold text-sm text-gray-800 mb-2 border-b pb-1">SUNTIK (STK)</h5>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="sipeka-label">Pemerintah</label><input type="number" id="cu_stk_p" class="sipeka-input"></div>
+              <div><label class="sipeka-label">Swasta</label><input type="number" id="cu_stk_s" class="sipeka-input"></div>
+            </div>
+          </div>
+          <div class="alkon-card lg:col-span-3">
+            <h5 class="font-bold text-sm text-gray-800 mb-2 border-b pb-1 text-center">PIL</h5>
+            <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+              <div><label class="sipeka-label">Pemerintah</label><input type="number" id="cu_pil_p" class="sipeka-input"></div>
+              <div><label class="sipeka-label">Swasta</label><input type="number" id="cu_pil_s" class="sipeka-input"></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-6">
+        
+        <h4 class="font-bold text-gray-700 mb-3 flex items-center gap-2">
+          <span class="bg-red-100 text-red-600 p-1.5 rounded-lg"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/></svg></span>
+          Bukan Peserta KB
+        </h4>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-red-50/50 p-4 rounded-xl border border-red-100">
+          <div><label class="sipeka-label">Hamil</label><input type="number" id="cu_hamil" class="sipeka-input bg-white"></div>
+          <div><label class="sipeka-label">IAS</label><input type="number" id="cu_ias" class="sipeka-input bg-white"></div>
+          <div><label class="sipeka-label">IAT</label><input type="number" id="cu_iat" class="sipeka-input bg-white"></div>
+          <div><label class="sipeka-label">TIAL</label><input type="number" id="cu_tial" class="sipeka-input bg-white"></div>
+        </div>
+
+        <button type="button" onclick="simpanDataCU()" class="mt-8 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition active:scale-95 text-lg flex justify-center items-center gap-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+          Simpan Register CU
+        </button>
+      </form>
     </div>
 
-    <hr>
-    <h4>Bukan Peserta KB</h4>
-    <div class="grid-non-kb" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-      <div><label>Hamil:</label><input type="number" id="cu_hamil"></div>
-      <div><label>IAS:</label><input type="number" id="cu_ias"></div>
-      <div><label>IAT:</label><input type="number" id="cu_iat"></div>
-      <div><label>TIAL:</label><input type="number" id="cu_tial"></div>
-    </div>
+  </main>
 
-    <button type="button" onclick="simpanDataCU()" class="btn-sipeka-green" style="margin-top: 20px; width: 100%;">💾 Simpan Register CU</button>
-  </form>
-</div>
-
-</main>
-
-<script src="script.js"></script>
+  <script src="script.js"></script>
   <script src="lapbul.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       if (typeof cekLogin === "function") cekLogin();
-      if (typeof initKhususAB === "function") {
-          setTimeout(initKhususAB, 500);
-      }
+      // Opsional jika ada inisiasi khusus CU
+      if (typeof initKhususCU === "function") setTimeout(initKhususCU, 500);
     });
   </script>
 
-<footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
-  &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
-  Aplikasi Pelaporan Kinerja PPKBD
-</footer>
+  <footer class="text-center text-[10px] text-gray-400 mt-12 mb-4">
+    &copy; 2026 siPeKa PPKBD by Dian Budiana<br>
+    Aplikasi Pelaporan Kinerja PPKBD
+  </footer>
 </body>
 </html>
